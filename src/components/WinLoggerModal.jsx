@@ -9,6 +9,58 @@ function fireWinConfetti() {
   setTimeout(() => confetti({ particleCount: 50, spread: 80, origin: { y: 0.5, x: 0.8 }, colors: ["#00f5ff", "#ffffff"] }), 400);
 }
 
+async function updateStreak(userId) {
+  const today = new Date().toISOString().split("T")[0];
+  const [existing] = await base44.entities.Streak.filter({ userId });
+
+  if (existing) {
+    const lastDate = existing.lastCompletedDate;
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+    const isConsecutive = lastDate === yesterday;
+    const alreadyToday = lastDate === today;
+
+    if (!alreadyToday) {
+      await base44.entities.Streak.update(existing.id, {
+        currentStreak: isConsecutive ? (existing.currentStreak ?? 0) + 1 : 1,
+        longestStreak: Math.max(existing.longestStreak ?? 0, isConsecutive ? (existing.currentStreak ?? 0) + 1 : 1),
+        lastCompletedDate: today,
+        totalWins: (existing.totalWins ?? 0) + 1,
+      });
+    }
+  } else {
+    await base44.entities.Streak.create({
+      userId,
+      currentStreak: 1,
+      longestStreak: 1,
+      lastCompletedDate: today,
+      totalWins: 1,
+      freezeCount: 3,
+    });
+  }
+}
+
+async function updateUserStats(userId, xpEarned) {
+  const [existing] = await base44.entities.UserStats.filter({ userId });
+  if (existing) {
+    const newXp = (existing.totalXp ?? 0) + xpEarned;
+    await base44.entities.UserStats.update(existing.id, {
+      totalXp: newXp,
+      currentLevel: Math.floor(newXp / 500) + 1,
+      totalMissionsCompleted: (existing.totalMissionsCompleted ?? 0) + 1,
+    });
+  } else {
+    await base44.entities.UserStats.create({
+      userId,
+      totalXp: xpEarned,
+      currentLevel: 1,
+      totalMissionsCompleted: 1,
+      badges: [],
+    });
+  }
+}
+
+const BOOST_LABELS = ["", "Slight nudge", "Noticeable lift", "Clear improvement", "Big jump", "Game changer"];
+
 export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
   const [timeSaved, setTimeSaved] = useState(10);
   const [stars, setStars] = useState(3);
@@ -22,19 +74,21 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
 
   const handleLog = async () => {
     setLogging(true);
-    try {
-      await base44.entities.WinLog.create({
+    const user = await base44.auth.me();
+    await Promise.all([
+      base44.entities.WinLog.create({
         missionId: mission?.id ?? "unknown",
-        userId: "placeholder",
+        userId: user.id,
         timeSavedMinutes: timeSaved,
         correctnessBoost: stars,
         note: note.trim() || undefined,
         appliedAt: new Date().toISOString(),
         xpEarned,
-      });
-    } catch (_) {
-      // non-blocking — celebration happens regardless
-    }
+        category: mission?.category,
+      }),
+      updateStreak(user.id),
+      updateUserStats(user.id, xpEarned),
+    ]);
 
     fireWinConfetti();
     setDone(true);
@@ -48,19 +102,15 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Sheet */}
       <div className="relative w-full max-w-lg rounded-t-3xl border-t border-border pb-8"
         style={{ background: "hsl(var(--background))", boxShadow: "0 -20px 60px rgba(0,0,0,0.4)" }}>
 
-        {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 rounded-full bg-border" />
         </div>
 
-        {/* Done state */}
         {done ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4 px-6 text-center">
             <div className="text-6xl animate-bounce">🏆</div>
@@ -71,7 +121,7 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
           </div>
         ) : (
           <div className="px-5 pt-3 space-y-5">
-            {/* Header */}
+
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-black">Log Your Win</h2>
@@ -82,7 +132,6 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
               </button>
             </div>
 
-            {/* Mission badge */}
             <div className="flex items-center gap-2 px-3 py-2 rounded-2xl"
               style={{ background: "rgba(0,245,255,0.08)", border: "1px solid rgba(0,245,255,0.2)" }}>
               <Zap className="w-4 h-4 shrink-0" style={{ color: "#00f5ff" }} />
@@ -90,7 +139,7 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
               <span className="ml-auto text-xs font-black shrink-0" style={{ color: "#39ff14" }}>+{xpEarned} XP</span>
             </div>
 
-            {/* Time saved slider */}
+            {/* Time saved */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-bold">Time Saved</label>
@@ -105,7 +154,7 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
               </div>
             </div>
 
-            {/* Correctness boost stars */}
+            {/* Stars */}
             <div className="space-y-2">
               <label className="text-sm font-bold block">Correctness Boost</label>
               <div className="flex gap-2">
@@ -114,7 +163,7 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
                     className="flex-1 py-2 rounded-xl border transition-all duration-150 active:scale-90"
                     style={n <= stars
                       ? { background: "rgba(57,255,20,0.15)", borderColor: "#39ff14" }
-                      : { background: "transparent", borderColor: "hsl(var(--border))" }}>
+                      : {}}>
                     <Star className="w-5 h-5 mx-auto"
                       fill={n <= stars ? "#39ff14" : "none"}
                       stroke={n <= stars ? "#39ff14" : "hsl(var(--muted-foreground))"}
@@ -122,27 +171,26 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-muted-foreground text-center">
-                {["", "Slight nudge", "Noticeable lift", "Clear improvement", "Big jump", "Game changer"][stars]}
-              </p>
+              <p className="text-[10px] text-muted-foreground text-center">{BOOST_LABELS[stars]}</p>
             </div>
 
             {/* Note */}
             <div className="space-y-1.5">
-              <label className="text-sm font-bold">Quick Note <span className="text-muted-foreground font-normal">(optional)</span></label>
+              <label className="text-sm font-bold">
+                Quick Note <span className="text-muted-foreground font-normal">(optional)</span>
+              </label>
               <textarea rows={2} value={note} onChange={e => setNote(e.target.value)}
                 placeholder="What changed? What would you do differently?"
                 className="w-full bg-secondary rounded-2xl px-4 py-3 text-sm resize-none outline-none border border-transparent focus:border-[#00f5ff] transition-colors placeholder:text-muted-foreground/50" />
             </div>
 
-            {/* Log Win CTA */}
             <button onClick={handleLog} disabled={logging}
               className="w-full py-4 rounded-2xl text-base font-black text-black flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 disabled:opacity-70"
               style={{
                 background: "linear-gradient(90deg, #39ff14, #00f5ff)",
                 boxShadow: "0 0 28px rgba(57,255,20,0.5)",
               }}>
-              {logging ? "Logging…" : <>🏆 Log Win — Protect Streak</>}
+              {logging ? "Logging…" : "🏆 Log Win — Protect Streak"}
             </button>
           </div>
         )}
