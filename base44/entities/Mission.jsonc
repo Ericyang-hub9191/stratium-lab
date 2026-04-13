@@ -2,13 +2,18 @@
   "name": "Mission",
   "type": "object",
   "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique mission identifier"
+    },
     "title": {
       "type": "string",
-      "description": "Mission title"
+      "description": "Mission title \u2014 short and action-oriented"
     },
     "durationMinutes": {
       "type": "number",
-      "description": "Duration in minutes (3-5 for quick-win)"
+      "default": 5,
+      "description": "Estimated time to complete the mission in minutes"
     },
     "type": {
       "type": "string",
@@ -16,43 +21,34 @@
         "quick-win",
         "deep-dive"
       ],
-      "description": "Mission type"
+      "description": "quick-win = 3\u20135 min immediate ROI; deep-dive = longer power-up for bigger mastery gains"
     },
     "category": {
       "type": "string",
-      "enum": [
-        "prompting",
-        "writing",
-        "research",
-        "automation",
-        "python",
-        "rag",
-        "data",
-        "productivity"
-      ],
-      "description": "Skill category"
+      "description": "Skill category: prompting, writing, research, automation, python, rag, data, productivity"
     },
     "description": {
       "type": "string",
-      "description": "What the mission teaches"
+      "description": "What this mission trains and what win the user will walk away with"
     },
     "applyInstruction": {
       "type": "string",
-      "description": "Clear action to try right now in Docs/Email/Notion/etc."
+      "description": "Clear, direct action: try this right now in Docs, Email, Notion, or your current tool"
     },
     "xpReward": {
       "type": "number",
-      "description": "XP earned on completion"
+      "description": "XP awarded when the mission win is logged"
     },
     "tags": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Searchable tags"
+      "description": "Searchable tags for filtering missions"
     }
   },
   "required": [
+    "id",
     "title",
     "type",
     "category",

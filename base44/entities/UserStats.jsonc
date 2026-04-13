@@ -4,34 +4,34 @@
   "properties": {
     "userId": {
       "type": "string",
-      "description": "User ID"
+      "description": "ID of the user"
     },
     "totalXp": {
       "type": "number",
       "default": 0,
-      "description": "Lifetime XP"
+      "description": "Lifetime XP accumulated across all mission wins"
     },
     "currentLevel": {
       "type": "number",
       "default": 1,
-      "description": "Current level"
+      "description": "Current mastery level derived from totalXp"
     },
     "totalTimeSaved": {
       "type": "number",
       "default": 0,
-      "description": "Total minutes saved"
+      "description": "Total minutes saved in the real world as logged across all wins"
     },
     "totalMissionsCompleted": {
       "type": "number",
       "default": 0,
-      "description": "Lifetime missions completed"
+      "description": "Lifetime count of mission wins logged"
     },
     "badges": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Earned badge IDs"
+      "description": "IDs of power-up badges earned through streaks, wins, and milestones"
     }
   },
   "required": [

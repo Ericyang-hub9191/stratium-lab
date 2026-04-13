@@ -4,31 +4,31 @@
   "properties": {
     "missionId": {
       "type": "string",
-      "description": "ID of the completed mission"
+      "description": "ID of the mission that produced this win"
     },
     "userId": {
       "type": "string",
-      "description": "User who completed it"
+      "description": "ID of the user who logged the win"
     },
     "timeSavedMinutes": {
       "type": "number",
-      "description": "Estimated minutes saved by applying the win"
+      "description": "Estimated real-world minutes saved by applying the win"
     },
     "correctnessBoost": {
       "type": "number",
-      "description": "Self-rated improvement 1-5"
+      "description": "Self-rated accuracy or quality improvement from 1 (slight) to 5 (major)"
     },
     "note": {
       "type": "string",
-      "description": "Optional reflection note"
+      "description": "Optional reflection: what changed, what worked, what to repeat"
     },
     "appliedAt": {
       "type": "string",
-      "description": "ISO date when applied"
+      "description": "ISO date when the win was applied in the real world"
     },
     "xpEarned": {
       "type": "number",
-      "description": "XP earned for this win"
+      "description": "XP credited to the user for this win"
     }
   },
   "required": [

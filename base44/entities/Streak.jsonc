@@ -4,31 +4,31 @@
   "properties": {
     "userId": {
       "type": "string",
-      "description": "User ID"
+      "description": "ID of the user this streak belongs to"
     },
     "currentStreak": {
       "type": "number",
       "default": 0,
-      "description": "Current consecutive days"
+      "description": "Number of consecutive days the user has completed a mission"
     },
     "longestStreak": {
       "type": "number",
       "default": 0,
-      "description": "All-time longest streak"
+      "description": "All-time longest streak achieved"
     },
     "lastCompletedDate": {
       "type": "string",
-      "description": "ISO date of last completed mission"
+      "description": "ISO date of the last day a mission win was logged"
     },
     "freezeCount": {
       "type": "number",
       "default": 3,
-      "description": "Remaining streak freezes"
+      "description": "Remaining streak freeze power-ups \u2014 lets the user miss a day without breaking their streak"
     },
     "totalWins": {
       "type": "number",
       "default": 0,
-      "description": "Total missions completed"
+      "description": "Total number of mission wins logged by the user"
     }
   },
   "required": [

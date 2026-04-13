@@ -4,33 +4,33 @@
   "properties": {
     "userId": {
       "type": "string",
-      "description": "User ID"
+      "description": "ID of the user"
     },
     "completedMissionIds": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "IDs of all completed missions"
+      "description": "IDs of all missions the user has won"
     },
     "categoryXp": {
       "type": "object",
-      "description": "XP breakdown by category, e.g. {prompting: 120, writing: 80}"
+      "description": "XP breakdown by category \u2014 e.g. { prompting: 120, writing: 80 }"
     },
     "streakId": {
       "type": "string",
-      "description": "Reference to the user Streak record"
+      "description": "Reference to the user's Streak record for streak-power-up integration"
     },
     "favoriteCategories": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "User's preferred mission categories"
+      "description": "User's preferred mission categories used to surface relevant quick-wins"
     },
     "lastMissionDate": {
       "type": "string",
-      "description": "ISO date of last mission attempt"
+      "description": "ISO date of the user's most recent mission attempt"
     }
   },
   "required": [

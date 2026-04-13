@@ -59,6 +59,8 @@ module.exports = {
           DEFAULT: 'hsl(var(--win))',
           foreground: 'hsl(var(--win-foreground))',
         },
+        electricBlue: '#00f5ff',
+        vibrantGreen: '#39ff14',
         chart: {
           1: 'hsl(var(--chart-1))',
           2: 'hsl(var(--chart-2))',
