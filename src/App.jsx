@@ -5,10 +5,10 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import AppLayout from './components/AppLayout';
+import Layout from './components/Layout';
 import Home from './pages/Home';
 import Missions from './pages/Missions';
-import StreakPage from './pages/StreakPage';
+import Streak from './pages/Streak';
 import Progress from './pages/Progress';
 import Me from './pages/Me';
 
@@ -38,10 +38,10 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      <Route element={<AppLayout />}>
+      <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/missions" element={<Missions />} />
-        <Route path="/streak" element={<StreakPage />} />
+        <Route path="/streak" element={<Streak />} />
         <Route path="/progress" element={<Progress />} />
         <Route path="/me" element={<Me />} />
         <Route path="*" element={<PageNotFound />} />

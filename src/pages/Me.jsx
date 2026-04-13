@@ -1,34 +1,91 @@
-import { User, Settings, LogOut } from "lucide-react";
+import { Settings, Bell, Palette, HelpCircle, LogOut, ChevronRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
+
+const menuItems = [
+  { icon: Bell, label: "Notifications", desc: "Daily mission reminders" },
+  { icon: Palette, label: "Appearance", desc: "Dark / Light mode" },
+  { icon: HelpCircle, label: "Help & FAQ", desc: "How missions and streaks work" },
+];
 
 export default function Me() {
   return (
     <div className="px-4 py-6 space-y-6">
+      {/* Profile hero */}
       <div className="flex items-center gap-4">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-xp flex items-center justify-center">
-          <User className="w-7 h-7 text-white" />
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
+          style={{
+            background: "linear-gradient(135deg, rgba(0,245,255,0.2), rgba(57,255,20,0.2))",
+            border: "2px solid rgba(0,245,255,0.4)",
+          }}
+        >
+          🧠
         </div>
-        <div>
-          <h1 className="text-lg font-bold">Your Profile</h1>
-          <p className="text-xs text-muted-foreground">Level 1 · 0 XP</p>
+        <div className="flex-1">
+          <h1 className="text-lg font-black">Your Profile</h1>
+          <div className="flex items-center gap-2 mt-1">
+            <span
+              className="text-xs font-bold px-2 py-0.5 rounded-full"
+              style={{ background: "rgba(0,245,255,0.15)", color: "#00f5ff" }}
+            >
+              Level 1
+            </span>
+            <span
+              className="text-xs font-bold px-2 py-0.5 rounded-full"
+              style={{ background: "rgba(57,255,20,0.15)", color: "#39ff14" }}
+            >
+              0 XP
+            </span>
+          </div>
         </div>
+        <button className="p-2 rounded-xl border bg-secondary">
+          <Settings className="w-4 h-4 text-muted-foreground" />
+        </button>
       </div>
 
-      <div className="space-y-2">
-        <div className="rounded-xl border bg-card p-4 flex items-center gap-3">
-          <Settings className="w-5 h-5 text-muted-foreground" />
-          <span className="text-sm font-medium">Preferences</span>
-        </div>
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-3 text-destructive hover:text-destructive"
-          onClick={() => base44.auth.logout()}
-        >
-          <LogOut className="w-5 h-5" />
-          <span className="text-sm font-medium">Sign Out</span>
-        </Button>
+      {/* Quick stats */}
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { emoji: "🔥", value: "0", label: "Streak" },
+          { emoji: "🏆", value: "0", label: "Wins" },
+          { emoji: "🛡️", value: "3", label: "Freezes" },
+        ].map(({ emoji, value, label }) => (
+          <div
+            key={label}
+            className="rounded-2xl border bg-card p-3 text-center space-y-0.5"
+          >
+            <div className="text-xl">{emoji}</div>
+            <div className="text-lg font-black">{value}</div>
+            <div className="text-[10px] text-muted-foreground">{label}</div>
+          </div>
+        ))}
       </div>
+
+      {/* Menu */}
+      <div className="rounded-2xl border bg-card divide-y divide-border overflow-hidden">
+        {menuItems.map(({ icon: Icon, label, desc }) => (
+          <button
+            key={label}
+            className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/50 transition-colors text-left"
+          >
+            <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold">{label}</div>
+              <div className="text-xs text-muted-foreground">{desc}</div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+        ))}
+      </div>
+
+      {/* Sign out */}
+      <button
+        onClick={() => base44.auth.logout()}
+        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-destructive/30 text-destructive text-sm font-bold hover:bg-destructive/5 transition-colors"
+      >
+        <LogOut className="w-4 h-4" />
+        Sign Out
+      </button>
     </div>
   );
 }
