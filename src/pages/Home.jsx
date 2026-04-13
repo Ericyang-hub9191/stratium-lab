@@ -35,7 +35,7 @@ export default function Home() {
         const [streaks, stats, missions, wins] = await Promise.all([
           base44.entities.Streak.filter({ userId: user.id }),
           base44.entities.UserStats.filter({ userId: user.id }),
-          base44.entities.Mission.list("-created_date", 1),
+          base44.entities.Mission.filter({ type: deepDive ? "deep-dive" : "quick-win" }, "-created_date", 1),
           base44.entities.WinLog.filter({ userId: user.id }, "-created_date", 10),
         ]);
 
