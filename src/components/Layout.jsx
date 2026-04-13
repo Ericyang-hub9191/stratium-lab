@@ -1,4 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { Home, Zap, Flame, TrendingUp, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -144,8 +145,18 @@ export default function Layout() {
       </header>
 
       {/* ── Page content ── */}
-      <main className="flex-1 overflow-y-auto pb-20">
-        <Outlet context={{ deepDive, streak, xp }} />
+      <main className="flex-1 overflow-y-auto pb-20" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18, ease: 'easeInOut' }}
+          >
+            <Outlet context={{ deepDive, streak, xp }} />
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* ── Bottom tab bar ── */}

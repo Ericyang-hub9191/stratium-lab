@@ -34,6 +34,9 @@ export default function Home() {
   const [loading,     setLoading]     = useState(true);
 
   const milestoneRef = useRef(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const touchStartY = useRef(0);
+  const [pullDist, setPullDist] = useState(0);
   const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * SIGNAL_TIPS.length));
 
   useEffect(() => {
@@ -72,6 +75,31 @@ export default function Home() {
     })();
   }, []);
 
+  const reload = async () => {
+    setRefreshing(true);
+    setLoading(true);
+    try {
+      const user = await base44.auth.me();
+      const [streaks, stats, missions, wins] = await Promise.all([
+        base44.entities.Streak.filter({ userId: user.id }),
+        base44.entities.UserStats.filter({ userId: user.id }),
+        base44.entities.Mission.filter({ type: deepDive ? "deep-dive" : "quick-win" }, "-created_date", 1),
+        base44.entities.WinLog.filter({ userId: user.id }, "-created_date", 10),
+      ]);
+      setStreak(streaks[0]?.currentStreak ?? 0);
+      setXp(stats[0]?.totalXp ?? 0);
+      if (missions[0]) setMission(missions[0]);
+      setRecentWins(wins.slice(0, 4));
+      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const weekWins = wins.filter(w => w.created_date >= oneWeekAgo);
+      const totalSaved = weekWins.reduce((s, w) => s + (w.timeSavedMinutes ?? 0), 0);
+      const avgBoost = weekWins.length ? +(weekWins.reduce((s, w) => s + (w.correctnessBoost ?? 0), 0) / weekWins.length).toFixed(1) : 0;
+      setWeeklyStats({ timeSaved: totalSaved, missions: weekWins.length, avgBoost });
+    } catch (_) {}
+    setLoading(false);
+    setRefreshing(false);
+  };
+
   const weeklyGoal   = 7;
   const signalTip    = SIGNAL_TIPS[tipIndex];
   const weekPct      = Math.min(Math.round((weeklyStats.missions / weeklyGoal) * 100), 100);
@@ -79,8 +107,32 @@ export default function Home() {
     ? `${(weeklyStats.timeSaved / 60).toFixed(1)} hrs`
     : `${weeklyStats.timeSaved} min`;
 
+  const handleTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
+  const handleTouchMove = (e) => {
+    const dist = e.touches[0].clientY - touchStartY.current;
+    if (dist > 0 && window.scrollY === 0) setPullDist(Math.min(dist, 80));
+  };
+  const handleTouchEnd = () => {
+    if (pullDist > 60) reload();
+    setPullDist(0);
+  };
+
   return (
-    <div className="px-4 py-5 space-y-5">
+    <div
+      className="px-4 py-5 space-y-5"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Pull-to-refresh indicator */}
+      {(pullDist > 10 || refreshing) && (
+        <div className="flex justify-center" style={{ marginTop: -16, marginBottom: -8 }}>
+          <div
+            className="w-6 h-6 border-2 border-[#00f5ff]/40 border-t-[#00f5ff] rounded-full"
+            style={{ animation: refreshing ? 'spin 0.7s linear infinite' : 'none', opacity: refreshing ? 1 : pullDist / 80 }}
+          />
+        </div>
+      )}
 
       {/* ── Streak hero ── */}
       <div className="flex items-center justify-between px-1">
