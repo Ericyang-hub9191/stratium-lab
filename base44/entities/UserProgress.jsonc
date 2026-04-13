@@ -1,0 +1,39 @@
+{
+  "name": "UserProgress",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string",
+      "description": "User ID"
+    },
+    "completedMissionIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of all completed missions"
+    },
+    "categoryXp": {
+      "type": "object",
+      "description": "XP breakdown by category, e.g. {prompting: 120, writing: 80}"
+    },
+    "streakId": {
+      "type": "string",
+      "description": "Reference to the user Streak record"
+    },
+    "favoriteCategories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "User's preferred mission categories"
+    },
+    "lastMissionDate": {
+      "type": "string",
+      "description": "ISO date of last mission attempt"
+    }
+  },
+  "required": [
+    "userId"
+  ]
+}

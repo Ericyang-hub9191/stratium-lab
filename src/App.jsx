@@ -5,7 +5,12 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-// Add page imports here
+import AppLayout from './components/AppLayout';
+import Home from './pages/Home';
+import Missions from './pages/Missions';
+import StreakPage from './pages/StreakPage';
+import Progress from './pages/Progress';
+import Me from './pages/Me';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -33,8 +38,14 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
-      <Route path="*" element={<PageNotFound />} />
+      <Route element={<AppLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/missions" element={<Missions />} />
+        <Route path="/streak" element={<StreakPage />} />
+        <Route path="/progress" element={<Progress />} />
+        <Route path="/me" element={<Me />} />
+        <Route path="*" element={<PageNotFound />} />
+      </Route>
     </Routes>
   );
 };

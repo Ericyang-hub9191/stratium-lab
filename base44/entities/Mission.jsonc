@@ -1,0 +1,63 @@
+{
+  "name": "Mission",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Mission title"
+    },
+    "durationMinutes": {
+      "type": "number",
+      "description": "Duration in minutes (3-5 for quick-win)"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "quick-win",
+        "deep-dive"
+      ],
+      "description": "Mission type"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "prompting",
+        "writing",
+        "research",
+        "automation",
+        "python",
+        "rag",
+        "data",
+        "productivity"
+      ],
+      "description": "Skill category"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the mission teaches"
+    },
+    "applyInstruction": {
+      "type": "string",
+      "description": "Clear action to try right now in Docs/Email/Notion/etc."
+    },
+    "xpReward": {
+      "type": "number",
+      "description": "XP earned on completion"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Searchable tags"
+    }
+  },
+  "required": [
+    "title",
+    "type",
+    "category",
+    "description",
+    "applyInstruction",
+    "xpReward"
+  ]
+}

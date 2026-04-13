@@ -1,0 +1,37 @@
+{
+  "name": "Streak",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string",
+      "description": "User ID"
+    },
+    "currentStreak": {
+      "type": "number",
+      "default": 0,
+      "description": "Current consecutive days"
+    },
+    "longestStreak": {
+      "type": "number",
+      "default": 0,
+      "description": "All-time longest streak"
+    },
+    "lastCompletedDate": {
+      "type": "string",
+      "description": "ISO date of last completed mission"
+    },
+    "freezeCount": {
+      "type": "number",
+      "default": 3,
+      "description": "Remaining streak freezes"
+    },
+    "totalWins": {
+      "type": "number",
+      "default": 0,
+      "description": "Total missions completed"
+    }
+  },
+  "required": [
+    "userId"
+  ]
+}

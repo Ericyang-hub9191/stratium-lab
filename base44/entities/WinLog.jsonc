@@ -1,0 +1,39 @@
+{
+  "name": "WinLog",
+  "type": "object",
+  "properties": {
+    "missionId": {
+      "type": "string",
+      "description": "ID of the completed mission"
+    },
+    "userId": {
+      "type": "string",
+      "description": "User who completed it"
+    },
+    "timeSavedMinutes": {
+      "type": "number",
+      "description": "Estimated minutes saved by applying the win"
+    },
+    "correctnessBoost": {
+      "type": "number",
+      "description": "Self-rated improvement 1-5"
+    },
+    "note": {
+      "type": "string",
+      "description": "Optional reflection note"
+    },
+    "appliedAt": {
+      "type": "string",
+      "description": "ISO date when applied"
+    },
+    "xpEarned": {
+      "type": "number",
+      "description": "XP earned for this win"
+    }
+  },
+  "required": [
+    "missionId",
+    "userId",
+    "xpEarned"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "name": "UserStats",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string",
+      "description": "User ID"
+    },
+    "totalXp": {
+      "type": "number",
+      "default": 0,
+      "description": "Lifetime XP"
+    },
+    "currentLevel": {
+      "type": "number",
+      "default": 1,
+      "description": "Current level"
+    },
+    "totalTimeSaved": {
+      "type": "number",
+      "default": 0,
+      "description": "Total minutes saved"
+    },
+    "totalMissionsCompleted": {
+      "type": "number",
+      "default": 0,
+      "description": "Lifetime missions completed"
+    },
+    "badges": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Earned badge IDs"
+    }
+  },
+  "required": [
+    "userId"
+  ]
+}
