@@ -3,7 +3,7 @@ import { Home, Zap, Flame, TrendingUp, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
-const tabs = [
+const TABS = [
   { path: "/", icon: Home, label: "Home" },
   { path: "/missions", icon: Zap, label: "Missions" },
   { path: "/streak", icon: Flame, label: "Streak" },
@@ -16,119 +16,88 @@ export default function Layout() {
   const [deepDive, setDeepDive] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-lg mx-auto relative">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border px-4 py-3">
-        <div className="flex items-center justify-between">
-          {/* Streak flame + count */}
-          <div className="flex items-center gap-2">
-            <span
-              className="text-2xl animate-bounce"
-              style={{ animationDuration: "1.4s" }}
-              role="img"
-              aria-label="streak"
-            >
-              🔥
-            </span>
-            <div className="leading-none">
-              <span className="text-xl font-black" style={{ color: "#00f5ff" }}>
-                0
-              </span>
-              <span className="text-xs text-muted-foreground ml-1 font-medium">
-                streak
-              </span>
-            </div>
-          </div>
+    <div className="min-h-screen bg-background flex flex-col max-w-lg mx-auto">
 
-          {/* Deep Dive toggle pill */}
-          <button
-            onClick={() => setDeepDive((v) => !v)}
-            className={cn(
-              "relative flex items-center rounded-full px-1 py-1 text-xs font-semibold transition-all duration-300 border",
-              deepDive
-                ? "border-[#39ff14] bg-[#39ff14]/10"
-                : "border-border bg-secondary"
-            )}
-            style={{ minWidth: 148 }}
-          >
-            <span
-              className={cn(
-                "px-3 py-1 rounded-full transition-all duration-300 text-xs font-bold",
-                !deepDive
-                  ? "bg-[#00f5ff] text-black shadow"
-                  : "text-muted-foreground"
-              )}
-            >
-              Quick-Win
-            </span>
-            <span
-              className={cn(
-                "px-3 py-1 rounded-full transition-all duration-300 text-xs font-bold",
-                deepDive
-                  ? "bg-[#39ff14] text-black shadow"
-                  : "text-muted-foreground"
-              )}
-            >
-              Deep Dive
-            </span>
-          </button>
+      {/* ── Header ── */}
+      <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between gap-2">
 
-          {/* XP */}
-          <div className="flex items-center gap-1">
-            <span className="text-base">⚡</span>
-            <span
-              className="text-sm font-black"
-              style={{ color: "#39ff14" }}
-            >
-              0
-            </span>
-            <span className="text-xs text-muted-foreground font-medium">
-              XP
-            </span>
-          </div>
+        {/* Streak flame + count */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-3xl" style={{ display: "inline-block", animation: "bounce 1.4s infinite" }}>
+            🔥
+          </span>
+          <span className="text-2xl font-black tabular-nums" style={{ color: "#00f5ff" }}>0</span>
+          <span className="text-xs text-muted-foreground font-medium">streak</span>
         </div>
+
+        {/* Quick-Win / Deep Dive toggle pill */}
+        <button
+          onClick={() => setDeepDive(v => !v)}
+          className="flex items-center rounded-full p-1 border transition-colors duration-300"
+          style={{
+            borderColor: deepDive ? "#39ff14" : "#00f5ff",
+            background: "transparent",
+          }}
+        >
+          <span
+            className="px-3 py-1 rounded-full text-[11px] font-bold transition-all duration-300"
+            style={!deepDive ? { background: "#00f5ff", color: "#000" } : { color: "var(--muted-foreground)" }}
+          >
+            Quick-Win
+          </span>
+          <span
+            className="px-3 py-1 rounded-full text-[11px] font-bold transition-all duration-300"
+            style={deepDive ? { background: "#39ff14", color: "#000" } : { color: "var(--muted-foreground)" }}
+          >
+            Deep Dive
+          </span>
+        </button>
+
+        {/* XP */}
+        <div className="flex items-center gap-1">
+          <span className="text-base">⚡</span>
+          <span className="text-lg font-black tabular-nums" style={{ color: "#39ff14" }}>0</span>
+          <span className="text-xs text-muted-foreground font-medium">XP</span>
+        </div>
+
       </header>
 
-      {/* Page content */}
-      <main className="flex-1 overflow-y-auto pb-24">
+      {/* ── Page content ── */}
+      <main className="flex-1 overflow-y-auto pb-20">
         <Outlet context={{ deepDive }} />
       </main>
 
-      {/* Bottom tab bar */}
-      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-lg z-50 border-t border-border bg-background/90 backdrop-blur-xl">
-        <div className="flex items-center justify-around h-16 px-2">
-          {tabs.map(({ path, icon: Icon, label }) => {
-            const active =
-              path === "/" ? pathname === "/" : pathname.startsWith(path);
-            return (
-              <Link
-                key={path}
-                to={path}
-                className={cn(
-                  "flex flex-col items-center gap-0.5 flex-1 py-2 rounded-xl transition-all duration-200",
-                  active ? "opacity-100" : "opacity-50 hover:opacity-75"
-                )}
-              >
-                <Icon
-                  className="w-5 h-5 transition-transform duration-200"
-                  style={
-                    active
-                      ? { color: "#00f5ff", transform: "scale(1.15)" }
-                      : {}
-                  }
-                  strokeWidth={active ? 2.5 : 1.8}
-                />
-                <span
-                  className="text-[10px] font-semibold"
-                  style={active ? { color: "#00f5ff" } : {}}
+      {/* ── Bottom tab bar ── */}
+      <nav className="fixed bottom-0 inset-x-0 z-50 flex justify-center">
+        <div className="w-full max-w-lg bg-background/90 backdrop-blur-xl border-t border-border">
+          <div className="flex items-center justify-around h-16 px-2">
+            {TABS.map(({ path, icon: Icon, label }) => {
+              const active = path === "/" ? pathname === "/" : pathname.startsWith(path);
+              return (
+                <Link
+                  key={path}
+                  to={path}
+                  className="flex flex-col items-center gap-0.5 flex-1 py-2 transition-opacity duration-150"
+                  style={{ opacity: active ? 1 : 0.45 }}
                 >
-                  {label}
-                </span>
-              </Link>
-            );
-          })}
+                  <Icon
+                    className="w-5 h-5 transition-transform duration-200"
+                    strokeWidth={active ? 2.5 : 1.8}
+                    style={active ? { color: "#00f5ff", transform: "scale(1.15)" } : {}}
+                  />
+                  <span
+                    className="text-[10px] font-semibold"
+                    style={active ? { color: "#00f5ff" } : {}}
+                  >
+                    {label}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </nav>
+
     </div>
   );
 }
