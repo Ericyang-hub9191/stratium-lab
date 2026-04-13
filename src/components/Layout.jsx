@@ -73,7 +73,7 @@ export default function Layout() {
       {/* ── Header ── */}
       <header
         className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border px-4 flex items-center justify-between gap-2"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)', paddingBottom: '12px' }}
+        style={{ paddingTop: 'env(safe-area-inset-top, 12px)', paddingBottom: '12px' }}
       >
 
         {/* Streak flame + count */}
