@@ -39,45 +39,7 @@ export default function Home() {
   const [pullDist, setPullDist] = useState(0);
   const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * SIGNAL_TIPS.length));
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const user = await base44.auth.me();
-        const [streaks, stats, missions, wins] = await Promise.all([
-          base44.entities.Streak.filter({ userId: user.id }),
-          base44.entities.UserStats.filter({ userId: user.id }),
-          base44.entities.Mission.filter({ type: deepDive ? "deep-dive" : "quick-win" }, "-created_date", 1),
-          base44.entities.WinLog.filter({ userId: user.id }, "-created_date", 10),
-        ]);
-
-        const currentStreak = streaks[0]?.currentStreak ?? 0;
-        setStreak(currentStreak);
-        setXp(stats[0]?.totalXp ?? 0);
-        if (missions[0]) setMission(missions[0]);
-        setRecentWins(wins.slice(0, 4));
-
-        // Weekly stats
-        const oneWeekAgo  = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-        const weekWins    = wins.filter(w => w.created_date >= oneWeekAgo);
-        const totalSaved  = weekWins.reduce((s, w) => s + (w.timeSavedMinutes ?? 0), 0);
-        const avgBoost    = weekWins.length
-          ? +(weekWins.reduce((s, w) => s + (w.correctnessBoost ?? 0), 0) / weekWins.length).toFixed(1)
-          : 0;
-        setWeeklyStats({ timeSaved: totalSaved, missions: weekWins.length, avgBoost });
-
-        // Milestone confetti
-        if (!milestoneRef.current && currentStreak > 0 && currentStreak % 7 === 0) {
-          milestoneRef.current = true;
-          confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors: ["#00f5ff", "#39ff14", "#ffffff", "#fb923c"] });
-        }
-      } catch (_) {}
-      setLoading(false);
-    })();
-  }, []);
-
-  const reload = async () => {
-    setRefreshing(true);
-    setLoading(true);
+  const loadData = async () => {
     try {
       const user = await base44.auth.me();
       const [streaks, stats, missions, wins] = await Promise.all([
@@ -86,16 +48,32 @@ export default function Home() {
         base44.entities.Mission.filter({ type: deepDive ? "deep-dive" : "quick-win" }, "-created_date", 1),
         base44.entities.WinLog.filter({ userId: user.id }, "-created_date", 10),
       ]);
-      setStreak(streaks[0]?.currentStreak ?? 0);
+      const currentStreak = streaks[0]?.currentStreak ?? 0;
+      setStreak(currentStreak);
       setXp(stats[0]?.totalXp ?? 0);
       if (missions[0]) setMission(missions[0]);
       setRecentWins(wins.slice(0, 4));
       const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const weekWins = wins.filter(w => w.created_date >= oneWeekAgo);
       const totalSaved = weekWins.reduce((s, w) => s + (w.timeSavedMinutes ?? 0), 0);
-      const avgBoost = weekWins.length ? +(weekWins.reduce((s, w) => s + (w.correctnessBoost ?? 0), 0) / weekWins.length).toFixed(1) : 0;
+      const avgBoost = weekWins.length
+        ? +(weekWins.reduce((s, w) => s + (w.correctnessBoost ?? 0), 0) / weekWins.length).toFixed(1)
+        : 0;
       setWeeklyStats({ timeSaved: totalSaved, missions: weekWins.length, avgBoost });
+      if (!milestoneRef.current && currentStreak > 0 && currentStreak % 7 === 0) {
+        milestoneRef.current = true;
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors: ["#00f5ff", "#39ff14", "#ffffff", "#fb923c"] });
+      }
     } catch (_) {}
+  };
+
+  useEffect(() => {
+    loadData().finally(() => setLoading(false));
+  }, []);
+
+  const reload = async () => {
+    setRefreshing(true);
+    await loadData();
     setLoading(false);
     setRefreshing(false);
   };
@@ -129,7 +107,8 @@ export default function Home() {
         <div className="flex justify-center" style={{ marginTop: -16, marginBottom: -8 }}>
           <div
             className="w-6 h-6 border-2 border-[#00f5ff]/40 border-t-[#00f5ff] rounded-full"
-            style={{ animation: refreshing ? 'spin 0.7s linear infinite' : 'none', opacity: refreshing ? 1 : pullDist / 80 }}
+            style={{ opacity: refreshing ? 1 : pullDist / 80 }}
+            className={`w-6 h-6 border-2 border-[#00f5ff]/40 border-t-[#00f5ff] rounded-full ${refreshing ? 'animate-spin' : ''}`}
           />
         </div>
       )}
