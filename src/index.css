@@ -103,7 +103,15 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
+  }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    overscroll-behavior: none;
+  }
+  button, a {
+    -webkit-tap-highlight-color: transparent;
   }
 }

@@ -1,4 +1,4 @@
-import { Bell, Palette, HelpCircle, LogOut, ChevronRight, Settings, Trash2 } from "lucide-react";
+import { Bell, Palette, HelpCircle, LogOut, ChevronRight, Settings, Trash2, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 
@@ -10,6 +10,32 @@ const MENU = [
 
 export default function Me() {
   const [resetting, setResetting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const user = await base44.auth.me();
+      const [streaks, stats, wins, progress] = await Promise.all([
+        base44.entities.Streak.filter({ userId: user.id }),
+        base44.entities.UserStats.filter({ userId: user.id }),
+        base44.entities.WinLog.filter({ userId: user.id }),
+        base44.entities.UserProgress.filter({ userId: user.id }),
+      ]);
+      await Promise.all([
+        ...streaks.map(r => base44.entities.Streak.delete(r.id)),
+        ...stats.map(r => base44.entities.UserStats.delete(r.id)),
+        ...wins.map(r => base44.entities.WinLog.delete(r.id)),
+        ...progress.map(r => base44.entities.UserProgress.delete(r.id)),
+      ]);
+      await base44.auth.deleteMe();
+      base44.auth.logout();
+    } catch (e) {
+      alert("Error deleting account: " + e.message);
+      setDeleting(false);
+    }
+  };
 
   const handleReset = async () => {
     if (!confirm("Reset all progress? This deletes your XP, streak, and win logs. Cannot be undone.")) return;
@@ -97,11 +123,64 @@ export default function Me() {
         <Trash2 className="w-4 h-4" /> {resetting ? "Resetting…" : "Reset Progress (Testing)"}
       </button>
 
+      {/* Delete Account */}
+      <button
+        onClick={() => setShowDeleteDialog(true)}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-red-500/30 text-red-400 text-sm font-bold hover:bg-red-500/5 transition-colors"
+      >
+        <AlertTriangle className="w-4 h-4" /> Delete My Account
+      </button>
+
       {/* Sign out */}
       <button onClick={() => base44.auth.logout()}
         className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-destructive/30 text-destructive text-sm font-bold hover:bg-destructive/5 transition-colors">
         <LogOut className="w-4 h-4" /> Sign Out
       </button>
+
+      {/* Delete Account Confirmation Dialog */}
+      {showDeleteDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowDeleteDialog(false)} />
+          <div className="relative w-full max-w-sm rounded-3xl border border-red-500/40 p-6 space-y-4"
+            style={{ background: 'hsl(var(--background))', boxShadow: '0 0 40px rgba(239,68,68,0.15)' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-500/15 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <h2 className="text-base font-black">Delete Account</h2>
+                <p className="text-xs text-muted-foreground">This cannot be undone</p>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4 space-y-1.5">
+              <p className="text-xs font-bold text-red-400">The following will be permanently deleted:</p>
+              <ul className="text-xs text-muted-foreground space-y-1">
+                <li>• All streak history and freeze power-ups</li>
+                <li>• All win logs and XP earned</li>
+                <li>• All badges and progress</li>
+                <li>• Your user account and profile</li>
+              </ul>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">You can create a new account at any time.</p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setShowDeleteDialog(false)}
+                className="py-3 rounded-2xl border bg-secondary text-sm font-bold transition-all active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                className="py-3 rounded-2xl text-sm font-black text-white transition-all active:scale-95 disabled:opacity-50"
+                style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', boxShadow: '0 0 16px rgba(239,68,68,0.4)' }}
+              >
+                {deleting ? 'Deleting…' : 'Delete Forever'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

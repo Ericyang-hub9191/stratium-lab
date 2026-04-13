@@ -14,6 +14,17 @@ const TABS = [
 
 export default function Layout() {
   const { pathname } = useLocation();
+
+  // Sync dark mode with system preference
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const apply = (dark) => {
+      document.documentElement.classList.toggle('dark', dark);
+    };
+    apply(mq.matches);
+    mq.addEventListener('change', e => apply(e.matches));
+    return () => mq.removeEventListener('change', e => apply(e.matches));
+  }, []);
   const [deepDive, setDeepDive] = useState(false);
   const [streak, setStreak] = useState(0);
   const [xp, setXp]         = useState(0);
@@ -60,7 +71,10 @@ export default function Layout() {
     <div className="min-h-screen bg-background flex flex-col max-w-lg mx-auto">
 
       {/* ── Header ── */}
-      <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between gap-2">
+      <header
+        className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border px-4 flex items-center justify-between gap-2"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)', paddingBottom: '12px' }}
+      >
 
         {/* Streak flame + count */}
         <div className="flex items-center gap-2">
@@ -136,7 +150,10 @@ export default function Layout() {
 
       {/* ── Bottom tab bar ── */}
       <nav className="fixed bottom-0 inset-x-0 z-50 flex justify-center">
-        <div className="w-full max-w-lg bg-background/95 backdrop-blur-xl border-t border-border">
+        <div
+          className="w-full max-w-lg bg-background/95 backdrop-blur-xl border-t border-border"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
           <div className="flex items-stretch h-16">
             {TABS.map(({ path, icon: Icon, label }) => {
               const active = path === "/" ? pathname === "/" : pathname.startsWith(path);
