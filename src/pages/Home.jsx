@@ -4,8 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import { base44 } from "@/api/base44Client";
 
-const SIGNAL_TIP =
-  "GPT-4o now supports real-time audio streaming. Use it to build voice-based AI workflows in under 10 minutes.";
+const SIGNAL_TIPS = [
+  "GPT-4o now supports real-time audio streaming. Build voice-based AI workflows in under 10 minutes.",
+  "Claude Opus can now process 200K-token contexts. Paste an entire codebase and ask it to audit for bugs.",
+  "Gemini 1.5 Pro reads entire PDFs natively — upload a 100-page report and ask it 5 targeted questions.",
+  "Chain two prompts: first extract facts, then generate your deliverable. Halves hallucination rate.",
+  "Use \"Act as a devil's advocate\" at the end of any analysis prompt to surface blind spots instantly.",
+  "Notion AI can now summarize your entire workspace — try it on your weekly notes for a 2-min brief.",
+  "Perplexity's Deep Research mode cites live sources — use it for any fact-checked research task.",
+];
 
 const CATEGORY_COLORS = {
   prompting:  "#00f5ff",
@@ -27,6 +34,7 @@ export default function Home() {
   const [loading,     setLoading]     = useState(true);
 
   const milestoneRef = useRef(false);
+  const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * SIGNAL_TIPS.length));
 
   useEffect(() => {
     (async () => {
@@ -65,6 +73,7 @@ export default function Home() {
   }, []);
 
   const weeklyGoal   = 7;
+  const signalTip    = SIGNAL_TIPS[tipIndex];
   const weekPct      = Math.min(Math.round((weeklyStats.missions / weeklyGoal) * 100), 100);
   const hoursDisplay = weeklyStats.timeSaved >= 60
     ? `${(weeklyStats.timeSaved / 60).toFixed(1)} hrs`
@@ -247,9 +256,12 @@ export default function Home() {
           <span className="text-xs font-bold uppercase tracking-wider text-[#a78bfa]">Signal Snapshot</span>
           <span className="text-[10px] text-muted-foreground ml-auto">Frontier tip</span>
         </div>
-        <p className="text-xs text-foreground leading-relaxed">{SIGNAL_TIP}</p>
-        <button className="text-xs font-bold flex items-center gap-0.5 text-[#a78bfa]">
-          Explore missions on this <ChevronRight className="w-3 h-3" />
+        <p className="text-xs text-foreground leading-relaxed">{signalTip}</p>
+        <button
+          onClick={() => setTipIndex(i => (i + 1) % SIGNAL_TIPS.length)}
+          className="text-xs font-bold flex items-center gap-0.5 text-[#a78bfa]"
+        >
+          Next tip <ChevronRight className="w-3 h-3" />
         </button>
       </div>
 

@@ -1,4 +1,5 @@
-import { Bell, Palette, HelpCircle, LogOut, ChevronRight, Settings } from "lucide-react";
+import { Bell, Palette, HelpCircle, LogOut, ChevronRight, Settings, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 
 const MENU = [
@@ -8,6 +9,33 @@ const MENU = [
 ];
 
 export default function Me() {
+  const [resetting, setResetting] = useState(false);
+
+  const handleReset = async () => {
+    if (!confirm("Reset all progress? This deletes your XP, streak, and win logs. Cannot be undone.")) return;
+    setResetting(true);
+    try {
+      const user = await base44.auth.me();
+      const [streaks, stats, wins, progress] = await Promise.all([
+        base44.entities.Streak.filter({ userId: user.id }),
+        base44.entities.UserStats.filter({ userId: user.id }),
+        base44.entities.WinLog.filter({ userId: user.id }),
+        base44.entities.UserProgress.filter({ userId: user.id }),
+      ]);
+      await Promise.all([
+        ...streaks.map(r => base44.entities.Streak.delete(r.id)),
+        ...stats.map(r => base44.entities.UserStats.delete(r.id)),
+        ...wins.map(r => base44.entities.WinLog.delete(r.id)),
+        ...progress.map(r => base44.entities.UserProgress.delete(r.id)),
+      ]);
+      window.dispatchEvent(new CustomEvent('win-logged'));
+      alert("✅ Progress reset! Refresh the app to start fresh.");
+    } catch (e) {
+      alert("Error: " + e.message);
+    }
+    setResetting(false);
+  };
+
   return (
     <div className="px-4 py-6 space-y-6">
       {/* Profile */}
@@ -59,6 +87,15 @@ export default function Me() {
           </button>
         ))}
       </div>
+
+      {/* Reset progress (testing) */}
+      <button
+        onClick={handleReset}
+        disabled={resetting}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-orange-500/30 text-orange-400 text-sm font-bold hover:bg-orange-500/5 transition-colors disabled:opacity-50"
+      >
+        <Trash2 className="w-4 h-4" /> {resetting ? "Resetting…" : "Reset Progress (Testing)"}
+      </button>
 
       {/* Sign out */}
       <button onClick={() => base44.auth.logout()}
