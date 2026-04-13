@@ -107,7 +107,25 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
       // still celebrate — don't block the dopamine hit
     }
 
+    // Check for level-up
+    try {
+      const user = await base44.auth.me();
+      const [statsArr] = await base44.entities.UserStats.filter({ userId: user.id });
+      if (statsArr) {
+        const oldLevel = statsArr.currentLevel ?? 1;
+        const newLevel = Math.floor(((statsArr.totalXp ?? 0)) / 500) + 1;
+        if (newLevel > oldLevel) {
+          setTimeout(() => {
+            confetti({ particleCount: 200, spread: 120, origin: { y: 0.4 }, colors: ["#a78bfa", "#00f5ff", "#39ff14", "#fb923c", "#ffffff"] });
+            setTimeout(() => confetti({ particleCount: 150, spread: 100, origin: { y: 0.5, x: 0.2 }, colors: ["#a78bfa", "#00f5ff", "#39ff14"] }), 300);
+            setTimeout(() => confetti({ particleCount: 150, spread: 100, origin: { y: 0.5, x: 0.8 }, colors: ["#fb923c", "#39ff14", "#ffffff"] }), 600);
+          }, 400);
+        }
+      }
+    } catch (_) {}
+
     fireWinConfetti();
+    window.dispatchEvent(new CustomEvent('win-logged'));
     setLogging(false);
     setDone(true);
 

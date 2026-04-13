@@ -17,6 +17,7 @@ export default function Layout() {
   const [deepDive, setDeepDive] = useState(false);
   const [streak, setStreak] = useState(0);
   const [xp, setXp]         = useState(0);
+  const [gems, setGems]     = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -28,9 +29,30 @@ export default function Layout() {
         ]);
         setStreak(streaks[0]?.currentStreak ?? 0);
         setXp(stats[0]?.totalXp ?? 0);
+        setGems(stats[0]?.gems ?? 10);
       } catch (_) {}
     })();
   }, [pathname]);
+
+  useEffect(() => {
+    const handler = () => {
+      // Re-fetch stats when a win is logged
+      (async () => {
+        try {
+          const user = await base44.auth.me();
+          const [streaks, stats] = await Promise.all([
+            base44.entities.Streak.filter({ userId: user.id }),
+            base44.entities.UserStats.filter({ userId: user.id }),
+          ]);
+          setStreak(streaks[0]?.currentStreak ?? 0);
+          setXp(stats[0]?.totalXp ?? 0);
+          setGems(stats[0]?.gems ?? 10);
+        } catch (_) {}
+      })();
+    };
+    window.addEventListener('win-logged', handler);
+    return () => window.removeEventListener('win-logged', handler);
+  }, []);
 
   const isHighStreak = streak >= 7;
 
@@ -93,11 +115,17 @@ export default function Layout() {
           </span>
         </button>
 
-        {/* XP */}
-        <div className="flex items-center gap-1">
-          <span className="text-base leading-none">⚡</span>
-          <span className="text-lg font-black tabular-nums text-[#39ff14]">{xp}</span>
-          <span className="text-xs text-muted-foreground font-medium">XP</span>
+        {/* Gems + XP */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <span className="text-base leading-none">💎</span>
+            <span className="text-sm font-black tabular-nums" style={{ color: "#a78bfa" }}>{gems}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-base leading-none">⚡</span>
+            <span className="text-lg font-black tabular-nums text-[#39ff14]">{xp}</span>
+            <span className="text-xs text-muted-foreground font-medium">XP</span>
+          </div>
         </div>
       </header>
 
