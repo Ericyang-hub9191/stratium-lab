@@ -1,10 +1,10 @@
-import { useOutletContext } from "react-router-dom";
-import { Zap, Clock, ChevronRight, TrendingUp, Sparkles, CheckCircle2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useOutletContext, useNavigate } from "react-router-dom";
+import { Zap, Clock, ChevronRight, TrendingUp, Sparkles } from "lucide-react";
+import { useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
 
-// ── Placeholder data ──────────────────────────────────────────────────
 const TODAY_MISSION = {
+  id: "mission-001",
   title: "Prompt Power-Up",
   type: "quick-win",
   durationMinutes: 3,
@@ -30,15 +30,12 @@ const CATEGORY_COLORS = {
   automation: "#f472b6",
 };
 
-// ── Component ─────────────────────────────────────────────────────────
 export default function Home() {
   const { deepDive } = useOutletContext() || {};
-  const [started, setStarted] = useState(false);
-  const [toastMsg, setToastMsg] = useState("");
-  const streakNumber = 7; // placeholder
+  const navigate = useNavigate();
   const milestoneRef = useRef(false);
+  const streakNumber = 7;
 
-  // Fire confetti on streak milestone
   useEffect(() => {
     if (!milestoneRef.current && streakNumber > 0 && streakNumber % 7 === 0) {
       milestoneRef.current = true;
@@ -51,26 +48,8 @@ export default function Home() {
     }
   }, []);
 
-  const showToast = (msg) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(""), 2500);
-  };
-
-  const handleStart = () => {
-    setStarted(true);
-    showToast(deepDive ? "Deep Dive mode — let's go 🚀" : "Quick-Win activated ⚡");
-  };
-
   return (
-    <div className="px-4 py-5 space-y-5 relative">
-
-      {/* ── Toast ── */}
-      {toastMsg && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-2xl text-sm font-bold text-black shadow-xl transition-all"
-          style={{ background: "#00f5ff", boxShadow: "0 0 24px rgba(0,245,255,0.5)" }}>
-          {toastMsg}
-        </div>
-      )}
+    <div className="px-4 py-5 space-y-5">
 
       {/* ── Streak hero ── */}
       <div className="flex items-center justify-between px-1">
@@ -102,11 +81,9 @@ export default function Home() {
           boxShadow: "0 0 40px rgba(0,245,255,0.08)",
         }}
       >
-        {/* Glow orb */}
         <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
           style={{ background: "radial-gradient(circle, rgba(0,245,255,0.15), transparent 70%)" }} />
 
-        {/* Badge row */}
         <div className="flex items-center justify-between">
           <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1 rounded-full"
             style={{ background: deepDive ? "#39ff14" : "#00f5ff", color: "#000" }}>
@@ -121,7 +98,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Title */}
         <div>
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-1">
             Today's Mission
@@ -132,28 +108,17 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Apply instruction */}
         <div className="rounded-2xl px-4 py-3 text-xs font-medium leading-relaxed"
           style={{ background: "rgba(57,255,20,0.1)", color: "#39ff14", borderLeft: "3px solid #39ff14" }}>
           💡 <span className="font-bold">Apply now:</span> {TODAY_MISSION.applyInstruction}
         </div>
 
-        {/* CTA */}
         <button
-          onClick={handleStart}
+          onClick={() => navigate(`/mission/${TODAY_MISSION.id}`)}
           className="w-full py-4 rounded-2xl text-base font-black text-black flex items-center justify-center gap-2 transition-all duration-200 active:scale-95"
-          style={{
-            background: started
-              ? "linear-gradient(90deg, #39ff14, #00f5ff)"
-              : "#00f5ff",
-            boxShadow: `0 0 ${started ? "28px" : "16px"} rgba(0,245,255,${started ? "0.6" : "0.35"})`,
-          }}
+          style={{ background: "#00f5ff", boxShadow: "0 0 20px rgba(0,245,255,0.4)" }}
         >
-          {started ? (
-            <><CheckCircle2 className="w-5 h-5" /> Mission In Progress</>
-          ) : (
-            <><Zap className="w-5 h-5" /> Start Mission</>
-          )}
+          <Zap className="w-5 h-5" /> Start Mission
         </button>
       </div>
 
@@ -179,7 +144,6 @@ export default function Home() {
             </div>
           ))}
         </div>
-        {/* Progress bar toward weekly goal */}
         <div>
           <div className="flex justify-between text-[10px] text-muted-foreground mb-1.5">
             <span>5 / 7 missions this week</span>
@@ -196,12 +160,11 @@ export default function Home() {
       <div className="space-y-2.5">
         <div className="flex items-center justify-between px-1">
           <h3 className="text-sm font-bold">Recent Wins</h3>
-          <button className="flex items-center gap-0.5 text-xs font-semibold"
-            style={{ color: "#00f5ff" }}>
+          <button className="flex items-center gap-0.5 text-xs font-semibold" style={{ color: "#00f5ff" }}>
             All wins <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory scrollbar-hide">
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory">
           {RECENT_WINS.map((win) => (
             <div key={win.id}
               className="shrink-0 w-44 rounded-2xl border bg-card p-3.5 space-y-2.5 snap-start"
@@ -210,7 +173,7 @@ export default function Home() {
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                   style={{
                     background: `${CATEGORY_COLORS[win.category] || "#00f5ff"}22`,
-                    color: CATEGORY_COLORS[win.category] || "#00f5ff"
+                    color: CATEGORY_COLORS[win.category] || "#00f5ff",
                   }}>
                   {win.category}
                 </span>
@@ -218,9 +181,7 @@ export default function Home() {
               </div>
               <p className="text-xs font-bold leading-snug line-clamp-2">{win.title}</p>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-muted-foreground">
-                  ⏱ {win.timeSaved}m saved
-                </span>
+                <span className="text-[10px] text-muted-foreground">⏱ {win.timeSaved}m saved</span>
                 <span className="text-[10px] font-bold" style={{ color: "#39ff14" }}>
                   {"★".repeat(win.correctnessBoost)}
                 </span>
@@ -232,10 +193,7 @@ export default function Home() {
 
       {/* ── Signal Snapshot ── */}
       <div className="rounded-3xl border p-4 space-y-2"
-        style={{
-          borderColor: "rgba(167,139,250,0.3)",
-          background: "rgba(167,139,250,0.05)",
-        }}>
+        style={{ borderColor: "rgba(167,139,250,0.3)", background: "rgba(167,139,250,0.05)" }}>
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4" style={{ color: "#a78bfa" }} />
           <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#a78bfa" }}>
@@ -244,8 +202,7 @@ export default function Home() {
           <span className="text-[10px] text-muted-foreground ml-auto">Frontier tip</span>
         </div>
         <p className="text-xs text-foreground leading-relaxed">{SIGNAL_TIP}</p>
-        <button className="text-xs font-bold flex items-center gap-0.5"
-          style={{ color: "#a78bfa" }}>
+        <button className="text-xs font-bold flex items-center gap-0.5" style={{ color: "#a78bfa" }}>
           Explore missions on this <ChevronRight className="w-3 h-3" />
         </button>
       </div>

@@ -8,6 +8,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Missions from './pages/Missions';
+import MissionExperience from './pages/MissionExperience';
 import Streak from './pages/Streak';
 import Progress from './pages/Progress';
 import Me from './pages/Me';
@@ -41,6 +42,7 @@ const AuthenticatedApp = () => {
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/missions" element={<Missions />} />
+        <Route path="/mission/:id" element={<MissionExperience />} />
         <Route path="/streak" element={<Streak />} />
         <Route path="/progress" element={<Progress />} />
         <Route path="/me" element={<Me />} />
