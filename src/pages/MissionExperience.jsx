@@ -4,19 +4,7 @@ import { Clock, ChevronDown, ChevronUp, ArrowLeft, Zap } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import WinLoggerModal from "../components/WinLoggerModal";
 
-const FALLBACK_MISSION = {
-  id: "mission-001",
-  title: "Prompt Power-Up",
-  type: "quick-win",
-  durationMinutes: 3,
-  xpReward: 75,
-  category: "prompting",
-  description: "Vague prompts get vague answers. Learn to add role + task + format in under 3 minutes and watch output quality jump instantly.",
-  applyInstruction: "Open ChatGPT, Claude, or Gemini right now. Take your last prompt and rewrite it using this structure:\n\n🎯 Role: \"Act as a senior [job role]\"\n📋 Task: \"Help me [specific task]\"\n📐 Format: \"Respond as a [bullet list / email / table]\"",
-  learnWhy: "LLMs are next-token predictors. By specifying role, task, and format upfront you narrow the probability distribution toward exactly the output you need — no back-and-forth required. This single habit saves 8–15 minutes per session on average.",
-};
-
-function useTimer(minutes) {
+function useCountdown(minutes) {
   const totalSecs = (minutes || 3) * 60;
   const [seconds, setSeconds] = useState(totalSecs);
   const [running, setRunning] = useState(false);
@@ -31,29 +19,35 @@ function useTimer(minutes) {
     return () => clearInterval(ref.current);
   }, [running, seconds]);
 
-  const start = () => setRunning(true);
-  const mins = String(Math.floor(seconds / 60)).padStart(2, "0");
-  const secs = String(seconds % 60).padStart(2, "0");
+  // Reset when duration changes (mission loads)
+  useEffect(() => {
+    setSeconds(totalSecs);
+    setRunning(false);
+  }, [totalSecs]);
+
   const pct = ((totalSecs - seconds) / totalSecs) * 100;
-  return { display: `${mins}:${secs}`, start, running, done: seconds === 0, pct };
+  const display = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+  return { display, start: () => setRunning(true), running, done: seconds === 0, pct };
 }
 
 export default function MissionExperience() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [mission, setMission] = useState(FALLBACK_MISSION);
+  const [mission, setMission] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [learnOpen, setLearnOpen] = useState(false);
   const [applied, setApplied] = useState(false);
   const [loggerOpen, setLoggerOpen] = useState(false);
 
-  const timer = useTimer(mission.durationMinutes);
+  const timer = useCountdown(mission?.durationMinutes);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) { setLoading(false); return; }
     base44.entities.Mission.filter({ id })
       .then(([m]) => { if (m) setMission(m); })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [id]);
 
   const handleApply = () => {
@@ -61,7 +55,24 @@ export default function MissionExperience() {
     setApplied(true);
   };
 
-  const circumference = 2 * Math.PI * 16; // r=16
+  const circumference = 2 * Math.PI * 16;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-border border-t-[#00f5ff] rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!mission) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-6 text-center">
+        <p className="text-muted-foreground">Mission not found.</p>
+        <button onClick={() => navigate("/")} className="text-[#00f5ff] font-bold text-sm">Go Home</button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -72,10 +83,11 @@ export default function MissionExperience() {
           className="p-2 rounded-xl border bg-secondary flex items-center gap-1.5 text-sm font-medium">
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
-        <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-full"
-          style={{ background: "#00f5ff", color: "#000" }}>
+
+        <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-full text-black bg-[#00f5ff]">
           <Zap className="w-3 h-3" /> Quick-Win
         </span>
+
         {/* Circular countdown */}
         <div className="relative w-12 h-12">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 40 40">
@@ -84,7 +96,8 @@ export default function MissionExperience() {
               stroke={timer.done ? "#39ff14" : "#00f5ff"}
               strokeWidth="3"
               strokeDasharray={`${circumference * timer.pct / 100} ${circumference}`}
-              strokeLinecap="round" />
+              strokeLinecap="round"
+            />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-[9px] font-black tabular-nums"
@@ -95,15 +108,15 @@ export default function MissionExperience() {
         </div>
       </div>
 
-      {/* ── Scrollable body ── */}
+      {/* ── Body ── */}
       <div className="flex-1 overflow-y-auto px-4 py-5 space-y-6 pb-32">
 
         {/* Title + meta */}
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs text-muted-foreground font-semibold">
             <Clock className="w-3.5 h-3.5" />
-            {mission.durationMinutes ?? 3} min ·
-            <span style={{ color: "#39ff14" }}>+{mission.xpReward ?? 75} XP</span>
+            {mission.durationMinutes ?? 3} min
+            <span className="text-[#39ff14]">· +{mission.xpReward ?? 75} XP</span>
             · {mission.category}
           </div>
           <h1 className="text-3xl font-black tracking-tight leading-tight">{mission.title}</h1>
@@ -116,14 +129,12 @@ export default function MissionExperience() {
             borderColor: "rgba(0,245,255,0.4)",
             background: "linear-gradient(135deg, rgba(0,245,255,0.07), rgba(57,255,20,0.04))",
           }}>
-          <div className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: "#00f5ff" }}>
+          <div className="text-xs font-black uppercase tracking-widest mb-3 text-[#00f5ff]">
             ⚡ Try This Right Now
           </div>
           {(mission.applyInstruction ?? "").split("\n").map((line, i) => (
             <p key={i} className={`text-sm leading-relaxed ${
-              line.startsWith("🎯") || line.startsWith("📋") || line.startsWith("📐")
-                ? "font-bold"
-                : "text-muted-foreground"
+              /^[🎯📋📐]/.test(line) ? "font-bold" : "text-muted-foreground"
             }`}>
               {line || <br />}
             </p>
@@ -138,13 +149,12 @@ export default function MissionExperience() {
             placeholder={`Act as a senior [role].\nHelp me [task].\nRespond as a [format].`}
             className="w-full bg-secondary rounded-2xl px-4 py-3 text-sm resize-none outline-none border border-transparent focus:border-[#00f5ff] transition-colors placeholder:text-muted-foreground/50 font-mono"
           />
-          <p className="text-[10px] text-muted-foreground">Draft here, then paste it into your AI tool.</p>
+          <p className="text-[10px] text-muted-foreground">Draft here, then paste into your AI tool.</p>
         </div>
 
-        {/* Learn Why — collapsible, only after applying */}
-        {applied && (
-          <div className="rounded-3xl border overflow-hidden"
-            style={{ borderColor: "rgba(167,139,250,0.3)" }}>
+        {/* Learn Why — collapsible after applying */}
+        {applied && mission.learnWhy && (
+          <div className="rounded-3xl border overflow-hidden" style={{ borderColor: "rgba(167,139,250,0.3)" }}>
             <button
               onClick={() => setLearnOpen(v => !v)}
               className="w-full flex items-center justify-between px-5 py-4 text-sm font-bold"
@@ -155,7 +165,7 @@ export default function MissionExperience() {
             {learnOpen && (
               <div className="px-5 pb-5 text-sm text-muted-foreground leading-relaxed"
                 style={{ background: "rgba(167,139,250,0.05)" }}>
-                {mission.learnWhy ?? "The science behind this technique will appear here."}
+                {mission.learnWhy}
               </div>
             )}
           </div>
@@ -170,13 +180,12 @@ export default function MissionExperience() {
           className="w-full max-w-sm mx-4 py-4 rounded-2xl text-base font-black text-black flex items-center justify-center gap-2 transition-all duration-200 active:scale-95"
           style={{
             background: applied ? "linear-gradient(90deg, #39ff14, #00e5ff)" : "#39ff14",
-            boxShadow: `0 0 ${applied ? "32px" : "20px"} rgba(57,255,20,${applied ? "0.6" : "0.4"})`,
+            boxShadow: applied ? "0 0 32px rgba(57,255,20,0.6)" : "0 0 20px rgba(57,255,20,0.4)",
           }}>
           {applied ? <><Zap className="w-5 h-5" /> Log Win 🏆</> : <>✅ I Applied It — Start Timer</>}
         </button>
       </div>
 
-      {/* ── Win Logger Modal ── */}
       <WinLoggerModal
         open={loggerOpen}
         onClose={() => setLoggerOpen(false)}

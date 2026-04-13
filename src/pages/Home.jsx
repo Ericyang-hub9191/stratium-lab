@@ -14,17 +14,7 @@ const CATEGORY_COLORS = {
   automation: "#f472b6",
 };
 
-// Fallback mission shown while loading
-const FALLBACK_MISSION = {
-  id: "mission-001",
-  title: "Prompt Power-Up",
-  type: "quick-win",
-  durationMinutes: 3,
-  xpReward: 75,
-  category: "prompting",
-  description: "Rewrite a vague request into a crystal-clear prompt and watch the output quality jump.",
-  applyInstruction: "Open ChatGPT right now. Rewrite your last prompt using role + task + format.",
-};
+const WEEKLY_GOAL = 7;
 
 export default function Home() {
   const { deepDive } = useOutletContext() || {};
@@ -32,14 +22,14 @@ export default function Home() {
 
   const [streak, setStreak] = useState(0);
   const [xp, setXp] = useState(0);
-  const [mission, setMission] = useState(FALLBACK_MISSION);
+  const [mission, setMission] = useState(null);
   const [recentWins, setRecentWins] = useState([]);
-  const [weeklyStats, setWeeklyStats] = useState({ timeSaved: 0, missions: 0, avgBoost: 0 });
-
+  const [weeklyStats, setWeeklyStats] = useState({ timeSaved: 0, missions: 0, avgBoost: "0" });
+  const [loading, setLoading] = useState(true);
   const milestoneRef = useRef(false);
 
   useEffect(() => {
-    const load = async () => {
+    (async () => {
       try {
         const user = await base44.auth.me();
         const [streaks, stats, missions, wins] = await Promise.all([
@@ -55,27 +45,24 @@ export default function Home() {
         if (missions[0]) setMission(missions[0]);
         setRecentWins(wins.slice(0, 4));
 
-        // Weekly stats
         const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-        const weekWins = wins.filter(w => w.created_date >= oneWeekAgo);
+        const weekWins = wins.filter(w => (w.created_date ?? "") >= oneWeekAgo);
         const totalTimeSaved = weekWins.reduce((s, w) => s + (w.timeSavedMinutes ?? 0), 0);
         const avgBoost = weekWins.length
           ? (weekWins.reduce((s, w) => s + (w.correctnessBoost ?? 0), 0) / weekWins.length).toFixed(1)
-          : 0;
+          : "0";
         setWeeklyStats({ timeSaved: totalTimeSaved, missions: weekWins.length, avgBoost });
 
-        // Streak milestone confetti
         if (!milestoneRef.current && currentStreak > 0 && currentStreak % 7 === 0) {
           milestoneRef.current = true;
           confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors: ["#00f5ff", "#39ff14", "#ffffff", "#fb923c"] });
         }
       } catch (_) {}
-    };
-    load();
+      setLoading(false);
+    })();
   }, []);
 
-  const weeklyGoal = 7;
-  const weekPct = Math.min(Math.round((weeklyStats.missions / weeklyGoal) * 100), 100);
+  const weekPct = Math.min(Math.round((weeklyStats.missions / WEEKLY_GOAL) * 100), 100);
   const hoursDisplay = weeklyStats.timeSaved >= 60
     ? `${(weeklyStats.timeSaved / 60).toFixed(1)} hrs`
     : `${weeklyStats.timeSaved} min`;
@@ -91,71 +78,78 @@ export default function Home() {
             🔥
           </span>
           <div>
-            <div className="text-3xl font-black leading-none" style={{ color: "#00f5ff" }}>
-              {streak} days
-            </div>
-            <div className="text-xs text-muted-foreground font-semibold mt-0.5">
-              Current streak — keep it alive!
-            </div>
+            <div className="text-3xl font-black leading-none text-[#00f5ff]">{streak} days</div>
+            <div className="text-xs text-muted-foreground font-semibold mt-0.5">Current streak — keep it alive!</div>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-black" style={{ color: "#39ff14" }}>{xp}</div>
+          <div className="text-2xl font-black text-[#39ff14]">{xp}</div>
           <div className="text-[10px] text-muted-foreground font-medium">Total XP</div>
         </div>
       </div>
 
       {/* ── Today's Mission card ── */}
-      <div className="rounded-3xl border p-5 space-y-4 relative overflow-hidden"
-        style={{
-          borderColor: "rgba(0,245,255,0.35)",
-          background: "linear-gradient(135deg, rgba(0,245,255,0.07) 0%, rgba(57,255,20,0.04) 100%)",
-          boxShadow: "0 0 40px rgba(0,245,255,0.08)",
-        }}>
-        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(0,245,255,0.15), transparent 70%)" }} />
+      {!loading && mission && (
+        <div className="rounded-3xl border p-5 space-y-4 relative overflow-hidden"
+          style={{
+            borderColor: "rgba(0,245,255,0.35)",
+            background: "linear-gradient(135deg, rgba(0,245,255,0.07) 0%, rgba(57,255,20,0.04) 100%)",
+            boxShadow: "0 0 40px rgba(0,245,255,0.08)",
+          }}>
+          <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
+            style={{ background: "radial-gradient(circle, rgba(0,245,255,0.15), transparent 70%)" }} />
 
-        <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1 rounded-full"
-            style={{ background: deepDive ? "#39ff14" : "#00f5ff", color: "#000" }}>
-            {deepDive ? "🔬 Deep Dive" : <><Zap className="w-3 h-3" />Quick-Win</>}
-          </span>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {deepDive ? "10 min" : `${mission.durationMinutes ?? 3} min`}
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1 rounded-full text-black"
+              style={{ background: deepDive ? "#39ff14" : "#00f5ff" }}>
+              {deepDive ? "🔬 Deep Dive" : <><Zap className="w-3 h-3" />Quick-Win</>}
             </span>
-            <span className="font-bold" style={{ color: "#39ff14" }}>+{mission.xpReward ?? 75} XP</span>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {deepDive ? "10 min" : `${mission.durationMinutes ?? 3} min`}
+              </span>
+              <span className="font-bold text-[#39ff14]">+{mission.xpReward ?? 75} XP</span>
+            </div>
           </div>
-        </div>
 
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-1">
-            Today's Mission
-          </p>
-          <h2 className="text-2xl font-black leading-tight">{mission.title}</h2>
-          <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{mission.description}</p>
-        </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-1">Today's Mission</p>
+            <h2 className="text-2xl font-black leading-tight">{mission.title}</h2>
+            <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{mission.description}</p>
+          </div>
 
-        <div className="rounded-2xl px-4 py-3 text-xs font-medium leading-relaxed"
-          style={{ background: "rgba(57,255,20,0.1)", color: "#39ff14", borderLeft: "3px solid #39ff14" }}>
-          💡 <span className="font-bold">Apply now:</span> {mission.applyInstruction}
-        </div>
+          <div className="rounded-2xl px-4 py-3 text-xs font-medium leading-relaxed text-[#39ff14]"
+            style={{ background: "rgba(57,255,20,0.1)", borderLeft: "3px solid #39ff14" }}>
+            💡 <span className="font-bold">Apply now:</span> {mission.applyInstruction}
+          </div>
 
-        <button
-          onClick={() => navigate(`/mission/${mission.id}`)}
-          className="w-full py-4 rounded-2xl text-base font-black text-black flex items-center justify-center gap-2 transition-all duration-200 active:scale-95"
-          style={{ background: "#00f5ff", boxShadow: "0 0 20px rgba(0,245,255,0.4)" }}>
-          <Zap className="w-5 h-5" /> Start Mission
-        </button>
-      </div>
+          <button
+            onClick={() => navigate(`/mission/${mission.id}`)}
+            className="w-full py-4 rounded-2xl text-base font-black text-black flex items-center justify-center gap-2 transition-all duration-200 active:scale-95"
+            style={{ background: "#00f5ff", boxShadow: "0 0 20px rgba(0,245,255,0.4)" }}>
+            <Zap className="w-5 h-5" /> Start Mission
+          </button>
+        </div>
+      )}
+
+      {/* Loading skeleton */}
+      {loading && (
+        <div className="rounded-3xl border p-5 space-y-4 animate-pulse"
+          style={{ borderColor: "rgba(0,245,255,0.2)" }}>
+          <div className="h-6 w-32 bg-secondary rounded-full" />
+          <div className="h-8 w-3/4 bg-secondary rounded-xl" />
+          <div className="h-4 w-full bg-secondary rounded-lg" />
+          <div className="h-14 w-full bg-secondary rounded-2xl" />
+        </div>
+      )}
 
       {/* ── Weekly impact ── */}
       <div className="rounded-3xl border bg-card p-4 space-y-3"
         style={{ borderColor: "rgba(57,255,20,0.2)" }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" style={{ color: "#39ff14" }} />
+            <TrendingUp className="w-4 h-4 text-[#39ff14]" />
             <span className="text-sm font-bold">This Week's Impact</span>
           </div>
           <span className="text-[10px] text-muted-foreground">Mon–Sun</span>
@@ -174,8 +168,8 @@ export default function Home() {
         </div>
         <div>
           <div className="flex justify-between text-[10px] text-muted-foreground mb-1.5">
-            <span>{weeklyStats.missions} / {weeklyGoal} missions this week</span>
-            <span className="font-semibold" style={{ color: "#39ff14" }}>{weekPct}%</span>
+            <span>{weeklyStats.missions} / {WEEKLY_GOAL} missions this week</span>
+            <span className="font-semibold text-[#39ff14]">{weekPct}%</span>
           </div>
           <div className="h-2 rounded-full bg-secondary overflow-hidden">
             <div className="h-full rounded-full transition-all duration-700"
@@ -189,7 +183,7 @@ export default function Home() {
         <div className="space-y-2.5">
           <div className="flex items-center justify-between px-1">
             <h3 className="text-sm font-bold">Recent Wins</h3>
-            <button className="flex items-center gap-0.5 text-xs font-semibold" style={{ color: "#00f5ff" }}>
+            <button className="flex items-center gap-0.5 text-xs font-semibold text-[#00f5ff]">
               All wins <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -212,7 +206,7 @@ export default function Home() {
                   <p className="text-xs font-bold leading-snug line-clamp-2">{win.note ?? "Mission win"}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-muted-foreground">⏱ {win.timeSavedMinutes ?? 0}m saved</span>
-                    <span className="text-[10px] font-bold" style={{ color: "#39ff14" }}>
+                    <span className="text-[10px] font-bold text-[#39ff14]">
                       {"★".repeat(win.correctnessBoost ?? 0)}
                     </span>
                   </div>
@@ -228,9 +222,7 @@ export default function Home() {
         style={{ borderColor: "rgba(167,139,250,0.3)", background: "rgba(167,139,250,0.05)" }}>
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4" style={{ color: "#a78bfa" }} />
-          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#a78bfa" }}>
-            Signal Snapshot
-          </span>
+          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#a78bfa" }}>Signal Snapshot</span>
           <span className="text-[10px] text-muted-foreground ml-auto">Frontier tip</span>
         </div>
         <p className="text-xs text-foreground leading-relaxed">{SIGNAL_TIP}</p>

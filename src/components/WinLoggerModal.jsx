@@ -3,30 +3,30 @@ import { X, Star, Zap } from "lucide-react";
 import confetti from "canvas-confetti";
 import { base44 } from "@/api/base44Client";
 
+// ── Confetti burst ────────────────────────────────────────────────────
 function fireWinConfetti() {
-  confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 }, colors: ["#39ff14", "#00f5ff", "#ffffff", "#fb923c"] });
-  setTimeout(() => confetti({ particleCount: 50, spread: 80, origin: { y: 0.5, x: 0.2 }, colors: ["#39ff14", "#ffffff"] }), 200);
-  setTimeout(() => confetti({ particleCount: 50, spread: 80, origin: { y: 0.5, x: 0.8 }, colors: ["#00f5ff", "#ffffff"] }), 400);
+  const colors = ["#39ff14", "#00f5ff", "#ffffff", "#fb923c"];
+  confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 }, colors });
+  setTimeout(() => confetti({ particleCount: 50, spread: 80, origin: { y: 0.5, x: 0.15 }, colors }), 220);
+  setTimeout(() => confetti({ particleCount: 50, spread: 80, origin: { y: 0.5, x: 0.85 }, colors }), 440);
 }
 
+// ── Streak logic ──────────────────────────────────────────────────────
 async function updateStreak(userId) {
   const today = new Date().toISOString().split("T")[0];
+  const yesterday = new Date(Date.now() - 86_400_000).toISOString().split("T")[0];
   const [existing] = await base44.entities.Streak.filter({ userId });
 
   if (existing) {
-    const lastDate = existing.lastCompletedDate;
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
-    const isConsecutive = lastDate === yesterday;
-    const alreadyToday = lastDate === today;
-
-    if (!alreadyToday) {
-      await base44.entities.Streak.update(existing.id, {
-        currentStreak: isConsecutive ? (existing.currentStreak ?? 0) + 1 : 1,
-        longestStreak: Math.max(existing.longestStreak ?? 0, isConsecutive ? (existing.currentStreak ?? 0) + 1 : 1),
-        lastCompletedDate: today,
-        totalWins: (existing.totalWins ?? 0) + 1,
-      });
-    }
+    if (existing.lastCompletedDate === today) return; // already logged today
+    const isConsecutive = existing.lastCompletedDate === yesterday;
+    const newStreak = isConsecutive ? (existing.currentStreak ?? 0) + 1 : 1;
+    await base44.entities.Streak.update(existing.id, {
+      currentStreak: newStreak,
+      longestStreak: Math.max(existing.longestStreak ?? 0, newStreak),
+      lastCompletedDate: today,
+      totalWins: (existing.totalWins ?? 0) + 1,
+    });
   } else {
     await base44.entities.Streak.create({
       userId,
@@ -39,6 +39,7 @@ async function updateStreak(userId) {
   }
 }
 
+// ── UserStats logic ───────────────────────────────────────────────────
 async function updateUserStats(userId, xpEarned) {
   const [existing] = await base44.entities.UserStats.filter({ userId });
   if (existing) {
@@ -50,17 +51,14 @@ async function updateUserStats(userId, xpEarned) {
     });
   } else {
     await base44.entities.UserStats.create({
-      userId,
-      totalXp: xpEarned,
-      currentLevel: 1,
-      totalMissionsCompleted: 1,
-      badges: [],
+      userId, totalXp: xpEarned, currentLevel: 1, totalMissionsCompleted: 1, badges: [],
     });
   }
 }
 
 const BOOST_LABELS = ["", "Slight nudge", "Noticeable lift", "Clear improvement", "Big jump", "Game changer"];
 
+// ── Component ─────────────────────────────────────────────────────────
 export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
   const [timeSaved, setTimeSaved] = useState(10);
   const [stars, setStars] = useState(3);
@@ -74,52 +72,60 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
 
   const handleLog = async () => {
     setLogging(true);
-    const user = await base44.auth.me();
-    await Promise.all([
-      base44.entities.WinLog.create({
-        missionId: mission?.id ?? "unknown",
-        userId: user.id,
-        timeSavedMinutes: timeSaved,
-        correctnessBoost: stars,
-        note: note.trim() || undefined,
-        appliedAt: new Date().toISOString(),
-        xpEarned,
-        category: mission?.category,
-      }),
-      updateStreak(user.id),
-      updateUserStats(user.id, xpEarned),
-    ]);
-
+    try {
+      const user = await base44.auth.me();
+      await Promise.all([
+        base44.entities.WinLog.create({
+          missionId: mission?.id ?? "unknown",
+          userId: user.id,
+          timeSavedMinutes: timeSaved,
+          correctnessBoost: stars,
+          note: note.trim() || undefined,
+          appliedAt: new Date().toISOString(),
+          xpEarned,
+          category: mission?.category,
+        }),
+        updateStreak(user.id),
+        updateUserStats(user.id, xpEarned),
+      ]);
+    } catch (_) {
+      // non-blocking — celebration fires regardless
+    }
     fireWinConfetti();
-    setDone(true);
     setLogging(false);
+    setDone(true);
     setTimeout(() => {
       setDone(false);
       onClose();
       onSuccess?.();
-    }, 2200);
+    }, 2400);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
+      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
+      {/* Sheet */}
       <div className="relative w-full max-w-lg rounded-t-3xl border-t border-border pb-8"
         style={{ background: "hsl(var(--background))", boxShadow: "0 -20px 60px rgba(0,0,0,0.4)" }}>
 
+        {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 rounded-full bg-border" />
         </div>
 
+        {/* ── Success state ── */}
         {done ? (
-          <div className="flex flex-col items-center justify-center py-12 space-y-4 px-6 text-center">
+          <div className="flex flex-col items-center justify-center py-14 space-y-4 px-6 text-center">
             <div className="text-6xl animate-bounce">🏆</div>
-            <h2 className="text-2xl font-black" style={{ color: "#39ff14" }}>Win Logged!</h2>
+            <h2 className="text-2xl font-black text-[#39ff14]">Win Logged!</h2>
             <p className="text-sm text-muted-foreground">
-              <span className="font-black" style={{ color: "#00f5ff" }}>+{xpEarned} XP</span> added · Streak protected 🔥
+              <span className="font-black text-[#00f5ff]">+{xpEarned} XP</span> added · Streak protected 🔥
             </p>
           </div>
         ) : (
+          /* ── Form state ── */
           <div className="px-5 pt-3 space-y-5">
 
             <div className="flex items-center justify-between">
@@ -132,25 +138,26 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
               </button>
             </div>
 
+            {/* Mission pill */}
             <div className="flex items-center gap-2 px-3 py-2 rounded-2xl"
               style={{ background: "rgba(0,245,255,0.08)", border: "1px solid rgba(0,245,255,0.2)" }}>
-              <Zap className="w-4 h-4 shrink-0" style={{ color: "#00f5ff" }} />
+              <Zap className="w-4 h-4 shrink-0 text-[#00f5ff]" />
               <span className="text-sm font-bold truncate">{mission?.title}</span>
-              <span className="ml-auto text-xs font-black shrink-0" style={{ color: "#39ff14" }}>+{xpEarned} XP</span>
+              <span className="ml-auto text-xs font-black shrink-0 text-[#39ff14]">+{xpEarned} XP</span>
             </div>
 
-            {/* Time saved */}
+            {/* Time saved slider */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-bold">Time Saved</label>
-                <span className="text-sm font-black" style={{ color: "#39ff14" }}>{timeSaved} min</span>
+                <span className="text-sm font-black text-[#39ff14]">{timeSaved} min</span>
               </div>
               <input type="range" min="0" max="60" step="1" value={timeSaved}
                 onChange={e => setTimeSaved(Number(e.target.value))}
                 className="w-full h-2 rounded-full outline-none cursor-pointer appearance-none"
                 style={{ accentColor: "#39ff14" }} />
               <div className="flex justify-between text-[10px] text-muted-foreground">
-                <span>0 min</span><span>30 min</span><span>60 min</span>
+                <span>0</span><span>30 min</span><span>60 min</span>
               </div>
             </div>
 
@@ -163,7 +170,7 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
                     className="flex-1 py-2 rounded-xl border transition-all duration-150 active:scale-90"
                     style={n <= stars
                       ? { background: "rgba(57,255,20,0.15)", borderColor: "#39ff14" }
-                      : {}}>
+                      : { borderColor: "hsl(var(--border))" }}>
                     <Star className="w-5 h-5 mx-auto"
                       fill={n <= stars ? "#39ff14" : "none"}
                       stroke={n <= stars ? "#39ff14" : "hsl(var(--muted-foreground))"}
@@ -174,7 +181,7 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
               <p className="text-[10px] text-muted-foreground text-center">{BOOST_LABELS[stars]}</p>
             </div>
 
-            {/* Note */}
+            {/* Optional note */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold">
                 Quick Note <span className="text-muted-foreground font-normal">(optional)</span>
@@ -184,12 +191,10 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
                 className="w-full bg-secondary rounded-2xl px-4 py-3 text-sm resize-none outline-none border border-transparent focus:border-[#00f5ff] transition-colors placeholder:text-muted-foreground/50" />
             </div>
 
+            {/* CTA */}
             <button onClick={handleLog} disabled={logging}
               className="w-full py-4 rounded-2xl text-base font-black text-black flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 disabled:opacity-70"
-              style={{
-                background: "linear-gradient(90deg, #39ff14, #00f5ff)",
-                boxShadow: "0 0 28px rgba(57,255,20,0.5)",
-              }}>
+              style={{ background: "linear-gradient(90deg, #39ff14, #00f5ff)", boxShadow: "0 0 28px rgba(57,255,20,0.5)" }}>
               {logging ? "Logging…" : "🏆 Log Win — Protect Streak"}
             </button>
           </div>
