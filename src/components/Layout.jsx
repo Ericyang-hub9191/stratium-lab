@@ -30,7 +30,7 @@ export default function Layout() {
         setXp(stats[0]?.totalXp ?? 0);
       } catch (_) {}
     })();
-  }, []);
+  }, [pathname]);
 
   const isHighStreak = streak >= 7;
 

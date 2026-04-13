@@ -4,18 +4,18 @@ import { base44 } from "@/api/base44Client";
 import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
 
-// ── Motivational messages ─────────────────────────────────────────────
 function getMotivation(streak) {
-  if (streak === 0) return { msg: "Start your streak today 🚀", color: "#00f5ff" };
-  if (streak < 3)   return { msg: "You're warming up — don't stop now 🔥", color: "#00f5ff" };
-  if (streak < 7)   return { msg: "Building real momentum. Keep going 💪", color: "#39ff14" };
-  if (streak < 14)  return { msg: "One week strong. You're in the zone 🎯", color: "#39ff14" };
-  if (streak < 30)  return { msg: "Streak machine. You're ahead of 90% of users 🏆", color: "#fb923c" };
-  return { msg: "LEGENDARY. You are Synthetica 🌟", color: "#a78bfa" };
+  if (streak === 0)  return { msg: "Start today — every legend begins at zero 🚀",     color: "#00f5ff" };
+  if (streak === 1)  return { msg: "Day 1 done. The hardest step is behind you 💪",     color: "#00f5ff" };
+  if (streak < 3)    return { msg: "2 days in — momentum is building 🔥",               color: "#00f5ff" };
+  if (streak < 7)    return { msg: `${streak} days — restart the flame. Don't stop now!`, color: "#fb923c" };
+  if (streak === 7)  return { msg: "7 days strong — you're officially on fire! 🔥",     color: "#39ff14" };
+  if (streak < 14)   return { msg: `${streak} days — you're in the zone. Keep going!`,  color: "#39ff14" };
+  if (streak < 30)   return { msg: `${streak} days — top 10% of users. Unstoppable 🏆`, color: "#39ff14" };
+  return              { msg: `${streak} days — LEGENDARY. You ARE Synthetica 🌟`,        color: "#a78bfa" };
 }
 
-// ── Build last-N-days map from win logs ───────────────────────────────
-function buildDayMap(wins, days = 56) {
+function buildDayMap(wins, days = 42) {
   const map = {};
   const now = new Date();
   for (let i = days - 1; i >= 0; i--) {
@@ -31,42 +31,41 @@ function buildDayMap(wins, days = 56) {
 }
 
 export default function Streak() {
-  const [streakData, setStreakData]   = useState(null);
-  const [wins,       setWins]        = useState([]);
-  const [dayMap,     setDayMap]      = useState({});
-  const [loading,    setLoading]     = useState(true);
-  const [freezeMsg,  setFreezeMsg]   = useState("");
-  const [repairMsg,  setRepairMsg]   = useState("");
+  const [streakData, setStreakData] = useState(null);
+  const [wins,       setWins]       = useState([]);
+  const [dayMap,     setDayMap]     = useState({});
+  const [loading,    setLoading]    = useState(true);
+  const [msg,        setMsg]        = useState("");
 
   const load = async () => {
     try {
       const user = await base44.auth.me();
       const [streaks, winLogs] = await Promise.all([
         base44.entities.Streak.filter({ userId: user.id }),
-        base44.entities.WinLog.filter({ userId: user.id }, "-created_date", 60),
+        base44.entities.WinLog.filter({ userId: user.id }, "-created_date", 100),
       ]);
       setStreakData(streaks[0] ?? null);
       setWins(winLogs);
-      setDayMap(buildDayMap(winLogs, 56));
+      setDayMap(buildDayMap(winLogs, 42));
     } catch (_) {}
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
 
+  const showMsg = (text) => { setMsg(text); setTimeout(() => setMsg(""), 3500); };
+
   const handleUseFreeze = async () => {
     if (!streakData || (streakData.freezeCount ?? 0) <= 0) {
-      setFreezeMsg("No freezes left! Complete missions to earn more.");
-      setTimeout(() => setFreezeMsg(""), 3000);
+      showMsg("❌ No freezes left! Complete missions to earn more.");
       return;
     }
     const today = new Date().toISOString().split("T")[0];
     await base44.entities.Streak.update(streakData.id, {
-      freezeCount:       (streakData.freezeCount ?? 0) - 1,
+      freezeCount: (streakData.freezeCount ?? 0) - 1,
       lastCompletedDate: today,
     });
-    setFreezeMsg("🛡️ Freeze used! Streak protected for today.");
-    setTimeout(() => setFreezeMsg(""), 3000);
+    showMsg("🛡️ Freeze used! Streak protected for today.");
     load();
   };
 
@@ -74,12 +73,11 @@ export default function Streak() {
     if (!streakData) return;
     const today = new Date().toISOString().split("T")[0];
     await base44.entities.Streak.update(streakData.id, {
-      currentStreak:     Math.max((streakData.currentStreak ?? 0), 1),
+      currentStreak: Math.max((streakData.currentStreak ?? 0), 1),
       lastCompletedDate: today,
     });
-    setRepairMsg("🔧 Streak repaired! Go log a win today to keep it alive.");
-    setTimeout(() => setRepairMsg(""), 3500);
-    confetti({ particleCount: 60, spread: 50, origin: { y: 0.6 }, colors: ["#00f5ff", "#39ff14"] });
+    showMsg("🔧 Streak repaired! Log a win today to keep it alive.");
+    confetti({ particleCount: 80, spread: 60, origin: { y: 0.55 }, colors: ["#00f5ff", "#39ff14", "#fb923c"] });
     load();
   };
 
@@ -91,59 +89,85 @@ export default function Streak() {
     );
   }
 
-  const streak      = streakData?.currentStreak  ?? 0;
-  const longest     = streakData?.longestStreak  ?? 0;
-  const freezes     = streakData?.freezeCount    ?? 0;
-  const totalWins   = streakData?.totalWins      ?? 0;
-  const isHighStreak = streak >= 7;
+  const streak        = streakData?.currentStreak  ?? 0;
+  const longest       = streakData?.longestStreak  ?? 0;
+  const freezes       = streakData?.freezeCount    ?? 0;
+  const totalWins     = streakData?.totalWins      ?? 0;
+  const isHighStreak  = streak >= 7;
   const { msg: motMsg, color: motColor } = getMotivation(streak);
   const days = Object.keys(dayMap).sort();
 
   return (
     <div className="px-4 py-6 space-y-6 pb-24">
 
-      {/* ── Streak hero ── */}
-      <div className="flex flex-col items-center py-6 space-y-3 rounded-3xl border relative overflow-hidden"
+      {/* ── Flame hero ── */}
+      <div
+        className="flex flex-col items-center py-8 space-y-4 rounded-3xl border relative overflow-hidden"
         style={{
-          borderColor: "rgba(0,245,255,0.3)",
-          background: "linear-gradient(135deg, rgba(0,245,255,0.06), rgba(57,255,20,0.03))",
-        }}>
+          borderColor: isHighStreak ? "rgba(255,107,53,0.5)" : "rgba(0,245,255,0.25)",
+          background: isHighStreak
+            ? "linear-gradient(135deg, rgba(255,107,53,0.1), rgba(251,146,60,0.05))"
+            : "linear-gradient(135deg, rgba(0,245,255,0.06), rgba(57,255,20,0.03))",
+        }}
+      >
         {/* Glow orb */}
-        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(0,245,255,0.12), transparent 70%)" }} />
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-56 h-56 rounded-full pointer-events-none"
+          style={{ background: isHighStreak
+            ? "radial-gradient(circle, rgba(255,107,53,0.2), transparent 70%)"
+            : "radial-gradient(circle, rgba(0,245,255,0.1), transparent 70%)" }} />
 
+        {/* Flame */}
         <span
-          className="text-7xl leading-none select-none"
+          className="leading-none select-none"
           style={{
+            fontSize: isHighStreak ? 96 : 80,
+            display: "inline-block",
             filter: isHighStreak
-              ? "drop-shadow(0 0 12px #ff6b35) drop-shadow(0 0 28px #ff6b35)"
-              : "drop-shadow(0 0 6px #ff6b35)",
-            animation: isHighStreak ? "streak-fire 0.8s ease-in-out infinite" : "bounce 1.6s infinite",
+              ? "drop-shadow(0 0 20px #ff6b35) drop-shadow(0 0 40px #ff6b35) drop-shadow(0 0 60px #fb923c)"
+              : "drop-shadow(0 0 8px #ff6b35) drop-shadow(0 0 20px #ff6b35)",
+            animation: isHighStreak ? "streak-fire 0.7s ease-in-out infinite" : "bounce 1.6s infinite",
           }}
         >
           🔥
         </span>
 
-        <div>
-          <div className="text-7xl font-black text-center tabular-nums text-[#00f5ff] leading-none">
+        {/* Counter */}
+        <div className="text-center">
+          <div
+            className="font-black tabular-nums leading-none"
+            style={{
+              fontSize: streak >= 100 ? 72 : 88,
+              color: isHighStreak ? "#fb923c" : "#00f5ff",
+              textShadow: isHighStreak ? "0 0 30px rgba(255,107,53,0.6)" : "0 0 20px rgba(0,245,255,0.4)",
+            }}
+          >
             {streak}
           </div>
-          <div className="text-sm font-semibold text-center text-muted-foreground mt-1">
+          <div className="text-sm font-semibold text-muted-foreground mt-1">
             {streak === 1 ? "day streak" : "day streak"}
           </div>
         </div>
 
-        {/* Motivational line */}
-        <p className="text-sm font-bold text-center px-6" style={{ color: motColor }}>
+        {/* Motivation */}
+        <p className="text-sm font-bold text-center px-8 leading-snug" style={{ color: motColor }}>
           {motMsg}
         </p>
+
+        {/* Fire ring for high streak */}
+        {isHighStreak && (
+          <div className="flex gap-1">
+            {Array.from({ length: Math.min(streak, 10) }).map((_, i) => (
+              <span key={i} style={{ fontSize: 10, opacity: 0.7 + (i / 20) }}>🔥</span>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* ── Toast messages ── */}
-      {(freezeMsg || repairMsg) && (
+      {/* ── Flash message ── */}
+      {msg && (
         <div className="rounded-2xl px-4 py-3 text-sm font-bold text-center"
-          style={{ background: "rgba(57,255,20,0.12)", color: "#39ff14", border: "1px solid rgba(57,255,20,0.3)" }}>
-          {freezeMsg || repairMsg}
+          style={{ background: "rgba(57,255,20,0.1)", color: "#39ff14", border: "1px solid rgba(57,255,20,0.3)" }}>
+          {msg}
         </div>
       )}
 
@@ -162,28 +186,34 @@ export default function Streak() {
         ))}
       </div>
 
-      {/* ── 8-week calendar grid ── */}
+      {/* ── 6-week calendar ── */}
       <div className="rounded-3xl border bg-card p-4 space-y-3">
-        <h2 className="text-sm font-bold">Activity (last 8 weeks)</h2>
-        {/* Day-of-week headers */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold">Activity (last 6 weeks)</h2>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <span style={{ fontSize: 10 }}>🔥</span> Win
+            </span>
+            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <span className="w-2.5 h-2.5 rounded-sm bg-secondary/60 inline-block" /> Missed
+            </span>
+          </div>
+        </div>
+
+        {/* Day headers Mon–Sun */}
         <div className="grid grid-cols-7 gap-1.5">
           {["M","T","W","T","F","S","S"].map((d, i) => (
             <div key={i} className="text-center text-[10px] font-bold text-muted-foreground">{d}</div>
           ))}
         </div>
-        {/* Day cells — pad start to align with correct weekday */}
+
+        {/* Calendar cells */}
         {(() => {
-          const firstDay = days[0] ? new Date(days[0]).getDay() : 0;
-          // convert Sun=0 to Mon=0
+          const firstDay = days[0] ? new Date(days[0]).getDay() : 1;
           const offset = (firstDay + 6) % 7;
-          const cells = [
-            ...Array(offset).fill(null),
-            ...days,
-          ];
+          const cells = [...Array(offset).fill(null), ...days];
           const rows = [];
-          for (let i = 0; i < cells.length; i += 7) {
-            rows.push(cells.slice(i, i + 7));
-          }
+          for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
           return rows.map((row, ri) => (
             <div key={ri} className="grid grid-cols-7 gap-1.5">
               {row.map((day, di) => {
@@ -192,38 +222,25 @@ export default function Streak() {
                 const isToday = day === new Date().toISOString().split("T")[0];
                 return (
                   <div
-                    key={di}
-                    title={day}
+                    key={di} title={day}
                     className={cn(
-                      "aspect-square rounded-lg flex items-center justify-center text-sm transition-all",
-                      status === "win"   ? "bg-[#39ff14]/20 border border-[#39ff14]/50" : "bg-secondary/50 border border-border",
-                      isToday           ? "ring-1 ring-[#00f5ff]" : ""
+                      "aspect-square rounded-lg flex items-center justify-center transition-all",
+                      status === "win"
+                        ? "border border-[#39ff14]/50"
+                        : "bg-secondary/40 border border-border",
+                      isToday ? "ring-2 ring-[#00f5ff] ring-offset-1 ring-offset-background" : ""
                     )}
+                    style={status === "win" ? { background: "rgba(57,255,20,0.18)" } : {}}
                   >
-                    {status === "win" ? (
-                      <span style={{ fontSize: 12, filter: "drop-shadow(0 0 4px #39ff14)" }}>🔥</span>
-                    ) : null}
+                    {status === "win" && (
+                      <span style={{ fontSize: 11, filter: "drop-shadow(0 0 3px #39ff14)" }}>🔥</span>
+                    )}
                   </div>
                 );
               })}
             </div>
           ));
         })()}
-        {/* Legend */}
-        <div className="flex items-center gap-4 pt-1">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm bg-[#39ff14]/20 border border-[#39ff14]/50" />
-            <span className="text-[10px] text-muted-foreground">Win</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm bg-secondary/50 border border-border" />
-            <span className="text-[10px] text-muted-foreground">Missed</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm ring-1 ring-[#00f5ff] border border-border" />
-            <span className="text-[10px] text-muted-foreground">Today</span>
-          </div>
-        </div>
       </div>
 
       {/* ── Freeze power-ups ── */}
@@ -232,22 +249,24 @@ export default function Streak() {
         <div className="flex items-center gap-2">
           <Shield className="w-4 h-4 text-[#00f5ff]" />
           <span className="text-sm font-bold">Streak Freeze Power-Ups</span>
-          <span className="ml-auto text-xs font-black text-[#00f5ff]">{freezes} left</span>
+          <span className="ml-auto text-xs font-black" style={{ color: freezes > 0 ? "#00f5ff" : "#ef4444" }}>
+            {freezes} left
+          </span>
         </div>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Use a freeze to protect your streak on a day you can't complete a mission.
+          Use a freeze to protect your streak on a rest day — no mission needed.
         </p>
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={handleUseFreeze}
             disabled={freezes <= 0}
-            className="py-3 rounded-2xl text-sm font-black text-black transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ background: "#00f5ff", boxShadow: freezes > 0 ? "0 0 16px rgba(0,245,255,0.35)" : "none" }}
+            className="py-3 rounded-2xl text-sm font-black text-black transition-all duration-200 active:scale-95 disabled:opacity-35 disabled:cursor-not-allowed"
+            style={{ background: "#00f5ff", boxShadow: freezes > 0 ? "0 0 18px rgba(0,245,255,0.4)" : "none" }}
           >
             🛡️ Use Freeze
           </button>
           <button
-            className="py-3 rounded-2xl text-sm font-bold border transition-all duration-200 active:scale-95"
+            className="py-3 rounded-2xl text-sm font-bold border transition-all active:scale-95"
             style={{ borderColor: "rgba(0,245,255,0.3)", color: "#00f5ff" }}
             onClick={() => alert("💎 Freeze Shop — coming soon!")}
           >
@@ -262,7 +281,7 @@ export default function Streak() {
         <RefreshCw className="w-5 h-5 shrink-0" style={{ color: "#fb923c" }} />
         <div className="flex-1">
           <div className="text-sm font-bold">Repair Streak</div>
-          <div className="text-xs text-muted-foreground mt-0.5">Missed yesterday? Restore your streak once.</div>
+          <div className="text-xs text-muted-foreground mt-0.5">Missed a day? Restore your streak once.</div>
         </div>
         <button
           onClick={handleRepairStreak}
@@ -273,8 +292,8 @@ export default function Streak() {
         </button>
       </div>
 
-      {/* ── Recent wins list ── */}
-      {wins.length > 0 && (
+      {/* ── Recent wins ── */}
+      {wins.length > 0 ? (
         <div className="space-y-3">
           <h2 className="text-sm font-bold px-1">Recent Wins</h2>
           <div className="space-y-2">
@@ -299,16 +318,13 @@ export default function Streak() {
             ))}
           </div>
         </div>
-      )}
-
-      {wins.length === 0 && !loading && (
+      ) : (
         <div className="rounded-3xl border bg-card p-8 text-center space-y-2">
           <div className="text-4xl">🎯</div>
           <p className="text-sm font-bold">No wins yet</p>
           <p className="text-xs text-muted-foreground">Complete your first mission to start your streak!</p>
         </div>
       )}
-
     </div>
   );
 }
