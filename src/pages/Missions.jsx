@@ -1,5 +1,5 @@
 import { useOutletContext, useNavigate } from "react-router-dom";
-import { Zap, BookOpen, Clock, Search, Map } from "lucide-react";
+import { Zap, BookOpen, Clock, Search, Map, Flame, Trophy } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
@@ -145,10 +145,36 @@ export default function Missions() {
             <div className="text-center py-12 text-sm text-muted-foreground">No journeys found 🗺️</div>
           ) : (
             <div className="space-y-4">
-              {/* Journey count */}
-              <p className="text-xs text-muted-foreground px-1">
-                {filteredJourneys.length} journey{filteredJourneys.length !== 1 ? "s" : ""} available
-              </p>
+              {/* Journey stats bar */}
+              <div className="flex items-center justify-between px-1">
+                <p className="text-xs text-muted-foreground">
+                  {filteredJourneys.length} journey{filteredJourneys.length !== 1 ? "s" : ""} available
+                </p>
+                {completedIds.length > 0 && (
+                  <div className="flex items-center gap-1.5 text-xs font-bold" style={{ color: "#39ff14" }}>
+                    <Trophy className="w-3 h-3" />
+                    {completedIds.length} lessons complete
+                  </div>
+                )}
+              </div>
+              {/* Encouraging message */}
+              {(() => {
+                const startedJourneys = filteredJourneys.filter(j => j.lessons.some(l => completedIds.includes(l.id)));
+                if (startedJourneys.length > 0) {
+                  return (
+                    <div className="rounded-2xl px-4 py-3 text-xs font-bold text-center"
+                      style={{ background: "rgba(57,255,20,0.08)", color: "#39ff14", border: "1px solid rgba(57,255,20,0.2)" }}>
+                      🔥 You're building real mastery — keep going, you're leveling up!
+                    </div>
+                  );
+                }
+                return (
+                  <div className="rounded-2xl px-4 py-3 text-xs font-bold text-center"
+                    style={{ background: "rgba(0,245,255,0.06)", color: "#00f5ff", border: "1px solid rgba(0,245,255,0.2)" }}>
+                    🗺️ Each journey takes days or weeks — real mastery, not shortcuts.
+                  </div>
+                );
+              })()}
               {filteredJourneys.map(journey => (
                 <DeepDiveCard
                   key={journey.journeyId}

@@ -55,6 +55,14 @@ export default function DeepDiveCard({ journey, completedIds = [], onClick }) {
   const isStarted = completedCount > 0;
   const isComplete = completedCount >= total;
 
+  const encouragements = [
+    "You're building real mastery 🔥",
+    "Keep going — you're leveling up! ⚡",
+    "Great progress — don't stop now!",
+    "You're in the zone. Stay consistent 💪",
+  ];
+  const encouragement = encouragements[completedCount % encouragements.length];
+
   const statusLabel = isComplete
     ? "✅ Mastered"
     : isStarted
@@ -153,22 +161,27 @@ export default function DeepDiveCard({ journey, completedIds = [], onClick }) {
         )}
       </div>
 
+      {/* Encouraging message when in progress */}
+      {isStarted && !isComplete && (
+      <p className="text-[10px] font-bold px-1" style={{ color: "#39ff14" }}>{encouragement}</p>
+      )}
+
       {/* CTA */}
       <div
-        className="flex items-center justify-between px-4 py-3 rounded-2xl"
-        style={{ background: `${color}12` }}
+      className="flex items-center justify-between px-4 py-3 rounded-2xl"
+      style={{ background: `${color}12` }}
       >
-        <div>
-          <p className="text-xs font-black" style={{ color }}>
-            {isComplete ? "🎓 Journey Complete!" : isStarted ? "▶ Continue Journey" : "🚀 Start Journey"}
+      <div>
+        <p className="text-xs font-black" style={{ color }}>
+          {isComplete ? "🎓 Journey Complete!" : isStarted ? "▶ Continue Journey" : "🚀 Start Journey"}
+        </p>
+        {!isComplete && nextLesson && (
+          <p className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[200px]">
+            {nextLesson.unitTitle || nextLesson.title}
           </p>
-          {!isComplete && nextLesson && (
-            <p className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[200px]">
-              {nextLesson.unitTitle || nextLesson.title}
-            </p>
-          )}
-        </div>
-        <ChevronRight className="w-5 h-5" style={{ color }} />
+        )}
+      </div>
+      <ChevronRight className="w-5 h-5" style={{ color }} />
       </div>
     </div>
   );
