@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
 
-const CATEGORIES = ["All", "prompting", "writing", "research", "automation", "rag", "python", "data", "productivity"];
+const QUICK_BOOST_CATEGORIES = ["All", "prompting", "writing", "research", "automation", "python", "data", "productivity"];
+const DEEP_DIVE_CATEGORIES   = ["All", "prompting", "writing", "research", "python", "automation", "data", "business", "biology", "safety", "psychology", "mlops", "productivity"];
 
 const CATEGORY_COLORS = {
   prompting:   "#00f5ff",
@@ -15,6 +16,11 @@ const CATEGORY_COLORS = {
   python:      "#fbbf24",
   data:        "#60a5fa",
   productivity:"#34d399",
+  business:    "#f59e0b",
+  biology:     "#4ade80",
+  safety:      "#f87171",
+  psychology:  "#c084fc",
+  mlops:       "#38bdf8",
 };
 
 export default function Missions() {
@@ -52,7 +58,7 @@ export default function Missions() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black">Missions</h1>
+          <h1 className="text-2xl font-black">{deepDive ? "Deep Dives" : "Quick Boosts"}</h1>
           <p className="text-xs text-muted-foreground mt-0.5">Pick one. Apply it. Log the impact.</p>
         </div>
         <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl"
@@ -70,14 +76,14 @@ export default function Missions() {
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Search missions…"
+          placeholder={deepDive ? "Search deep dives…" : "Search boosts…"}
           className="w-full bg-secondary rounded-2xl pl-9 pr-4 py-2.5 text-sm outline-none border border-transparent focus:border-[#00f5ff] transition-colors placeholder:text-muted-foreground/50"
         />
       </div>
 
       {/* Category filter */}
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar">
-        {CATEGORIES.map(cat => (
+        {(deepDive ? DEEP_DIVE_CATEGORIES : QUICK_BOOST_CATEGORIES).map(cat => (
           <button key={cat}
             onClick={() => setActiveCategory(cat)}
             className={cn("shrink-0 px-4 py-1.5 rounded-full text-xs font-bold border transition-all",
@@ -96,7 +102,7 @@ export default function Missions() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-sm text-muted-foreground">
-          No missions found 🔍
+          No boosts found 🔍
         </div>
       ) : (
         <div className="space-y-3">
