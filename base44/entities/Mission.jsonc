@@ -9,7 +9,7 @@
     "durationMinutes": {
       "type": "number",
       "default": 5,
-      "description": "Estimated time to complete the boost in minutes"
+      "description": "Estimated time (Quick Boost only). Omit for Deep Dive journeys."
     },
     "type": {
       "type": "string",
@@ -17,7 +17,7 @@
         "quick-boost",
         "deep-dive"
       ],
-      "description": "quick-boost = 3\u20135 min immediate ROI; deep-dive = longer mastery session"
+      "description": "quick-boost = 3\u20135 min immediate ROI; deep-dive = multi-lesson mastery journey"
     },
     "category": {
       "type": "string",
@@ -25,11 +25,11 @@
     },
     "description": {
       "type": "string",
-      "description": "What this boost trains and what impact the user will walk away with"
+      "description": "What this boost trains and what the learner walks away with"
     },
     "applyInstruction": {
       "type": "string",
-      "description": "Clear, direct action: try this right now in ChatGPT/Claude/Gemini or your current tool"
+      "description": "For Quick Boost: immediate action to try now. For Deep Dive: lesson steps + practice tasks."
     },
     "xpReward": {
       "type": "number",
@@ -40,7 +40,27 @@
       "items": {
         "type": "string"
       },
-      "description": "Searchable tags for filtering boosts"
+      "description": "Searchable tags"
+    },
+    "journeyDescription": {
+      "type": "string",
+      "description": "Deep Dive only: one-sentence overview of the full multi-lesson journey"
+    },
+    "lessonNumber": {
+      "type": "number",
+      "description": "Deep Dive only: which lesson in the journey this is (e.g. 1)"
+    },
+    "totalLessons": {
+      "type": "number",
+      "description": "Deep Dive only: total lessons in this journey (e.g. 8)"
+    },
+    "journeyId": {
+      "type": "string",
+      "description": "Deep Dive only: slug that groups all lessons of the same journey (e.g. 'ai-101-foundations')"
+    },
+    "unitTitle": {
+      "type": "string",
+      "description": "Deep Dive only: the unit/lesson subtitle (e.g. 'Unit 1 \u2014 What AI Is and Is Not')"
     }
   },
   "required": [
