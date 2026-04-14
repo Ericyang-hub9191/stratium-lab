@@ -235,6 +235,7 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
                 rows={2} value={note} onChange={e => setNote(e.target.value)}
                 placeholder="What changed? What would you do differently?"
                 className="w-full bg-secondary rounded-2xl px-4 py-3 text-sm resize-none outline-none border border-transparent focus:border-[#00f5ff] transition-colors placeholder:text-muted-foreground/50"
+                style={{ WebkitUserSelect: 'text', userSelect: 'text' }}
               />
             </div>
 

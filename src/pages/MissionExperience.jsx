@@ -162,6 +162,7 @@ export default function MissionExperience() {
             rows={4}
             placeholder={`Act as a senior [role].\nHelp me [task].\nRespond as a [format].`}
             className="w-full bg-secondary rounded-2xl px-4 py-3 text-sm resize-none outline-none border border-transparent focus:border-[#00f5ff] transition-colors placeholder:text-muted-foreground/50 font-mono"
+            style={{ WebkitUserSelect: 'text', userSelect: 'text' }}
           />
           <p className="text-[10px] text-muted-foreground">Draft here, then paste it into your AI tool.</p>
         </div>

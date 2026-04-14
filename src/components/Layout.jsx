@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Home, Zap, Flame, TrendingUp, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 
 const TABS = [
@@ -31,45 +31,33 @@ export default function Layout() {
   const [xp, setXp]         = useState(0);
   const [gems, setGems]     = useState(0);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const user = await base44.auth.me();
-        const [streaks, stats] = await Promise.all([
-          base44.entities.Streak.filter({ userId: user.id }),
-          base44.entities.UserStats.filter({ userId: user.id }),
-        ]);
-        setStreak(streaks[0]?.currentStreak ?? 0);
-        setXp(stats[0]?.totalXp ?? 0);
-        setGems(stats[0]?.gems ?? 10);
-      } catch (_) {}
-    })();
-  }, [pathname]);
+  const fetchStats = useCallback(async () => {
+    try {
+      const user = await base44.auth.me();
+      const [streaks, stats] = await Promise.all([
+        base44.entities.Streak.filter({ userId: user.id }),
+        base44.entities.UserStats.filter({ userId: user.id }),
+      ]);
+      setStreak(streaks[0]?.currentStreak ?? 0);
+      setXp(stats[0]?.totalXp ?? 0);
+      setGems(stats[0]?.gems ?? 10);
+    } catch (_) {}
+  }, []);
+
+  useEffect(() => { fetchStats(); }, [pathname, fetchStats]);
 
   useEffect(() => {
-    const handler = () => {
-      // Re-fetch stats when a win is logged
-      (async () => {
-        try {
-          const user = await base44.auth.me();
-          const [streaks, stats] = await Promise.all([
-            base44.entities.Streak.filter({ userId: user.id }),
-            base44.entities.UserStats.filter({ userId: user.id }),
-          ]);
-          setStreak(streaks[0]?.currentStreak ?? 0);
-          setXp(stats[0]?.totalXp ?? 0);
-          setGems(stats[0]?.gems ?? 10);
-        } catch (_) {}
-      })();
-    };
-    window.addEventListener('win-logged', handler);
-    return () => window.removeEventListener('win-logged', handler);
-  }, []);
+    window.addEventListener('win-logged', fetchStats);
+    return () => window.removeEventListener('win-logged', fetchStats);
+  }, [fetchStats]);
 
   const isHighStreak = streak >= 7;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-lg mx-auto">
+    <div
+      className="min-h-screen bg-background flex flex-col max-w-lg mx-auto"
+      style={{ WebkitUserSelect: 'none', userSelect: 'none', touchAction: 'pan-y' }}
+    >
 
       {/* ── Header ── */}
       <header
@@ -145,7 +133,7 @@ export default function Layout() {
       </header>
 
       {/* ── Page content ── */}
-      <main className="flex-1 overflow-y-auto pb-20" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <main className="flex-1 overflow-y-auto pb-20" style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={pathname}

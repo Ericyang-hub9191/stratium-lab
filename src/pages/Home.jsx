@@ -101,15 +101,12 @@ export default function Home() {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      style={{ touchAction: 'pan-x pan-y' }}
     >
       {/* Pull-to-refresh indicator */}
       {(pullDist > 10 || refreshing) && (
-        <div className="flex justify-center" style={{ marginTop: -16, marginBottom: -8 }}>
-          <div
-            className="w-6 h-6 border-2 border-[#00f5ff]/40 border-t-[#00f5ff] rounded-full"
-            style={{ opacity: refreshing ? 1 : pullDist / 80 }}
-            className={`w-6 h-6 border-2 border-[#00f5ff]/40 border-t-[#00f5ff] rounded-full ${refreshing ? 'animate-spin' : ''}`}
-          />
+        <div className="flex justify-center" style={{ marginTop: -16, marginBottom: -8, opacity: refreshing ? 1 : pullDist / 80 }}>
+          <div className={`w-6 h-6 border-2 border-[#00f5ff]/40 border-t-[#00f5ff] rounded-full ${refreshing ? 'animate-spin' : ''}`} />
         </div>
       )}
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Shield, Trophy, Zap, RefreshCw } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import confetti from "canvas-confetti";
@@ -36,6 +36,9 @@ export default function Streak() {
   const [dayMap,     setDayMap]     = useState({});
   const [loading,    setLoading]    = useState(true);
   const [msg,        setMsg]        = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const touchStartY = useRef(0);
+  const [pullDist,   setPullDist]   = useState(0);
 
   const load = async () => {
     try {
@@ -52,6 +55,20 @@ export default function Streak() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const handleTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
+  const handleTouchMove  = (e) => {
+    const dist = e.touches[0].clientY - touchStartY.current;
+    if (dist > 0 && window.scrollY === 0) setPullDist(Math.min(dist, 80));
+  };
+  const handleTouchEnd = async () => {
+    if (pullDist > 60) {
+      setRefreshing(true);
+      await load();
+      setRefreshing(false);
+    }
+    setPullDist(0);
+  };
 
   const showMsg = (text) => { setMsg(text); setTimeout(() => setMsg(""), 3500); };
 
@@ -98,7 +115,19 @@ export default function Streak() {
   const days = Object.keys(dayMap).sort();
 
   return (
-    <div className="px-4 py-6 space-y-6 pb-24">
+    <div
+      className="px-4 py-6 space-y-6 pb-24"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{ touchAction: 'pan-x pan-y' }}
+    >
+      {/* Pull-to-refresh indicator */}
+      {(pullDist > 10 || refreshing) && (
+        <div className="flex justify-center" style={{ marginTop: -16, marginBottom: -8, opacity: refreshing ? 1 : pullDist / 80 }}>
+          <div className={`w-6 h-6 border-2 border-[#00f5ff]/40 border-t-[#00f5ff] rounded-full ${refreshing ? 'animate-spin' : ''}`} />
+        </div>
+      )}
 
       {/* ── Flame hero ── */}
       <div
