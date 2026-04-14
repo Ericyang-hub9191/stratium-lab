@@ -12,6 +12,8 @@ import MissionExperience from './pages/MissionExperience';
 import Streak from './pages/Streak';
 import Progress from './pages/Progress';
 import Me from './pages/Me';
+import Signals from './pages/Signals';
+import SignalDetail from './pages/SignalDetail';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -45,6 +47,8 @@ const AuthenticatedApp = () => {
         <Route path="/mission/:id" element={<MissionExperience />} />
         <Route path="/streak" element={<Streak />} />
         <Route path="/progress" element={<Progress />} />
+        <Route path="/signals" element={<Signals />} />
+        <Route path="/signals/:id" element={<SignalDetail />} />
         <Route path="/me" element={<Me />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>

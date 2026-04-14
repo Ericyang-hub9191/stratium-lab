@@ -1,18 +1,11 @@
 import { useOutletContext, useNavigate } from "react-router-dom";
-import { Zap, Clock, ChevronRight, TrendingUp, Sparkles } from "lucide-react";
+import { Zap, Clock, ChevronRight, TrendingUp, Radio } from "lucide-react";
+import { getTodaySignal } from "@/lib/signals-data";
 import { useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import { base44 } from "@/api/base44Client";
 
-const SIGNAL_TIPS = [
-  "GPT-4o now supports real-time audio streaming. Build voice-based AI workflows in under 10 minutes.",
-  "Claude Opus can now process 200K-token contexts. Paste an entire codebase and ask it to audit for bugs.",
-  "Gemini 1.5 Pro reads entire PDFs natively — upload a 100-page report and ask it 5 targeted questions.",
-  "Chain two prompts: first extract facts, then generate your deliverable. Halves hallucination rate.",
-  "Use \"Act as a devil's advocate\" at the end of any analysis prompt to surface blind spots instantly.",
-  "Notion AI can now summarize your entire workspace — try it on your weekly notes for a 2-min brief.",
-  "Perplexity's Deep Research mode cites live sources — use it for any fact-checked research task.",
-];
+
 
 const CATEGORY_COLORS = {
   prompting:  "#00f5ff",
@@ -37,7 +30,7 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const touchStartY = useRef(0);
   const [pullDist, setPullDist] = useState(0);
-  const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * SIGNAL_TIPS.length));
+  const todaySignal = getTodaySignal();
 
   const loadData = async () => {
     try {
@@ -79,7 +72,6 @@ export default function Home() {
   };
 
   const weeklyGoal   = 7;
-  const signalTip    = SIGNAL_TIPS[tipIndex];
   const weekPct      = Math.min(Math.round((weeklyStats.missions / weeklyGoal) * 100), 100);
   const hoursDisplay = weeklyStats.timeSaved >= 60
     ? `${(weeklyStats.timeSaved / 60).toFixed(1)} hrs`
@@ -274,24 +266,29 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Signal Snapshot ── */}
-      <div
-        className="rounded-3xl border p-4 space-y-2"
-        style={{ borderColor: "rgba(167,139,250,0.3)", background: "rgba(167,139,250,0.05)" }}
-      >
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#a78bfa]" />
-          <span className="text-xs font-bold uppercase tracking-wider text-[#a78bfa]">Signal Snapshot</span>
-          <span className="text-[10px] text-muted-foreground ml-auto">Frontier tip</span>
-        </div>
-        <p className="text-xs text-foreground leading-relaxed">{signalTip}</p>
-        <button
-          onClick={() => setTipIndex(i => (i + 1) % SIGNAL_TIPS.length)}
-          className="text-xs font-bold flex items-center gap-0.5 text-[#a78bfa]"
+      {/* ── Signal of the Day ── */}
+      {todaySignal && (
+        <div
+          className="rounded-3xl border p-4 space-y-3 cursor-pointer active:scale-[0.98] transition-transform"
+          style={{
+            borderColor: "rgba(167,139,250,0.45)",
+            background: "linear-gradient(135deg, rgba(167,139,250,0.09), rgba(0,245,255,0.04))",
+            boxShadow: "0 0 30px rgba(167,139,250,0.08)",
+          }}
+          onClick={() => navigate(`/signals/${todaySignal.id}`)}
         >
-          Next tip <ChevronRight className="w-3 h-3" />
-        </button>
-      </div>
+          <div className="flex items-center gap-2">
+            <Radio className="w-4 h-4 text-[#a78bfa]" />
+            <span className="text-xs font-black uppercase tracking-wider text-[#a78bfa]">Signal of the Day</span>
+            <span className="text-[10px] text-muted-foreground ml-auto">{todaySignal.date}</span>
+          </div>
+          <h3 className="text-sm font-black leading-snug">{todaySignal.title}</h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">{todaySignal.shortTeaser}</p>
+          <div className="flex items-center gap-0.5 text-xs font-bold text-[#a78bfa]">
+            Read Full Signal <ChevronRight className="w-3.5 h-3.5" />
+          </div>
+        </div>
+      )}
 
     </div>
   );
