@@ -1,5 +1,5 @@
 import { useOutletContext, useNavigate } from "react-router-dom";
-import { Zap, Clock, ChevronRight, TrendingUp, Radio } from "lucide-react";
+import { Zap, Clock, ChevronRight, TrendingUp, Radio, Map } from "lucide-react";
 import { getTodaySignal } from "@/lib/signals-data";
 import { useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
@@ -126,7 +126,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Today's Mission card ── */}
+      {/* ── Today's Featured card ── */}
       {loading ? (
         <div className="rounded-3xl border bg-card p-8 flex items-center justify-center">
           <div className="w-8 h-8 border-4 border-border border-t-[#00f5ff] rounded-full animate-spin" />
@@ -135,14 +135,20 @@ export default function Home() {
         <div
           className="rounded-3xl border p-5 space-y-4 relative overflow-hidden"
           style={{
-            borderColor: "rgba(0,245,255,0.35)",
-            background:  "linear-gradient(135deg, rgba(0,245,255,0.07) 0%, rgba(57,255,20,0.04) 100%)",
-            boxShadow:   "0 0 40px rgba(0,245,255,0.08)",
+            borderColor: deepDive ? "rgba(57,255,20,0.35)" : "rgba(0,245,255,0.35)",
+            background: deepDive
+              ? "linear-gradient(135deg, rgba(57,255,20,0.07) 0%, rgba(0,245,255,0.04) 100%)"
+              : "linear-gradient(135deg, rgba(0,245,255,0.07) 0%, rgba(57,255,20,0.04) 100%)",
+            boxShadow: deepDive
+              ? "0 0 40px rgba(57,255,20,0.08)"
+              : "0 0 40px rgba(0,245,255,0.08)",
           }}
         >
           <div
             className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(0,245,255,0.15), transparent 70%)" }}
+            style={{ background: deepDive
+              ? "radial-gradient(circle, rgba(57,255,20,0.15), transparent 70%)"
+              : "radial-gradient(circle, rgba(0,245,255,0.15), transparent 70%)" }}
           />
 
           <div className="flex items-center justify-between">
@@ -150,38 +156,75 @@ export default function Home() {
               className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1 rounded-full text-black"
               style={{ background: deepDive ? "#39ff14" : "#00f5ff" }}
             >
-              {deepDive ? "🔬 Deep Dive" : <><Zap className="w-3 h-3" />Quick Boost</>}
+              {deepDive ? "🗺️ Learning Journey" : <><Zap className="w-3 h-3" />Quick Boost</>}
             </span>
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {deepDive ? "10 min" : `${mission.durationMinutes ?? 3} min`}
-              </span>
+              {deepDive && mission.lessonNumber && mission.totalLessons ? (
+                <span className="font-bold" style={{ color: "#39ff14" }}>
+                  Lesson {mission.lessonNumber} of {mission.totalLessons}
+                </span>
+              ) : (
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {mission.durationMinutes ?? 4} min
+                </span>
+              )}
               <span className="font-bold text-[#39ff14]">+{mission.xpReward ?? 75} XP</span>
             </div>
           </div>
 
           <div>
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-1">
-              Today's Boost
+              {deepDive ? "Featured Journey" : "Today's Boost"}
             </p>
-            <h2 className="text-2xl font-black leading-tight">{mission.title}</h2>
-            <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{mission.description}</p>
+            {deepDive && mission.unitTitle && (
+              <p className="text-[10px] text-muted-foreground mb-1 font-semibold" style={{ color: "#39ff14" }}>
+                {mission.unitTitle}
+              </p>
+            )}
+            <h2 className="text-2xl font-black leading-tight">
+              {deepDive && mission.journeyId
+                ? mission.title.replace(/ — Unit.*$/, "").replace(/: Lesson \d+.*$/, "").split(":")[0]
+                : mission.title}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed line-clamp-3">
+              {deepDive ? (mission.journeyDescription || mission.description) : mission.description}
+            </p>
           </div>
 
-          <div
-            className="rounded-2xl px-4 py-3 text-xs font-medium leading-relaxed text-[#39ff14]"
-            style={{ background: "rgba(57,255,20,0.1)", borderLeft: "3px solid #39ff14" }}
-          >
-            💡 <span className="font-bold">Apply now:</span> {mission.applyInstruction}
-          </div>
+          {!deepDive && (
+            <div
+              className="rounded-2xl px-4 py-3 text-xs font-medium leading-relaxed text-[#39ff14]"
+              style={{ background: "rgba(57,255,20,0.1)", borderLeft: "3px solid #39ff14" }}
+            >
+              💡 <span className="font-bold">Apply now:</span>{" "}
+              {mission.applyInstruction?.split("\n")[0]}
+            </div>
+          )}
+
+          {deepDive && (
+            <div
+              className="rounded-2xl px-4 py-3 text-xs leading-relaxed"
+              style={{ background: "rgba(57,255,20,0.08)", borderLeft: "3px solid #39ff14" }}
+            >
+              <span className="font-bold text-[#39ff14]">🗺️ Multi-lesson journey</span>
+              <span className="text-muted-foreground ml-1.5">
+                — progress at your own pace through {mission.totalLessons} guided lessons
+              </span>
+            </div>
+          )}
 
           <button
-          onClick={() => navigate(`/mission/${mission.id}`)}
-          className="w-full py-4 rounded-2xl text-base font-black text-black flex items-center justify-center gap-2 transition-all duration-200 active:scale-95"
-          style={{ background: "#00f5ff", boxShadow: "0 0 20px rgba(0,245,255,0.4)" }}
+            onClick={() => navigate(deepDive ? "/missions" : `/mission/${mission.id}`)}
+            className="w-full py-4 rounded-2xl text-base font-black text-black flex items-center justify-center gap-2 transition-all duration-200 active:scale-95"
+            style={{
+              background: deepDive ? "#39ff14" : "#00f5ff",
+              boxShadow: deepDive
+                ? "0 0 20px rgba(57,255,20,0.4)"
+                : "0 0 20px rgba(0,245,255,0.4)",
+            }}
           >
-          <Zap className="w-5 h-5" /> Start Boost
+            {deepDive ? <>🗺️ View All Journeys</> : <><Zap className="w-5 h-5" /> Start Boost</>}
           </button>
         </div>
       ) : (
