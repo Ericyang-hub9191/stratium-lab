@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Zap } from "lucide-react";
+import { ArrowLeft, ExternalLink, Zap, Archive } from "lucide-react";
 import { getSignalByDate, SIGNALS } from "@/lib/signals-data";
 
 const CATEGORY_LABELS = {
@@ -51,6 +51,13 @@ export default function SignalDetail() {
         >
           📡 SIGNAL
         </span>
+        <button
+          onClick={() => navigate("/signals")}
+          className="ml-auto flex items-center gap-1.5 text-xs font-black px-3 py-2 rounded-xl border transition-all active:scale-95"
+          style={{ borderColor: "rgba(167,139,250,0.4)", color: "#a78bfa", background: "rgba(167,139,250,0.08)" }}
+        >
+          <Archive className="w-3.5 h-3.5" /> See All Signals
+        </button>
       </div>
 
       {/* Content */}
