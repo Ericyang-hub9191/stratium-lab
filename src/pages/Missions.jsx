@@ -30,7 +30,7 @@ export default function Missions() {
     (async () => {
       setLoading(true);
       try {
-        const type = deepDive ? "deep-dive" : "quick-win";
+        const type = deepDive ? "deep-dive" : "quick-boost";
         const all = await base44.entities.Mission.filter({ type });
         setMissions(all);
       } catch (_) {}

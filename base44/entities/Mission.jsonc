@@ -2,53 +2,48 @@
   "name": "Mission",
   "type": "object",
   "properties": {
-    "id": {
-      "type": "string",
-      "description": "Unique mission identifier"
-    },
     "title": {
       "type": "string",
-      "description": "Mission title \u2014 short and action-oriented"
+      "description": "Boost title \u2014 short and action-oriented"
     },
     "durationMinutes": {
       "type": "number",
       "default": 5,
-      "description": "Estimated time to complete the mission in minutes"
+      "description": "Estimated time to complete the boost in minutes"
     },
     "type": {
       "type": "string",
       "enum": [
-        "quick-win",
+        "quick-boost",
         "deep-dive"
       ],
-      "description": "quick-win = 3\u20135 min immediate ROI; deep-dive = longer power-up for bigger mastery gains"
+      "description": "quick-boost = 3\u20135 min immediate ROI; deep-dive = longer mastery session"
     },
     "category": {
       "type": "string",
-      "description": "Skill category: prompting, writing, research, automation, python, rag, data, productivity"
+      "description": "Skill category: prompting, writing, research, automation, python, rag, data, productivity, business, biology, safety, psychology, mlops"
     },
     "description": {
       "type": "string",
-      "description": "What this mission trains and what win the user will walk away with"
+      "description": "What this boost trains and what impact the user will walk away with"
     },
     "applyInstruction": {
       "type": "string",
-      "description": "Clear, direct action: try this right now in Docs, Email, Notion, or your current tool"
+      "description": "Clear, direct action: try this right now in ChatGPT/Claude/Gemini or your current tool"
     },
     "xpReward": {
       "type": "number",
-      "description": "XP awarded when the mission win is logged"
+      "description": "XP awarded when the impact is logged"
     },
     "tags": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Searchable tags for filtering missions"
+      "description": "Searchable tags for filtering boosts"
     }
   },
   "required": [
-    "id",
     "title",
     "type",
     "category",
