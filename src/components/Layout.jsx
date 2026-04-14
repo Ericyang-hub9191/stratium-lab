@@ -47,22 +47,33 @@ export default function Layout() {
   useEffect(() => { fetchStats(); }, [pathname, fetchStats]);
 
   useEffect(() => {
+    const handleOptimistic = (e) => {
+      const delta = e.detail?.xpDelta ?? 0;
+      setXp(prev => prev + delta);
+      setStreak(prev => prev + 1);
+    };
+    window.addEventListener('win-logged-optimistic', handleOptimistic);
     window.addEventListener('win-logged', fetchStats);
-    return () => window.removeEventListener('win-logged', fetchStats);
+    return () => {
+      window.removeEventListener('win-logged-optimistic', handleOptimistic);
+      window.removeEventListener('win-logged', fetchStats);
+    };
   }, [fetchStats]);
 
   const isHighStreak = streak >= 7;
 
   return (
-    <div
-      className="min-h-screen bg-background flex flex-col max-w-lg mx-auto"
-      style={{ WebkitUserSelect: 'none', userSelect: 'none', touchAction: 'pan-y' }}
-    >
+    <div className="min-h-screen bg-background flex flex-col max-w-lg mx-auto">
 
       {/* ── Header ── */}
       <header
         className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border px-4 flex items-center justify-between gap-2"
-        style={{ paddingTop: 'env(safe-area-inset-top, 12px)', paddingBottom: '12px' }}
+        style={{
+          paddingTop: 'max(env(safe-area-inset-top), 14px)',
+          paddingBottom: '12px',
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
+        }}
       >
 
         {/* Streak flame + count */}
@@ -133,7 +144,14 @@ export default function Layout() {
       </header>
 
       {/* ── Page content ── */}
-      <main className="flex-1 overflow-y-auto pb-20" style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
+      <main
+        className="flex-1 overflow-y-auto"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain',
+          paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))',
+        }}
+      >
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={pathname}
@@ -148,27 +166,27 @@ export default function Layout() {
       </main>
 
       {/* ── Bottom tab bar ── */}
-      <nav className="fixed bottom-0 inset-x-0 z-50 flex justify-center">
+      <nav className="fixed bottom-0 inset-x-0 z-50 flex justify-center" style={{ WebkitUserSelect: 'none', userSelect: 'none' }}>
         <div
           className="w-full max-w-lg bg-background/95 backdrop-blur-xl border-t border-border"
-          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
         >
-          <div className="flex items-stretch h-16">
+          <div className="flex items-stretch h-14">
             {TABS.map(({ path, icon: Icon, label }) => {
               const active = path === "/" ? pathname === "/" : pathname.startsWith(path);
               return (
                 <Link
                   key={path}
                   to={path}
-                  className="flex flex-col items-center justify-center gap-0.5 flex-1 transition-all duration-200 active:scale-90"
-                  style={{ opacity: active ? 1 : 0.4 }}
+                  className="flex flex-col items-center justify-center gap-0.5 flex-1 active:scale-90 transition-transform duration-150"
+                  style={{ opacity: active ? 1 : 0.4, WebkitTapHighlightColor: 'transparent' }}
                 >
                   <Icon
                     style={{
                       width: 22, height: 22,
-                      color:     active ? "#00f5ff" : undefined,
-                      transform: active ? "scale(1.2)" : "scale(1)",
-                      transition: "transform 0.2s, color 0.2s",
+                      color: active ? "#00f5ff" : undefined,
+                      transform: active ? "scale(1.15)" : "scale(1)",
+                      transition: "transform 0.18s, color 0.18s",
                       strokeWidth: active ? 2.5 : 1.8,
                     }}
                   />

@@ -87,48 +87,46 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
 
   const handleLog = async () => {
     setLogging(true);
-    try {
-      const user = await base44.auth.me();
-      await Promise.all([
-        base44.entities.WinLog.create({
-          missionId:         mission?.id ?? "unknown",
-          userId:            user.id,
-          timeSavedMinutes:  timeSaved,
-          correctnessBoost:  stars,
-          note:              note.trim() || undefined,
-          appliedAt:         new Date().toISOString(),
-          xpEarned,
-          category:          mission?.category,
-        }),
-        updateStreak(user.id),
-        updateUserStats(user.id, xpEarned, timeSaved),
-      ]);
-    } catch (_) {
-      // still celebrate — don't block the dopamine hit
-    }
 
-    // Check for level-up
-    try {
-      const user = await base44.auth.me();
-      const [statsArr] = await base44.entities.UserStats.filter({ userId: user.id });
-      if (statsArr) {
-        const oldLevel = statsArr.currentLevel ?? 1;
-        const newLevel = Math.floor(((statsArr.totalXp ?? 0)) / 500) + 1;
-        if (newLevel > oldLevel) {
-          setTimeout(() => {
+    // ── Optimistic UI: celebrate & update header immediately ──
+    fireWinConfetti();
+    window.dispatchEvent(new CustomEvent('win-logged-optimistic', { detail: { xpDelta: xpEarned } }));
+    setDone(true);
+
+    // ── Persist in background ──
+    (async () => {
+      try {
+        const user = await base44.auth.me();
+        await Promise.all([
+          base44.entities.WinLog.create({
+            missionId:        mission?.id ?? "unknown",
+            userId:           user.id,
+            timeSavedMinutes: timeSaved,
+            correctnessBoost: stars,
+            note:             note.trim() || undefined,
+            appliedAt:        new Date().toISOString(),
+            xpEarned,
+            category:         mission?.category,
+          }),
+          updateStreak(user.id),
+          updateUserStats(user.id, xpEarned, timeSaved),
+        ]);
+        // After save: check for level-up and fire confirmed refresh
+        const [statsArr] = await base44.entities.UserStats.filter({ userId: user.id });
+        if (statsArr) {
+          const newLevel = Math.floor((statsArr.totalXp ?? 0) / 500) + 1;
+          if (newLevel > (statsArr.currentLevel ?? 1)) {
             confetti({ particleCount: 200, spread: 120, origin: { y: 0.4 }, colors: ["#a78bfa", "#00f5ff", "#39ff14", "#fb923c", "#ffffff"] });
             setTimeout(() => confetti({ particleCount: 150, spread: 100, origin: { y: 0.5, x: 0.2 }, colors: ["#a78bfa", "#00f5ff", "#39ff14"] }), 300);
             setTimeout(() => confetti({ particleCount: 150, spread: 100, origin: { y: 0.5, x: 0.8 }, colors: ["#fb923c", "#39ff14", "#ffffff"] }), 600);
-          }, 400);
+          }
         }
-      }
-    } catch (_) {}
+      } catch (_) {}
+      // Confirmed refresh so header shows real persisted values
+      window.dispatchEvent(new CustomEvent('win-logged'));
+    })();
 
-    fireWinConfetti();
-    window.dispatchEvent(new CustomEvent('win-logged'));
     setLogging(false);
-    setDone(true);
-
     setTimeout(() => {
       setDone(false);
       onClose();
