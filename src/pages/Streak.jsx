@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Shield, Trophy, Zap, RefreshCw } from "lucide-react";
+import { Shield, Trophy, Zap, RefreshCw, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ function buildDayMap(wins, days = 42) {
 }
 
 export default function Streak() {
+  const navigate = useNavigate();
   const [streakData, setStreakData] = useState(null);
   const [wins,       setWins]       = useState([]);
   const [dayMap,     setDayMap]     = useState({});
@@ -122,6 +124,14 @@ export default function Streak() {
       onTouchEnd={handleTouchEnd}
       style={{ touchAction: 'pan-x pan-y' }}
     >
+      {/* Back button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" /> Back
+      </button>
+
       {/* Pull-to-refresh indicator */}
       {(pullDist > 10 || refreshing) && (
         <div className="flex justify-center" style={{ marginTop: -16, marginBottom: -8, opacity: refreshing ? 1 : pullDist / 80 }}>

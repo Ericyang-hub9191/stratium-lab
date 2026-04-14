@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Home, Zap, Flame, TrendingUp, User, Radio } from "lucide-react";
+import { Home, Zap, TrendingUp, User, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
@@ -8,9 +8,8 @@ import { base44 } from "@/api/base44Client";
 const TABS = [
   { path: "/",         icon: Home,       label: "Home"     },
   { path: "/missions", icon: Zap,        label: "Missions" },
-  { path: "/streak",   icon: Flame,      label: "Streak"   },
-  { path: "/progress", icon: TrendingUp, label: "Progress" },
   { path: "/signals",  icon: Radio,      label: "Signals"  },
+  { path: "/progress", icon: TrendingUp, label: "Progress" },
   { path: "/me",       icon: User,       label: "Me"       },
 ];
 

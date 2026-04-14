@@ -102,20 +102,24 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Streak hero ── */}
+      {/* ── Streak hero (tappable → /streak) ── */}
       <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate("/streak")}
+          className="flex items-center gap-3 active:scale-95 transition-transform"
+          style={{ WebkitTapHighlightColor: "transparent" }}
+        >
           <span
             className="text-5xl leading-none"
             style={{ filter: "drop-shadow(0 0 12px #ff6b35)", animation: "bounce 1.4s infinite" }}
           >
             🔥
           </span>
-          <div>
+          <div className="text-left">
             <div className="text-3xl font-black leading-none text-[#00f5ff]">{streak} days</div>
             <div className="text-xs text-muted-foreground font-semibold mt-0.5">Current streak — keep it alive!</div>
           </div>
-        </div>
+        </button>
         <div className="text-right">
           <div className="text-2xl font-black text-[#39ff14]">{xp}</div>
           <div className="text-[10px] text-muted-foreground font-medium">Total XP</div>
