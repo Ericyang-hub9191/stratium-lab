@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Home, Zap, TrendingUp, User, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ const TABS = [
 
 export default function Layout() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
 
   // Sync dark mode with system preference
   useEffect(() => {
@@ -64,8 +65,12 @@ export default function Layout() {
   // ── Shared header content ──────────────────────────────────────────
   const HeaderContent = () => (
     <>
-      {/* Streak flame */}
-      <div className="flex items-center gap-2">
+      {/* Streak flame — tappable */}
+      <button
+        onClick={() => navigate("/streak")}
+        className="flex items-center gap-2 active:scale-95 transition-transform"
+        style={{ WebkitTapHighlightColor: "transparent" }}
+      >
         <span
           className={cn("text-[32px] leading-none select-none", isHighStreak ? "animate-pulse-glow" : "animate-streak-fire")}
           style={{
@@ -77,7 +82,7 @@ export default function Layout() {
         >🔥</span>
         <span className="text-2xl font-black tabular-nums text-[#00f5ff] leading-none">{streak}</span>
         <span className="text-xs text-muted-foreground font-medium">streak</span>
-      </div>
+      </button>
 
       {/* Deep Dive toggle */}
       <button
@@ -185,9 +190,13 @@ export default function Layout() {
             })}
           </nav>
 
-          {/* Streak stat in sidebar footer */}
+          {/* Streak stat in sidebar footer — tappable */}
           <div className="px-4 py-5 border-t border-border space-y-3">
-            <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate("/streak")}
+              className="flex items-center gap-2 active:scale-95 transition-transform w-full text-left"
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            >
               <span
                 className={cn("text-2xl leading-none select-none", isHighStreak ? "animate-streak-fire" : "")}
                 style={{ filter: "drop-shadow(0 0 6px #ff6b35)" }}
@@ -196,7 +205,7 @@ export default function Layout() {
                 <div className="text-xl font-black tabular-nums text-[#00f5ff]">{streak}</div>
                 <div className="text-[10px] text-muted-foreground">day streak</div>
               </div>
-            </div>
+            </button>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
                 <span className="text-sm">💎</span>
@@ -209,6 +218,7 @@ export default function Layout() {
               </div>
             </div>
           </div>
+
         </aside>
 
         {/* Main column */}
