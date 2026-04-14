@@ -1,46 +1,17 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Clock, ChevronDown, ChevronUp, ArrowLeft, Zap } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ImpactLoggerModal from "../components/WinLoggerModal";
 
-function useTimer(minutes) {
-  const totalSecs = (minutes || 3) * 60;
-  const [seconds, setSeconds] = useState(totalSecs);
-  const [running, setRunning] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (running && seconds > 0) {
-      ref.current = setInterval(() => setSeconds(s => s - 1), 1000);
-    } else {
-      clearInterval(ref.current);
-    }
-    return () => clearInterval(ref.current);
-  }, [running, seconds]);
-
-  // Reset when duration changes (new mission loaded)
-  useEffect(() => {
-    setSeconds(totalSecs);
-    setRunning(false);
-  }, [totalSecs]);
-
-  const start = () => setRunning(true);
-  const mm  = String(Math.floor(seconds / 60)).padStart(2, "0");
-  const ss  = String(seconds % 60).padStart(2, "0");
-  const pct = ((totalSecs - seconds) / totalSecs) * 100;
-  return { display: `${mm}:${ss}`, start, running, done: seconds === 0, pct };
-}
-
 export default function MissionExperience() {
   const { id }    = useParams();
   const navigate  = useNavigate();
 
-  const [mission,     setMission]     = useState(null);
-  const [loading,     setLoading]     = useState(true);
-  const [learnOpen,   setLearnOpen]   = useState(false);
-  const [applied,     setApplied]     = useState(false);
-  const [loggerOpen,  setLoggerOpen]  = useState(false);
+  const [mission,    setMission]    = useState(null);
+  const [loading,    setLoading]    = useState(true);
+  const [learnOpen,  setLearnOpen]  = useState(false);
+  const [loggerOpen, setLoggerOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -56,15 +27,6 @@ export default function MissionExperience() {
       setLoading(false);
     })();
   }, [id]);
-
-  const timer = useTimer(mission?.durationMinutes);
-
-  const handleApply = () => {
-    timer.start();
-    setApplied(true);
-  };
-
-  const circumference = 2 * Math.PI * 16;
 
   if (loading) {
     return (
@@ -99,27 +61,7 @@ export default function MissionExperience() {
           <Zap className="w-3 h-3" /> Quick Boost
         </span>
 
-        {/* Circular countdown */}
-        <div className="relative w-12 h-12">
-          <svg className="w-full h-full -rotate-90" viewBox="0 0 40 40">
-            <circle cx="20" cy="20" r="16" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
-            <circle
-              cx="20" cy="20" r="16" fill="none"
-              stroke={timer.done ? "#39ff14" : "#00f5ff"}
-              strokeWidth="3"
-              strokeDasharray={`${circumference * timer.pct / 100} ${circumference}`}
-              strokeLinecap="round"
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span
-              className="text-[9px] font-black tabular-nums"
-              style={{ color: timer.done ? "#39ff14" : "#00f5ff" }}
-            >
-              {timer.display}
-            </span>
-          </div>
-        </div>
+        <span className="text-sm font-black text-[#39ff14]">+{mission?.xpReward ?? 75} XP</span>
       </div>
 
       {/* ── Body ── */}
@@ -167,8 +109,8 @@ export default function MissionExperience() {
           <p className="text-[10px] text-muted-foreground">Draft here, then paste it into your AI tool.</p>
         </div>
 
-        {/* Learn Why — revealed after Apply */}
-        {applied && mission.learnWhy && (
+        {/* Learn Why */}
+        {mission.learnWhy && (
           <div className="rounded-3xl border overflow-hidden" style={{ borderColor: "rgba(167,139,250,0.3)" }}>
             <button
               onClick={() => setLearnOpen(v => !v)}
@@ -195,17 +137,14 @@ export default function MissionExperience() {
         style={{ background: "linear-gradient(to top, hsl(var(--background)) 60%, transparent)" }}
       >
         <button
-          onClick={applied ? () => setLoggerOpen(true) : handleApply}
+          onClick={() => setLoggerOpen(true)}
           className="w-full max-w-sm mx-4 py-4 rounded-2xl text-base font-black text-black flex items-center justify-center gap-2 transition-all duration-200 active:scale-95"
           style={{
-            background:  applied ? "linear-gradient(90deg, #39ff14, #00e5ff)" : "#39ff14",
-            boxShadow:   `0 0 ${applied ? "32px" : "20px"} rgba(57,255,20,${applied ? "0.6" : "0.4"})`,
+            background: "linear-gradient(90deg, #39ff14, #00f5ff)",
+            boxShadow: "0 0 28px rgba(57,255,20,0.5)",
           }}
         >
-          {applied
-            ? <><Zap className="w-5 h-5" /> Log Impact 🏆</>
-            : <>✅ I Applied It — Start Timer</>
-          }
+          ✅ I Applied It
         </button>
       </div>
 
