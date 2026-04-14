@@ -1,12 +1,12 @@
 import { useOutletContext, useNavigate } from "react-router-dom";
-import { Zap, BookOpen, Clock, Search, Map, Flame, Trophy } from "lucide-react";
+import { Zap, Clock, Search, Map, Trophy } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
 import DeepDiveCard, { groupIntoJourneys } from "@/components/DeepDiveCard";
 
 const QUICK_BOOST_CATEGORIES = ["All", "prompting", "writing", "research", "automation", "python", "data", "productivity"];
-const DEEP_DIVE_CATEGORIES   = ["All", "prompting", "research", "python", "business", "biology", "safety", "psychology", "mlops"];
+const DEEP_DIVE_CATEGORIES   = ["All", "prompting", "research", "python", "mlops", "business", "biology", "safety", "psychology"];
 
 const CATEGORY_COLORS = {
   prompting:   "#00f5ff",
