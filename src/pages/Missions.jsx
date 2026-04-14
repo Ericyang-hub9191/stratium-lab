@@ -53,14 +53,14 @@ export default function Missions() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black">Missions</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Pick one. Apply it. Log the win.</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Pick one. Apply it. Log the impact.</p>
         </div>
         <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl"
           style={deepDive
             ? { background: "rgba(57,255,20,0.12)", color: "#39ff14" }
             : { background: "rgba(0,245,255,0.12)", color: "#00f5ff" }}>
           {deepDive ? <BookOpen className="w-3 h-3" /> : <Zap className="w-3 h-3" />}
-          {deepDive ? "Deep Dive" : "Quick-Win"}
+          {deepDive ? "Deep Dive" : "Quick Boost"}
         </div>
       </div>
 

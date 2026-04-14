@@ -112,6 +112,7 @@ export default function Progress() {
   // ── Mastery path progress ─────────────────────────────────────────
   const activeNode = PATH_NODES.filter(n => totalMissions >= n.req).slice(-1)[0] ?? PATH_NODES[0];
 
+
   const timeDisplay = totalTime >= 60
     ? `${(totalTime / 60).toFixed(1)} hrs`
     : `${totalTime} min`;
@@ -170,7 +171,7 @@ export default function Progress() {
         {[
           { icon: Zap,       label: "Lifetime XP",    value: String(totalXp),       color: "#00f5ff" },
           { icon: Clock,     label: "Time Saved",     value: timeDisplay,           color: "#39ff14" },
-          { icon: TrendingUp,label: "Total Missions", value: String(totalMissions), color: "#a78bfa" },
+          { icon: TrendingUp,label: "Total Boosts", value: String(totalMissions), color: "#a78bfa" },
         ].map(({ icon: Icon, label, value, color }) => (
           <div key={label} className="rounded-2xl border bg-card p-3 text-center space-y-1.5">
             <Icon className="w-5 h-5 mx-auto" style={{ color }} />
@@ -215,7 +216,7 @@ export default function Progress() {
         <div className="flex items-center gap-2">
           <Award className="w-4 h-4 text-[#fb923c]" />
           <span className="text-sm font-bold">Mastery Path</span>
-          <span className="ml-auto text-[10px] text-muted-foreground">{totalMissions} missions done</span>
+          <span className="ml-auto text-[10px] text-muted-foreground">{totalMissions} boosts done</span>
         </div>
         <div className="space-y-3">
           {PATH_NODES.map((node, i) => {
@@ -261,7 +262,7 @@ export default function Progress() {
                   <p className="text-[10px] text-muted-foreground mt-0.5">{node.desc}</p>
                   {!unlocked && (
                     <p className="text-[10px] mt-0.5" style={{ color: "#fb923c" }}>
-                      🔒 {node.req - totalMissions} more missions to unlock
+                      🔒 {node.req - totalMissions} more boosts to unlock
                     </p>
                   )}
                 </div>

@@ -101,7 +101,7 @@ export default function Layout() {
           }}
         />
         <span className={cn("relative z-10 flex-1 text-center text-[11px] font-black py-1 select-none transition-colors duration-200", !deepDive ? "text-black" : "text-muted-foreground")}>
-          Quick-Win
+          Quick Boost
         </span>
         <span className={cn("relative z-10 flex-1 text-center text-[11px] font-black py-1 select-none transition-colors duration-200", deepDive ? "text-black" : "text-muted-foreground")}>
           Deep Dive

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Clock, ChevronDown, ChevronUp, ArrowLeft, Zap } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import WinLoggerModal from "../components/WinLoggerModal";
+import ImpactLoggerModal from "../components/WinLoggerModal";
 
 function useTimer(minutes) {
   const totalSecs = (minutes || 3) * 60;
@@ -96,7 +96,7 @@ export default function MissionExperience() {
         </button>
 
         <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-full text-black bg-[#00f5ff]">
-          <Zap className="w-3 h-3" /> Quick-Win
+          <Zap className="w-3 h-3" /> Quick Boost
         </span>
 
         {/* Circular countdown */}
@@ -203,14 +203,14 @@ export default function MissionExperience() {
           }}
         >
           {applied
-            ? <><Zap className="w-5 h-5" /> Log Win 🏆</>
+            ? <><Zap className="w-5 h-5" /> Log Impact 🏆</>
             : <>✅ I Applied It — Start Timer</>
           }
         </button>
       </div>
 
-      {/* ── Win Logger ── */}
-      <WinLoggerModal
+      {/* ── Impact Logger ── */}
+      <ImpactLoggerModal
         open={loggerOpen}
         onClose={() => setLoggerOpen(false)}
         mission={mission}

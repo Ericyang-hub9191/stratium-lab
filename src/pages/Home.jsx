@@ -150,7 +150,7 @@ export default function Home() {
               className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1 rounded-full text-black"
               style={{ background: deepDive ? "#39ff14" : "#00f5ff" }}
             >
-              {deepDive ? "🔬 Deep Dive" : <><Zap className="w-3 h-3" />Quick-Win</>}
+              {deepDive ? "🔬 Deep Dive" : <><Zap className="w-3 h-3" />Quick Boost</>}
             </span>
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
@@ -163,7 +163,7 @@ export default function Home() {
 
           <div>
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-1">
-              Today's Mission
+              Today's Boost
             </p>
             <h2 className="text-2xl font-black leading-tight">{mission.title}</h2>
             <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{mission.description}</p>
@@ -177,16 +177,16 @@ export default function Home() {
           </div>
 
           <button
-            onClick={() => navigate(`/mission/${mission.id}`)}
-            className="w-full py-4 rounded-2xl text-base font-black text-black flex items-center justify-center gap-2 transition-all duration-200 active:scale-95"
-            style={{ background: "#00f5ff", boxShadow: "0 0 20px rgba(0,245,255,0.4)" }}
+          onClick={() => navigate(`/mission/${mission.id}`)}
+          className="w-full py-4 rounded-2xl text-base font-black text-black flex items-center justify-center gap-2 transition-all duration-200 active:scale-95"
+          style={{ background: "#00f5ff", boxShadow: "0 0 20px rgba(0,245,255,0.4)" }}
           >
-            <Zap className="w-5 h-5" /> Start Mission
+          <Zap className="w-5 h-5" /> Start Boost
           </button>
         </div>
       ) : (
         <div className="rounded-3xl border bg-card p-6 text-center text-sm text-muted-foreground">
-          No missions yet — check back soon 🚀
+          No boosts yet — check back soon 🚀
         </div>
       )}
 
@@ -202,7 +202,7 @@ export default function Home() {
         <div className="grid grid-cols-3 gap-3 text-center">
           {[
             { value: hoursDisplay,                   label: "Time Saved", color: "#39ff14" },
-            { value: String(weeklyStats.missions),   label: "Missions",   color: "#00f5ff" },
+            { value: String(weeklyStats.missions),   label: "Boosts",     color: "#00f5ff" },
             { value: String(weeklyStats.avgBoost),   label: "Avg Boost",  color: "#a78bfa" },
           ].map(({ value, label, color }) => (
             <div key={label}>
@@ -213,7 +213,7 @@ export default function Home() {
         </div>
         <div>
           <div className="flex justify-between text-[10px] text-muted-foreground mb-1.5">
-            <span>{weeklyStats.missions} / {weeklyGoal} missions this week</span>
+            <span>{weeklyStats.missions} / {weeklyGoal} boosts this week</span>
             <span className="font-semibold text-[#39ff14]">{weekPct}%</span>
           </div>
           <div className="h-2 rounded-full bg-secondary overflow-hidden">
@@ -229,9 +229,9 @@ export default function Home() {
       {recentWins.length > 0 && (
         <div className="space-y-2.5">
           <div className="flex items-center justify-between px-1">
-            <h3 className="text-sm font-bold">Recent Wins</h3>
+            <h3 className="text-sm font-bold">Recent Impact</h3>
             <button className="flex items-center gap-0.5 text-xs font-semibold text-[#00f5ff]">
-              All wins <ChevronRight className="w-3.5 h-3.5" />
+              All impact <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory">
@@ -248,7 +248,7 @@ export default function Home() {
                       className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                       style={{ background: `${color}22`, color }}
                     >
-                      {win.category ?? "win"}
+                      {win.category ?? "boost"}
                     </span>
                     <span className="text-[10px] text-muted-foreground">
                       {win.appliedAt
@@ -256,7 +256,7 @@ export default function Home() {
                         : ""}
                     </span>
                   </div>
-                  <p className="text-xs font-bold leading-snug line-clamp-2">{win.note ?? "Mission win"}</p>
+                  <p className="text-xs font-bold leading-snug line-clamp-2">{win.note ?? "Impact logged"}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-muted-foreground">⏱ {win.timeSavedMinutes ?? 0}m saved</span>
                     <span className="text-[10px] font-bold text-[#39ff14]">

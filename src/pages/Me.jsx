@@ -87,7 +87,7 @@ export default function Me() {
       <div className="grid grid-cols-3 gap-2">
         {[
           { emoji: "🔥", value: "0", label: "Streak" },
-          { emoji: "🏆", value: "0", label: "Wins" },
+          { emoji: "🏆", value: "0", label: "Impact" },
           { emoji: "🛡️", value: "3", label: "Freezes" },
         ].map(({ emoji, value, label }) => (
           <div key={label} className="rounded-2xl border bg-card p-3 text-center space-y-0.5">

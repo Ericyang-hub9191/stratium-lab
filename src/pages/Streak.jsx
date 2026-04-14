@@ -76,7 +76,7 @@ export default function Streak() {
 
   const handleUseFreeze = async () => {
     if (!streakData || (streakData.freezeCount ?? 0) <= 0) {
-      showMsg("❌ No freezes left! Complete missions to earn more.");
+      showMsg("❌ No freezes left! Complete boosts to earn more.");
       return;
     }
     const today = new Date().toISOString().split("T")[0];
@@ -95,7 +95,7 @@ export default function Streak() {
       currentStreak: Math.max((streakData.currentStreak ?? 0), 1),
       lastCompletedDate: today,
     });
-    showMsg("🔧 Streak repaired! Log a win today to keep it alive.");
+    showMsg("🔧 Streak repaired! Log an impact today to keep it alive.");
     confetti({ particleCount: 80, spread: 60, origin: { y: 0.55 }, colors: ["#00f5ff", "#39ff14", "#fb923c"] });
     load();
   };
@@ -219,7 +219,7 @@ export default function Streak() {
       <div className="grid grid-cols-3 gap-3">
         {[
           { icon: Trophy, label: "Longest",    value: String(longest),   color: "#fb923c" },
-          { icon: Zap,    label: "Total Wins", value: String(totalWins), color: "#39ff14" },
+          { icon: Zap,    label: "Total Impact", value: String(totalWins), color: "#39ff14" },
           { icon: Shield, label: "Freezes",    value: String(freezes),   color: "#00f5ff" },
         ].map(({ icon: Icon, label, value, color }) => (
           <div key={label} className="rounded-2xl border bg-card p-3 text-center space-y-1.5">
@@ -236,7 +236,7 @@ export default function Streak() {
           <h2 className="text-sm font-bold">Activity (last 6 weeks)</h2>
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <span style={{ fontSize: 10 }}>🔥</span> Win
+              <span style={{ fontSize: 10 }}>🔥</span> Boost
             </span>
             <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
               <span className="w-2.5 h-2.5 rounded-sm bg-secondary/60 inline-block" /> Missed
@@ -298,7 +298,7 @@ export default function Streak() {
           </span>
         </div>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Use a freeze to protect your streak on a rest day — no mission needed.
+          Use a freeze to protect your streak on a rest day — no boost needed.
         </p>
         <div className="grid grid-cols-2 gap-2">
           <button
@@ -339,7 +339,7 @@ export default function Streak() {
       {/* ── Recent wins ── */}
       {wins.length > 0 ? (
         <div className="space-y-3">
-          <h2 className="text-sm font-bold px-1">Recent Wins</h2>
+          <h2 className="text-sm font-bold px-1">Recent Impact</h2>
           <div className="space-y-2">
             {wins.slice(0, 10).map((win) => (
               <div key={win.id}
@@ -347,7 +347,7 @@ export default function Streak() {
                 style={{ borderColor: "rgba(57,255,20,0.15)" }}>
                 <div className="text-xl shrink-0">🏆</div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold truncate">{win.note ?? "Mission win"}</p>
+                  <p className="text-xs font-bold truncate">{win.note ?? "Impact logged"}</p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
                     ⏱ {win.timeSavedMinutes ?? 0}m saved ·{" "}
                     <span style={{ color: "#39ff14" }}>{"★".repeat(win.correctnessBoost ?? 0)}</span>
@@ -365,8 +365,8 @@ export default function Streak() {
       ) : (
         <div className="rounded-3xl border bg-card p-8 text-center space-y-2">
           <div className="text-4xl">🎯</div>
-          <p className="text-sm font-bold">No wins yet</p>
-          <p className="text-xs text-muted-foreground">Complete your first mission to start your streak!</p>
+          <p className="text-sm font-bold">No impact yet</p>
+          <p className="text-xs text-muted-foreground">Complete your first boost to start your streak!</p>
         </div>
       )}
     </div>

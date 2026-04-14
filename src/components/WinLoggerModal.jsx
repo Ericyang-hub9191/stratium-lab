@@ -74,7 +74,7 @@ async function updateUserStats(userId, xpEarned, timeSaved) {
 // ── Component ─────────────────────────────────────────────────────────
 const BOOST_LABELS = ["", "Slight nudge", "Noticeable lift", "Clear improvement", "Big jump", "Game changer"];
 
-export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
+export default function ImpactLoggerModal({ open, onClose, mission, onSuccess }) {
   const [timeSaved, setTimeSaved] = useState(10);
   const [stars,     setStars]     = useState(3);
   const [note,      setNote]      = useState("");
@@ -153,9 +153,9 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
         {done ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4 px-6 text-center">
             <div className="text-6xl animate-bounce">🏆</div>
-            <h2 className="text-2xl font-black text-[#39ff14]">Win Logged!</h2>
+            <h2 className="text-2xl font-black text-[#39ff14]">Impact Logged!</h2>
             <p className="text-sm text-muted-foreground">
-              <span className="font-black text-[#00f5ff]">+{xpEarned} XP</span> added · Streak protected 🔥
+            <span className="font-black text-[#00f5ff]">+{xpEarned} XP</span> added · Streak protected 🔥
             </p>
           </div>
         ) : (
@@ -165,7 +165,7 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-black">Log Your Win</h2>
+                <h2 className="text-xl font-black">Log Your Impact</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">How did applying it go?</p>
               </div>
               <button onClick={onClose} className="p-2 rounded-xl border bg-secondary">
@@ -247,7 +247,7 @@ export default function WinLoggerModal({ open, onClose, mission, onSuccess }) {
                 boxShadow:  "0 0 28px rgba(57,255,20,0.5)",
               }}
             >
-              {logging ? "Logging…" : "🏆 Log Win — Protect Streak"}
+              {logging ? "Logging…" : "🏆 Log Impact — Protect Streak"}
             </button>
 
           </div>
