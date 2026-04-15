@@ -81,7 +81,7 @@ export default function MissionExperience() {
     })();
   }, [id]);
 
-  const canApply = draft.trim().length >= 10;
+  const canApply = true;
   const xpEarned = mission?.xpReward ?? 75;
 
   const handleApply = async () => {
@@ -202,22 +202,16 @@ export default function MissionExperience() {
         <div className="rounded-3xl border bg-card p-5 space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Your Prompt Draft</p>
-            {draft.trim().length > 0 && draft.trim().length < 10 && (
-              <span className="text-[10px] text-muted-foreground">{10 - draft.trim().length} more chars…</span>
-            )}
-            {canApply && (
-              <span className="text-[10px] font-bold text-[#39ff14]">✓ Ready</span>
-            )}
           </div>
           <textarea
             rows={4}
             value={draft}
             onChange={e => setDraft(e.target.value)}
-            placeholder={`Act as a senior [role].\nHelp me [task].\nRespond as a [format].`}
+            placeholder="Optional — write your prompt here to help it stick"
             className="w-full bg-secondary rounded-2xl px-4 py-3 text-sm resize-none outline-none border border-transparent focus:border-[#00f5ff] transition-colors placeholder:text-muted-foreground/50 font-mono"
             style={{ WebkitUserSelect: 'text', userSelect: 'text' }}
           />
-          <p className="text-[10px] text-muted-foreground">Draft here, then paste it into your AI tool. Type at least 10 characters to unlock.</p>
+          <p className="text-[10px] text-muted-foreground">Writing what you tried helps retention — but you can skip this.</p>
         </div>
 
         {/* Optional quick note */}
@@ -263,15 +257,12 @@ export default function MissionExperience() {
           onClick={handleApply}
           disabled={!canApply || logging}
           className="w-full max-w-sm mx-4 py-4 rounded-2xl text-base font-black text-black flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100"
-          style={canApply ? {
+          style={{
             background: "linear-gradient(90deg, #39ff14, #00f5ff)",
             boxShadow: "0 0 28px rgba(57,255,20,0.5)",
-          } : {
-            background: "hsl(var(--secondary))",
-            color: "hsl(var(--muted-foreground))",
           }}
         >
-          {logging ? "Logging…" : canApply ? "✅ I Applied It" : "✍️ Draft your prompt first"}
+          {logging ? "Logging…" : "✅ I Applied It"}
         </button>
       </div>
     </div>
