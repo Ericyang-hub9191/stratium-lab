@@ -93,19 +93,28 @@ export default function Layout() {
   const MobileStreakBtn = () => (
     <button
       onClick={() => pathname !== "/streak" && navigate("/streak")}
-      className="flex items-center gap-1.5 active:scale-95 transition-transform"
+      className="flex flex-col items-start active:scale-95 transition-transform"
       style={{ WebkitTapHighlightColor: "transparent" }}
     >
-      <span
-        className={cn("text-[32px] leading-none select-none", isHighStreak ? "animate-pulse-glow" : "animate-streak-fire")}
-        style={{
-          display: "inline-block",
-          filter: isHighStreak
-            ? "drop-shadow(0 0 10px #ff6b35) drop-shadow(0 0 20px #ff6b35)"
-            : "drop-shadow(0 0 4px #ff6b35)",
-        }}
-      >🔥</span>
-      <span className="text-2xl font-black tabular-nums text-[#00f5ff] leading-none">{streak}</span>
+      {/* Wordmark */}
+      <div className="flex items-center gap-1 leading-none">
+        <span style={{ fontSize: 13, color: "#00f5ff" }}>⚡</span>
+        <span style={{ fontSize: 15, fontWeight: 900, color: "#00f5ff", letterSpacing: "-0.02em" }}>Synthetica</span>
+      </div>
+      {/* Streak */}
+      <div className="flex items-center gap-1 mt-0.5">
+        <span
+          className={cn("leading-none select-none", isHighStreak ? "animate-streak-fire" : "")}
+          style={{
+            fontSize: 14,
+            filter: isHighStreak
+              ? "drop-shadow(0 0 6px #ff6b35) drop-shadow(0 0 12px #ff6b35)"
+              : "drop-shadow(0 0 3px #ff6b35)",
+          }}
+        >🔥</span>
+        <span className="font-black tabular-nums leading-none" style={{ fontSize: 14, color: "#00f5ff" }}>{streak}</span>
+        <span className="text-muted-foreground font-medium" style={{ fontSize: 10 }}>streak</span>
+      </div>
     </button>
   );
 
