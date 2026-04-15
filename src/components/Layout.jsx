@@ -29,6 +29,33 @@ export default function Layout() {
   const [streak,   setStreak]   = useState(0);
   const [xp,       setXp]       = useState(0);
   const [gems,     setGems]     = useState(0);
+  const [headerFlash, setHeaderFlash] = useState(null); // null | "#39ff14" | "#00f5ff"
+  const [showToggleHint, setShowToggleHint] = useState(
+    () => !localStorage.getItem("synthetica_toggle_hint_seen")
+  );
+
+  const handleToggle = () => {
+    const next = !deepDive;
+    setDeepDive(next);
+    // Flash header border
+    const flashColor = next ? "#39ff14" : "#00f5ff";
+    setHeaderFlash(flashColor);
+    setTimeout(() => setHeaderFlash(null), 800);
+    // Dismiss tooltip
+    if (showToggleHint) {
+      setShowToggleHint(false);
+      localStorage.setItem("synthetica_toggle_hint_seen", "1");
+    }
+  };
+
+  useEffect(() => {
+    if (!showToggleHint) return;
+    const t = setTimeout(() => {
+      setShowToggleHint(false);
+      localStorage.setItem("synthetica_toggle_hint_seen", "1");
+    }, 4000);
+    return () => clearTimeout(t);
+  }, [showToggleHint]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -62,30 +89,50 @@ export default function Layout() {
   const isHighStreak = streak >= 7;
 
   // ── Shared header content ──────────────────────────────────────────
-  const HeaderContent = () => (
-    <>
-      {/* Streak flame — tappable */}
-      <button
-        onClick={() => pathname !== "/streak" && navigate("/streak")}
-        className="flex items-center gap-2 active:scale-95 transition-transform"
-        style={{ WebkitTapHighlightColor: "transparent" }}
-      >
-        <span
-          className={cn("text-[32px] leading-none select-none", isHighStreak ? "animate-pulse-glow" : "animate-streak-fire")}
-          style={{
-            display: "inline-block",
-            filter: isHighStreak
-              ? "drop-shadow(0 0 10px #ff6b35) drop-shadow(0 0 20px #ff6b35)"
-              : "drop-shadow(0 0 4px #ff6b35)",
-          }}
-        >🔥</span>
-        <span className="text-2xl font-black tabular-nums text-[#00f5ff] leading-none">{streak}</span>
-        <span className="text-xs text-muted-foreground font-medium">streak</span>
-      </button>
+  // isMobile: used to conditionally render streak label
+  const MobileStreakBtn = () => (
+    <button
+      onClick={() => pathname !== "/streak" && navigate("/streak")}
+      className="flex items-center gap-1.5 active:scale-95 transition-transform"
+      style={{ WebkitTapHighlightColor: "transparent" }}
+    >
+      <span
+        className={cn("text-[32px] leading-none select-none", isHighStreak ? "animate-pulse-glow" : "animate-streak-fire")}
+        style={{
+          display: "inline-block",
+          filter: isHighStreak
+            ? "drop-shadow(0 0 10px #ff6b35) drop-shadow(0 0 20px #ff6b35)"
+            : "drop-shadow(0 0 4px #ff6b35)",
+        }}
+      >🔥</span>
+      <span className="text-2xl font-black tabular-nums text-[#00f5ff] leading-none">{streak}</span>
+    </button>
+  );
 
-      {/* Deep Dive toggle */}
+  const DesktopStreakBtn = () => (
+    <button
+      onClick={() => pathname !== "/streak" && navigate("/streak")}
+      className="flex items-center gap-2 active:scale-95 transition-transform"
+      style={{ WebkitTapHighlightColor: "transparent" }}
+    >
+      <span
+        className={cn("text-[32px] leading-none select-none", isHighStreak ? "animate-pulse-glow" : "animate-streak-fire")}
+        style={{
+          display: "inline-block",
+          filter: isHighStreak
+            ? "drop-shadow(0 0 10px #ff6b35) drop-shadow(0 0 20px #ff6b35)"
+            : "drop-shadow(0 0 4px #ff6b35)",
+        }}
+      >🔥</span>
+      <span className="text-2xl font-black tabular-nums text-[#00f5ff] leading-none">{streak}</span>
+      <span className="text-xs text-muted-foreground font-medium">streak</span>
+    </button>
+  );
+
+  const ToggleWithHint = () => (
+    <div className="relative flex flex-col items-center">
       <button
-        onClick={() => setDeepDive(v => !v)}
+        onClick={handleToggle}
         role="switch"
         aria-checked={deepDive}
         className="relative flex items-center rounded-full border transition-colors duration-300 overflow-hidden p-1 min-w-[148px]"
@@ -106,20 +153,29 @@ export default function Layout() {
           Deep Dive
         </span>
       </button>
+      {showToggleHint && (
+        <div
+          className="absolute top-full mt-2 whitespace-nowrap text-center pointer-events-none z-50"
+          style={{ fontSize: 11, color: "hsl(var(--muted-foreground))" }}
+        >
+          Switch between daily Boosts and multi-lesson journeys
+        </div>
+      )}
+    </div>
+  );
 
-      {/* Gems + XP */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1">
-          <span className="text-base leading-none">💎</span>
-          <span className="text-sm font-black tabular-nums" style={{ color: "#a78bfa" }}>{gems}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-base leading-none">⚡</span>
-          <span className="text-lg font-black tabular-nums text-[#39ff14]">{xp}</span>
-          <span className="text-xs text-muted-foreground font-medium">XP</span>
-        </div>
+  const GemsXp = () => (
+    <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1">
+        <span className="text-base leading-none">💎</span>
+        <span className="text-sm font-black tabular-nums" style={{ color: "#a78bfa" }}>{gems}</span>
       </div>
-    </>
+      <div className="flex items-center gap-1">
+        <span className="text-base leading-none">⚡</span>
+        <span className="text-lg font-black tabular-nums text-[#39ff14]">{xp}</span>
+        <span className="text-xs text-muted-foreground font-medium">XP</span>
+      </div>
+    </div>
   );
 
   // ── Page transition wrapper ────────────────────────────────────────
@@ -158,6 +214,9 @@ export default function Layout() {
               <span className="text-lg font-black tracking-tight text-[#00f5ff]">Synthetica</span>
             </div>
             <p className="text-[10px] text-muted-foreground mt-1">AI habit formation</p>
+            <p className="text-[10px] font-bold mt-1 transition-colors duration-300" style={{ color: deepDive ? "#39ff14" : "#00f5ff" }}>
+              {deepDive ? "🗺️ Deep Dive mode" : "⚡ Quick Boost mode"}
+            </p>
           </div>
 
           {/* Nav links */}
@@ -224,10 +283,19 @@ export default function Layout() {
         <div className="flex-1 flex flex-col min-w-0">
           {/* Desktop header */}
           <header
-            className="sticky top-0 z-30 bg-background/90 backdrop-blur-xl border-b border-border px-6 py-3 flex items-center justify-between gap-4"
-            style={{ WebkitUserSelect: 'none', userSelect: 'none' }}
+            className="sticky top-0 z-30 bg-background/90 backdrop-blur-xl px-6 py-3 flex items-center justify-between gap-4"
+            style={{
+              WebkitUserSelect: 'none',
+              userSelect: 'none',
+              borderBottomWidth: 1,
+              borderBottomStyle: 'solid',
+              borderBottomColor: headerFlash ?? 'hsl(var(--border))',
+              transition: headerFlash ? 'none' : 'border-bottom-color 0.8s ease',
+            }}
           >
-            <HeaderContent />
+            <DesktopStreakBtn />
+            <ToggleWithHint />
+            <GemsXp />
           </header>
 
           {/* Desktop page content */}
@@ -244,15 +312,23 @@ export default function Layout() {
 
         {/* Mobile header */}
         <header
-          className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border px-4 flex items-center justify-between gap-2"
+          className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl px-4 flex items-center gap-2"
           style={{
             paddingTop: 'max(env(safe-area-inset-top), 14px)',
             paddingBottom: '12px',
             WebkitUserSelect: 'none',
             userSelect: 'none',
+            borderBottomWidth: 1,
+            borderBottomStyle: 'solid',
+            borderBottomColor: headerFlash ?? 'hsl(var(--border))',
+            transition: headerFlash ? 'none' : 'border-bottom-color 0.8s ease',
           }}
         >
-          <HeaderContent />
+          <MobileStreakBtn />
+          <div className="flex-1 flex justify-center">
+            <ToggleWithHint />
+          </div>
+          <GemsXp />
         </header>
 
         {/* Mobile page content */}
