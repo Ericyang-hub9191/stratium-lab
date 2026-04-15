@@ -4,6 +4,7 @@ import { getTodaySignal } from "@/lib/signals-data";
 import { useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import { base44 } from "@/api/base44Client";
+import OnboardingModal from "@/components/OnboardingModal";
 
 
 
@@ -25,6 +26,7 @@ export default function Home() {
   const [recentWins,  setRecentWins]  = useState([]);
   const [weeklyStats, setWeeklyStats] = useState({ missions: 0, weeklyXp: 0 });
   const [loading,     setLoading]     = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem("synthetica_onboarded"));
 
   const milestoneRef = useRef(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -81,7 +83,14 @@ export default function Home() {
     setPullDist(0);
   };
 
+  const handleDismissOnboarding = () => {
+    localStorage.setItem("synthetica_onboarded", "true");
+    setShowOnboarding(false);
+  };
+
   return (
+    <>
+    {showOnboarding && <OnboardingModal onDismiss={handleDismissOnboarding} />}
     <div
       className="px-4 py-5 space-y-5"
       onTouchStart={handleTouchStart}
@@ -325,5 +334,6 @@ export default function Home() {
       )}
 
     </div>
+    </>
   );
 }
