@@ -213,6 +213,12 @@ export default function Progress() {
           <span className="text-sm font-bold">Mastery Path</span>
           <span className="ml-auto text-[10px] text-muted-foreground">{totalMissions} boosts done</span>
         </div>
+        {totalMissions === 0 && (
+          <div className="rounded-2xl px-4 py-3 text-xs font-bold text-center"
+            style={{ background: "rgba(57,255,20,0.08)", color: "#39ff14", border: "1px solid rgba(57,255,20,0.2)" }}>
+            Start here → complete your first Quick Boost to unlock your path
+          </div>
+        )}
         <div className="space-y-3">
           {PATH_NODES.map((node, i) => {
             const unlocked = totalMissions >= node.req;
@@ -275,6 +281,12 @@ export default function Progress() {
             {earnedIds.size} / {BADGES.length} earned
           </span>
         </div>
+        {earnedIds.size === 0 && (
+          <div className="rounded-2xl px-4 py-3 text-xs font-bold text-center"
+            style={{ background: "rgba(0,245,255,0.08)", color: "#00f5ff", border: "1px solid rgba(0,245,255,0.2)" }}>
+            Complete your first Boost to start earning badges ⚡
+          </div>
+        )}
         <div className="grid grid-cols-3 gap-3">
           {BADGES.map((badge) => {
             const earned = earnedIds.has(badge.id);

@@ -142,7 +142,11 @@ export default function Missions() {
               <div className="w-8 h-8 border-4 border-border border-t-[#39ff14] rounded-full animate-spin" />
             </div>
           ) : filteredJourneys.length === 0 ? (
-            <div className="text-center py-12 text-sm text-muted-foreground">No journeys found 🗺️</div>
+            <div className="rounded-3xl border bg-card p-8 text-center space-y-2">
+              <p className="text-2xl">🗺️</p>
+              <p className="text-sm font-bold">No journeys found</p>
+              <p className="text-xs text-muted-foreground">Try clearing your search or selecting a different category</p>
+            </div>
           ) : (
             <div className="space-y-4">
               {/* Journey stats bar */}
@@ -196,8 +200,10 @@ export default function Missions() {
               <div className="w-8 h-8 border-4 border-border border-t-[#00f5ff] rounded-full animate-spin" />
             </div>
           ) : filteredBoosts.length === 0 ? (
-            <div className="text-center py-12 text-sm text-muted-foreground">
-              No boosts found 🔍
+            <div className="rounded-3xl border bg-card p-8 text-center space-y-2">
+              <p className="text-2xl">🔍</p>
+              <p className="text-sm font-bold">No boosts found</p>
+              <p className="text-xs text-muted-foreground">Try clearing your search or selecting a different category</p>
             </div>
           ) : (
             <div className="space-y-3">

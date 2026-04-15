@@ -271,14 +271,24 @@ export default function Home() {
       </div>
 
       {/* ── Recent Wins carousel ── */}
-      {recentWins.length > 0 && (
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between px-1">
-            <h3 className="text-sm font-bold">Recent Impact</h3>
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-sm font-bold">Recent Impact</h3>
+          {recentWins.length > 0 && (
             <button className="flex items-center gap-0.5 text-xs font-semibold text-[#00f5ff]">
               All impact <ChevronRight className="w-3.5 h-3.5" />
             </button>
+          )}
+        </div>
+        {recentWins.length === 0 ? (
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
+            <div className="shrink-0 w-44 rounded-3xl border bg-card p-3.5 space-y-2 flex flex-col items-center justify-center text-center">
+              <span className="text-2xl">🎯</span>
+              <p className="text-xs font-bold leading-snug">No wins logged yet</p>
+              <p className="text-[10px] text-muted-foreground leading-snug">Complete your first Boost and tap 'I Applied It' to log your first win.</p>
+            </div>
           </div>
+        ) : (
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory">
             {recentWins.map((win) => {
               const color = CATEGORY_COLORS[win.category] ?? "#00f5ff";
@@ -306,8 +316,8 @@ export default function Home() {
               );
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* ── Signal of the Day ── */}
       {todaySignal && (
