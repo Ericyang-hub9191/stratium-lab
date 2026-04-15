@@ -129,6 +129,43 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ── Signal of the Day (prominent, second element) ── */}
+      {todaySignal && (
+        <>
+          <style>{`
+            @keyframes signal-pulse {
+              0%, 100% { border-color: rgba(167,139,250,0.45); }
+              50% { border-color: rgba(167,139,250,0.7); }
+            }
+          `}</style>
+          <div
+            className="rounded-3xl p-4 space-y-3 cursor-pointer active:scale-[0.98] transition-transform"
+            style={{
+              borderWidth: 1,
+              borderStyle: 'solid',
+              background: "linear-gradient(135deg, rgba(167,139,250,0.09), rgba(0,245,255,0.04))",
+              boxShadow: "0 0 30px rgba(167,139,250,0.08)",
+              animation: "signal-pulse 3s ease-in-out infinite",
+            }}
+            onClick={() => navigate(`/signals/${todaySignal.id}`)}
+          >
+            <div className="flex items-center gap-2">
+              <Radio className="w-4 h-4 text-[#a78bfa]" />
+              <span className="text-xs font-black uppercase tracking-wider text-[#a78bfa]">Signal of the Day</span>
+              {todaySignal.date === new Date().toISOString().split("T")[0] && (
+                <span className="px-1.5 py-px rounded-full text-black font-black" style={{ fontSize: 9, background: "#a78bfa" }}>NEW</span>
+              )}
+              <span className="text-[10px] text-muted-foreground ml-auto">{todaySignal.date}</span>
+            </div>
+            <h3 className="text-sm font-black leading-snug">{todaySignal.title}</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">{todaySignal.shortTeaser}</p>
+            <div className="flex items-center gap-0.5 text-xs font-bold text-[#a78bfa]">
+              Read Full Signal <ChevronRight className="w-3.5 h-3.5" />
+            </div>
+          </div>
+        </>
+      )}
+
       {/* ── Today's Featured card ── */}
       {loading ? (
         <div className="rounded-3xl border bg-card p-8 flex items-center justify-center">
@@ -319,29 +356,7 @@ export default function Home() {
         )}
       </div>
 
-      {/* ── Signal of the Day ── */}
-      {todaySignal && (
-        <div
-          className="rounded-3xl border p-4 space-y-3 cursor-pointer active:scale-[0.98] transition-transform"
-          style={{
-            borderColor: "rgba(167,139,250,0.45)",
-            background: "linear-gradient(135deg, rgba(167,139,250,0.09), rgba(0,245,255,0.04))",
-            boxShadow: "0 0 30px rgba(167,139,250,0.08)",
-          }}
-          onClick={() => navigate(`/signals/${todaySignal.id}`)}
-        >
-          <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-[#a78bfa]" />
-            <span className="text-xs font-black uppercase tracking-wider text-[#a78bfa]">Signal of the Day</span>
-            <span className="text-[10px] text-muted-foreground ml-auto">{todaySignal.date}</span>
-          </div>
-          <h3 className="text-sm font-black leading-snug">{todaySignal.title}</h3>
-          <p className="text-xs text-muted-foreground leading-relaxed">{todaySignal.shortTeaser}</p>
-          <div className="flex items-center gap-0.5 text-xs font-bold text-[#a78bfa]">
-            Read Full Signal <ChevronRight className="w-3.5 h-3.5" />
-          </div>
-        </div>
-      )}
+
 
     </div>
     </>
