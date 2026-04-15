@@ -256,7 +256,7 @@ export default function Streak() {
           return rows.map((row, ri) => (
             <div key={ri} className="grid grid-cols-7 gap-1.5">
               {row.map((day, di) => {
-                if (!day) return <div key={di} className="aspect-square" />;
+                if (day == null) return <div key={`empty-${ri}-${di}`} className="aspect-square" />;
                 const status = dayMap[day];
                 const isToday = day === new Date().toISOString().split("T")[0];
                 return (
