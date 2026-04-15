@@ -1,5 +1,5 @@
 import { Bell, Palette, HelpCircle, LogOut, ChevronRight, Settings, Trash2, AlertTriangle, CheckCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 
 const MENU = [
@@ -9,7 +9,29 @@ const MENU = [
 ];
 
 export default function Me() {
+  const [totalXp, setTotalXp] = useState(0);
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [totalMissions, setTotalMissions] = useState(0);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const user = await base44.auth.me();
+        const [statsArr, streakArr] = await Promise.all([
+          base44.entities.UserStats.filter({ userId: user.id }),
+          base44.entities.Streak.filter({ userId: user.id }),
+        ]);
+        setTotalXp(statsArr[0]?.totalXp ?? 0);
+        setCurrentLevel(statsArr[0]?.currentLevel ?? 1);
+        setTotalMissions(statsArr[0]?.totalMissionsCompleted ?? 0);
+        setCurrentStreak(streakArr[0]?.currentStreak ?? 0);
+      } catch (_) {}
+      setStatsLoading(false);
+    })();
+  }, []);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
@@ -72,10 +94,16 @@ export default function Me() {
         <div className="flex-1">
           <h1 className="text-lg font-black">Your Profile</h1>
           <div className="flex gap-2 mt-1">
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-              style={{ background: "rgba(0,245,255,0.15)", color: "#00f5ff" }}>Level 1</span>
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-              style={{ background: "rgba(57,255,20,0.15)", color: "#39ff14" }}>0 XP</span>
+            {statsLoading ? (
+              <div className="w-4 h-4 border-2 border-border border-t-[#00f5ff] rounded-full animate-spin" />
+            ) : (
+              <>
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                  style={{ background: "rgba(0,245,255,0.15)", color: "#00f5ff" }}>Level {currentLevel}</span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                  style={{ background: "rgba(57,255,20,0.15)", color: "#39ff14" }}>{totalXp} XP</span>
+              </>
+            )}
           </div>
         </div>
         <button className="p-2 rounded-xl border bg-secondary">
@@ -86,8 +114,8 @@ export default function Me() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2">
         {[
-          { emoji: "🔥", value: "0", label: "Streak" },
-          { emoji: "🏆", value: "0", label: "Impact" },
+          { emoji: "🔥", value: String(currentStreak), label: "Streak" },
+          { emoji: "🏆", value: String(totalMissions), label: "Impact" },
           { emoji: "🛡️", value: "3", label: "Freezes" },
         ].map(({ emoji, value, label }) => (
           <div key={label} className="rounded-2xl border bg-card p-3 text-center space-y-0.5">
