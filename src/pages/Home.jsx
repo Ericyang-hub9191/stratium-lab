@@ -23,7 +23,7 @@ export default function Home() {
   const [xp,          setXp]          = useState(0);
   const [mission,     setMission]     = useState(null);
   const [recentWins,  setRecentWins]  = useState([]);
-  const [weeklyStats, setWeeklyStats] = useState({ timeSaved: 0, missions: 0, avgBoost: 0 });
+  const [weeklyStats, setWeeklyStats] = useState({ missions: 0, weeklyXp: 0 });
   const [loading,     setLoading]     = useState(true);
 
   const milestoneRef = useRef(false);
@@ -48,11 +48,8 @@ export default function Home() {
       setRecentWins(wins.slice(0, 4));
       const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const weekWins = wins.filter(w => w.created_date >= oneWeekAgo);
-      const totalSaved = weekWins.reduce((s, w) => s + (w.timeSavedMinutes ?? 0), 0);
-      const avgBoost = weekWins.length
-        ? +(weekWins.reduce((s, w) => s + (w.correctnessBoost ?? 0), 0) / weekWins.length).toFixed(1)
-        : 0;
-      setWeeklyStats({ timeSaved: totalSaved, missions: weekWins.length, avgBoost });
+      const weeklyXp = weekWins.reduce((s, w) => s + (w.xpEarned ?? 0), 0);
+      setWeeklyStats({ missions: weekWins.length, weeklyXp });
       if (!milestoneRef.current && currentStreak > 0 && currentStreak % 7 === 0) {
         milestoneRef.current = true;
         confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors: ["#00f5ff", "#39ff14", "#ffffff", "#fb923c"] });
@@ -71,11 +68,8 @@ export default function Home() {
     setRefreshing(false);
   };
 
-  const weeklyGoal   = 7;
-  const weekPct      = Math.min(Math.round((weeklyStats.missions / weeklyGoal) * 100), 100);
-  const hoursDisplay = weeklyStats.timeSaved >= 60
-    ? `${(weeklyStats.timeSaved / 60).toFixed(1)} hrs`
-    : `${weeklyStats.timeSaved} min`;
+  const weeklyGoal = 7;
+  const weekPct    = Math.min(Math.round((weeklyStats.missions / weeklyGoal) * 100), 100);
 
   const handleTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
   const handleTouchMove = (e) => {
@@ -242,11 +236,10 @@ export default function Home() {
           </div>
           <span className="text-[10px] text-muted-foreground">Mon–Sun</span>
         </div>
-        <div className="grid grid-cols-3 gap-3 text-center">
+        <div className="grid grid-cols-2 gap-3 text-center">
           {[
-            { value: hoursDisplay,                   label: "Time Saved", color: "#39ff14" },
-            { value: String(weeklyStats.missions),   label: "Boosts",     color: "#00f5ff" },
-            { value: String(weeklyStats.avgBoost),   label: "Avg Boost",  color: "#a78bfa" },
+            { value: String(weeklyStats.missions), label: "Boosts",    color: "#00f5ff" },
+            { value: String(weeklyStats.weeklyXp), label: "XP Earned", color: "#39ff14" },
           ].map(({ value, label, color }) => (
             <div key={label}>
               <div className="text-xl font-black" style={{ color }}>{value}</div>
@@ -300,12 +293,6 @@ export default function Home() {
                     </span>
                   </div>
                   <p className="text-xs font-bold leading-snug line-clamp-2">{win.note ?? "Impact logged"}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-muted-foreground">⏱ {win.timeSavedMinutes ?? 0}m saved</span>
-                    <span className="text-[10px] font-bold text-[#39ff14]">
-                      {"★".repeat(win.correctnessBoost ?? 0)}
-                    </span>
-                  </div>
                 </div>
               );
             })}

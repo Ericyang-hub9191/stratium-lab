@@ -106,6 +106,7 @@ export default function MissionExperience() {
             xpEarned,
             category:  mission?.category,
           }),
+
           updateStreak(user.id),
           updateUserStats(user.id, xpEarned),
         ]);

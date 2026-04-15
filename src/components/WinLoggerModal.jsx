@@ -79,6 +79,7 @@ export default function ImpactLoggerModal({ open, onClose, mission, onSuccess })
             xpEarned,
             category:  mission?.category,
           }),
+
           updateStreak(user.id),
           updateUserStats(user.id, xpEarned),
         ]);

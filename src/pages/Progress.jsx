@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
-import { TrendingUp, Clock, Zap, Award, Lock, ChevronRight } from "lucide-react";
+import { TrendingUp, Zap, Award, Lock, ChevronRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 
@@ -113,10 +113,6 @@ export default function Progress() {
   const activeNode = PATH_NODES.filter(n => totalMissions >= n.req).slice(-1)[0] ?? PATH_NODES[0];
 
 
-  const timeDisplay = totalTime >= 60
-    ? `${(totalTime / 60).toFixed(1)} hrs`
-    : `${totalTime} min`;
-
   return (
     <div className="px-4 py-6 space-y-6 pb-24">
 
@@ -169,9 +165,8 @@ export default function Progress() {
       {/* ── Lifetime impact stats ── */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { icon: Zap,       label: "Lifetime XP",    value: String(totalXp),       color: "#00f5ff" },
-          { icon: Clock,     label: "Time Saved",     value: timeDisplay,           color: "#39ff14" },
-          { icon: TrendingUp,label: "Total Boosts", value: String(totalMissions), color: "#a78bfa" },
+          { icon: Zap,        label: "Lifetime XP",  value: String(totalXp),       color: "#00f5ff" },
+          { icon: TrendingUp, label: "Total Boosts", value: String(totalMissions), color: "#39ff14" },
         ].map(({ icon: Icon, label, value, color }) => (
           <div key={label} className="rounded-2xl border bg-card p-3 text-center space-y-1.5">
             <Icon className="w-5 h-5 mx-auto" style={{ color }} />
