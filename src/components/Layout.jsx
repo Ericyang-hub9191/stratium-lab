@@ -66,7 +66,7 @@ export default function Layout() {
     <>
       {/* Streak flame — tappable */}
       <button
-        onClick={() => navigate("/streak")}
+        onClick={() => pathname !== "/streak" && navigate("/streak")}
         className="flex items-center gap-2 active:scale-95 transition-transform"
         style={{ WebkitTapHighlightColor: "transparent" }}
       >
@@ -192,7 +192,7 @@ export default function Layout() {
           {/* Streak stat in sidebar footer — tappable */}
           <div className="px-4 py-5 border-t border-border space-y-3">
             <button
-              onClick={() => navigate("/streak")}
+              onClick={() => pathname !== "/streak" && navigate("/streak")}
               className="flex items-center gap-2 active:scale-95 transition-transform w-full text-left"
               style={{ WebkitTapHighlightColor: "transparent" }}
             >

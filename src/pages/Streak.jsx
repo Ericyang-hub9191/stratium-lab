@@ -156,24 +156,19 @@ export default function Streak() {
             : "radial-gradient(circle, rgba(0,245,255,0.1), transparent 70%)" }} />
 
         {/* Flame — tappable even here for consistency */}
-        <button
-          onClick={() => navigate("/streak")}
-          className="leading-none select-none active:scale-90 transition-transform"
-          style={{ WebkitTapHighlightColor: "transparent", background: "none", border: "none", padding: 0 }}
+        <span
+          className="leading-none select-none"
+          style={{
+            fontSize: isHighStreak ? 96 : 80,
+            display: "inline-block",
+            filter: isHighStreak
+              ? "drop-shadow(0 0 20px #ff6b35) drop-shadow(0 0 40px #ff6b35) drop-shadow(0 0 60px #fb923c)"
+              : "drop-shadow(0 0 8px #ff6b35) drop-shadow(0 0 20px #ff6b35)",
+            animation: isHighStreak ? "streak-fire 0.7s ease-in-out infinite" : "bounce 1.6s infinite",
+          }}
         >
-          <span
-            style={{
-              fontSize: isHighStreak ? 96 : 80,
-              display: "inline-block",
-              filter: isHighStreak
-                ? "drop-shadow(0 0 20px #ff6b35) drop-shadow(0 0 40px #ff6b35) drop-shadow(0 0 60px #fb923c)"
-                : "drop-shadow(0 0 8px #ff6b35) drop-shadow(0 0 20px #ff6b35)",
-              animation: isHighStreak ? "streak-fire 0.7s ease-in-out infinite" : "bounce 1.6s infinite",
-            }}
-          >
-            🔥
-          </span>
-        </button>
+          🔥
+        </span>
 
         {/* Counter */}
         <div className="text-center">
