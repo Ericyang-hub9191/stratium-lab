@@ -1,6 +1,6 @@
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { Zap, Clock, ChevronRight, TrendingUp, Radio, Map } from "lucide-react";
-import { getTodaySignal } from "@/lib/signals-data";
+import { getTodaySignal, SIGNALS } from "@/lib/signals-data";
 import { useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import { base44 } from "@/api/base44Client";
@@ -32,7 +32,7 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const touchStartY = useRef(0);
   const [pullDist, setPullDist] = useState(0);
-  const todaySignal = getTodaySignal();
+  const todaySignal = SIGNALS[SIGNALS.length - 1];
 
   const loadData = async () => {
     try {
