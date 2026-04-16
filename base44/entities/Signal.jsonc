@@ -1,0 +1,42 @@
+{
+  "name": "Signal",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the signal"
+    },
+    "date": {
+      "type": "string",
+      "description": "Publication date in YYYY-MM-DD format"
+    },
+    "title": {
+      "type": "string",
+      "description": "Signal headline"
+    },
+    "shortTeaser": {
+      "type": "string",
+      "description": "Short teaser summary of the signal"
+    },
+    "fullText": {
+      "type": "string",
+      "format": "long-text",
+      "description": "Full body text of the signal"
+    },
+    "source": {
+      "type": "string",
+      "description": "Source attribution for the signal"
+    },
+    "relatedCategory": {
+      "type": "string",
+      "description": "Optional related skill category (e.g. prompting, research, python)"
+    }
+  },
+  "required": [
+    "date",
+    "title",
+    "shortTeaser",
+    "fullText",
+    "source"
+  ]
+}
