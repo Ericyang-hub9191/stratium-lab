@@ -1,10 +1,9 @@
-import { Bell, Palette, HelpCircle, LogOut, ChevronRight, Settings, Trash2, AlertTriangle, CheckCircle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Bell, HelpCircle, LogOut, ChevronRight, Settings, Trash2, AlertTriangle, CheckCircle } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { Switch } from "@/components/ui/switch";
 
 const MENU = [
-  { icon: Bell, label: "Notifications", desc: "Daily mission reminders" },
-  { icon: Palette, label: "Appearance", desc: "Dark / Light mode" },
   { icon: HelpCircle, label: "Help", desc: "How missions and streaks work" },
 ];
 
@@ -15,6 +14,11 @@ export default function Me() {
   const [totalMissions, setTotalMissions] = useState(0);
   const [statsLoading, setStatsLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    () => localStorage.getItem("synthetica_notifications") === "true"
+  );
+  const [notifMsg, setNotifMsg] = useState("");
+  const notifTimer = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -128,6 +132,36 @@ export default function Me() {
 
       {/* Menu */}
       <div className="rounded-2xl border bg-card divide-y divide-border overflow-hidden">
+        {/* Notifications toggle */}
+        <div className="px-4 py-3.5">
+          <div className="flex items-center gap-3">
+            <Bell className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="flex-1">
+              <div className="text-sm font-semibold">Notifications</div>
+              <div className="text-xs text-muted-foreground">Daily mission reminders</div>
+            </div>
+            <Switch
+              checked={notificationsEnabled}
+              onCheckedChange={(val) => {
+                setNotificationsEnabled(val);
+                localStorage.setItem("synthetica_notifications", String(val));
+                if (notifTimer.current) clearTimeout(notifTimer.current);
+                if (val) {
+                  setNotifMsg("You'll be reminded daily at 9am");
+                  notifTimer.current = setTimeout(() => setNotifMsg(""), 3000);
+                } else {
+                  setNotifMsg("");
+                }
+              }}
+            />
+          </div>
+          {notifMsg && (
+            <p className="mt-1.5 pl-7 transition-opacity" style={{ fontSize: 11, color: "#39ff14" }}>
+              {notifMsg}
+            </p>
+          )}
+        </div>
+        {/* Other menu items */}
         {MENU.map(({ icon: Icon, label, desc }) => (
           <button key={label}
             className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/50 transition-colors text-left">
