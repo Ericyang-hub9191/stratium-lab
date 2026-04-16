@@ -1,5 +1,6 @@
 import { useOutletContext, useNavigate } from "react-router-dom";
-import { Zap, Clock, Search, Map, Trophy } from "lucide-react";
+import { Zap, Clock, Search, Map, Trophy, Radio } from "lucide-react";
+import { SIGNALS } from "@/lib/signals-data";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
@@ -33,6 +34,7 @@ export default function Missions() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [search,         setSearch]         = useState("");
   const [completedIds,   setCompletedIds]   = useState([]);
+  const todaySignal = SIGNALS[SIGNALS.length - 1];
 
   useEffect(() => {
     setActiveCategory("All");
@@ -114,6 +116,25 @@ export default function Missions() {
           className="w-full bg-secondary rounded-2xl pl-9 pr-4 py-2.5 text-sm outline-none border border-transparent focus:border-[#00f5ff] transition-colors placeholder:text-muted-foreground/50"
         />
       </div>
+
+      {/* Signal callout — Quick Boost only */}
+      {!deepDive && todaySignal && (
+        <div
+          onClick={() => navigate(`/signals/${todaySignal.id}`)}
+          className="flex items-center gap-2 rounded-2xl cursor-pointer active:scale-[0.98] transition-transform"
+          style={{
+            background: "rgba(167,139,250,0.08)",
+            border: "1px solid rgba(167,139,250,0.25)",
+            padding: "10px 14px",
+          }}
+        >
+          <Radio className="w-3.5 h-3.5 shrink-0 text-[#a78bfa]" />
+          <span className="text-muted-foreground" style={{ fontSize: 11 }}>Today's Signal: </span>
+          <span className="font-bold line-clamp-1 flex-1 min-w-0" style={{ fontSize: 11, color: "#a78bfa" }}>
+            {todaySignal.title}
+          </span>
+        </div>
+      )}
 
       {/* Category filter */}
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar">
