@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Radio } from "lucide-react";
-import { getSignalsGroupedByMonth, getTodaySignal } from "@/lib/signals-data";
+import { fetchSignalsGroupedByMonth, fetchTodaySignal } from "@/lib/signals-data";
+import { useState, useEffect } from "react";
 
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -15,11 +16,30 @@ function formatDay(dateStr) {
 }
 
 export default function Signals() {
-  const navigate   = useNavigate();
-  const groups     = getSignalsGroupedByMonth();
-  const todaySignal = getTodaySignal();
-  const today      = new Date().toISOString().split("T")[0];
-  const monthKeys  = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+  const navigate    = useNavigate();
+  const today       = new Date().toISOString().split("T")[0];
+  const [groups, setGroups]         = useState({});
+  const [todaySignal, setTodaySignal] = useState(null);
+  const [loading, setLoading]       = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const [grp, sig] = await Promise.all([fetchSignalsGroupedByMonth(), fetchTodaySignal()]);
+      setGroups(grp);
+      setTodaySignal(sig);
+      setLoading(false);
+    })();
+  }, []);
+
+  const monthKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-border border-t-[#a78bfa] rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 py-5 space-y-6 pb-24">

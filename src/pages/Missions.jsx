@@ -1,6 +1,6 @@
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { Zap, Clock, Search, Map, Trophy, Radio } from "lucide-react";
-import { SIGNALS } from "@/lib/signals-data";
+import { fetchTodaySignal } from "@/lib/signals-data";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { base44 } from "@/api/base44Client";
@@ -34,7 +34,7 @@ export default function Missions() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [search,         setSearch]         = useState("");
   const [completedIds,   setCompletedIds]   = useState([]);
-  const todaySignal = SIGNALS[SIGNALS.length - 1];
+  const [todaySignal,    setTodaySignal]    = useState(null);
 
   useEffect(() => {
     setActiveCategory("All");
@@ -46,10 +46,12 @@ export default function Missions() {
       setLoading(true);
       try {
         const type = deepDive ? "deep-dive" : "quick-boost";
-        const [all, user] = await Promise.all([
+        const [all, user, signal] = await Promise.all([
           base44.entities.Mission.filter({ type }),
           base44.auth.me().catch(() => null),
+          fetchTodaySignal(),
         ]);
+        setTodaySignal(signal);
         setMissions(all);
 
         if (user) {

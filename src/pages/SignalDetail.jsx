@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, ExternalLink, Zap, Archive } from "lucide-react";
-import { getSignalByDate, SIGNALS } from "@/lib/signals-data";
+import { base44 } from "@/api/base44Client";
+import { useState, useEffect } from "react";
 
 const CATEGORY_LABELS = {
   prompting:   "Prompting",
@@ -16,9 +17,24 @@ const CATEGORY_LABELS = {
 export default function SignalDetail() {
   const { id }   = useParams();
   const navigate = useNavigate();
+  const [signal, setSignal] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Find signal by id
-  const signal = SIGNALS.find(s => s.id === id) ?? null;
+  useEffect(() => {
+    (async () => {
+      const results = await base44.entities.Signal.filter({ id });
+      setSignal(results[0] ?? null);
+      setLoading(false);
+    })();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-border border-t-[#a78bfa] rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!signal) {
     return (

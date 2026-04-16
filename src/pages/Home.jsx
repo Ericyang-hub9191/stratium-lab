@@ -1,6 +1,6 @@
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { Zap, Clock, ChevronRight, TrendingUp, Radio, Map } from "lucide-react";
-import { getTodaySignal } from "@/lib/signals-data";
+import { fetchTodaySignal } from "@/lib/signals-data";
 import { useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import { base44 } from "@/api/base44Client";
@@ -27,27 +27,29 @@ export default function Home() {
   const [weeklyStats, setWeeklyStats] = useState({ missions: 0, weeklyXp: 0 });
   const [loading,     setLoading]     = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem("synthetica_onboarded"));
+  const [todaySignal, setTodaySignal] = useState(null);
 
   const milestoneRef = useRef(false);
   const [refreshing, setRefreshing] = useState(false);
   const touchStartY = useRef(0);
   const [pullDist, setPullDist] = useState(0);
-  const todaySignal = getTodaySignal();
 
   const loadData = async () => {
     try {
       const user = await base44.auth.me();
-      const [streaks, stats, missions, wins] = await Promise.all([
+      const [streaks, stats, missions, wins, signal] = await Promise.all([
         base44.entities.Streak.filter({ userId: user.id }),
         base44.entities.UserStats.filter({ userId: user.id }),
         base44.entities.Mission.filter({ type: deepDive ? "deep-dive" : "quick-boost" }, "-created_date", 1),
         base44.entities.WinLog.filter({ userId: user.id }, "-created_date", 10),
+        fetchTodaySignal(),
       ]);
       const currentStreak = streaks[0]?.currentStreak ?? 0;
       setStreak(currentStreak);
       setXp(stats[0]?.totalXp ?? 0);
       if (missions[0]) setMission(missions[0]);
       setRecentWins(wins.slice(0, 4));
+      setTodaySignal(signal);
       const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const weekWins = wins.filter(w => w.created_date >= oneWeekAgo);
       const weeklyXp = weekWins.reduce((s, w) => s + (w.xpEarned ?? 0), 0);
