@@ -210,8 +210,6 @@ export default function Missions() {
                   onClick={lesson => navigate(`/mission/${lesson.id}`)}
                 />
               ))}
-              {/* Bottom spacer so last card isn't cut off */}
-              <div className="h-2" />
             </div>
           )}
         </>
