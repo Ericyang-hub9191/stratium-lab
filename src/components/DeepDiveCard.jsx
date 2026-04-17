@@ -1,5 +1,36 @@
-import { BookOpen, ChevronRight, Star, Lock } from "lucide-react";
+import { BookOpen, ChevronRight, Map } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Human-readable journey titles keyed by journeyId
+const JOURNEY_NAMES = {
+  "ai-101-foundations":           "AI Foundations",
+  "ai-201-llm-mastery":          "LLM Mastery",
+  "ai-301-prompting-pro":        "Prompting Pro",
+  "ai-302-strategy-frontier":    "AI Strategy & Frontier Intelligence",
+  "ai-303-business-strategy":    "AI in Business & Strategy",
+  "ai-401-build-ai":             "Build Your Own AI",
+  "ai-402-python-for-ai":        "Python for AI",
+  "ai-403-rag-systems":          "RAG Systems",
+  "ai-501-ai-biology":           "AI in Biology",
+  "ai-502-ai-psychology":        "AI in Psychology",
+  "ai-503-ai-safety":            "AI Safety & Alignment",
+  "ai-504-mlops":                "AI Deployment & MLOps",
+};
+
+const JOURNEY_EMOJIS = {
+  "ai-101-foundations":          "🧠",
+  "ai-201-llm-mastery":         "⚡",
+  "ai-301-prompting-pro":       "💬",
+  "ai-302-strategy-frontier":   "🔭",
+  "ai-303-business-strategy":   "📈",
+  "ai-401-build-ai":            "🔨",
+  "ai-402-python-for-ai":       "🐍",
+  "ai-403-rag-systems":         "📚",
+  "ai-501-ai-biology":          "🧬",
+  "ai-502-ai-psychology":       "🧩",
+  "ai-503-ai-safety":           "🛡️",
+  "ai-504-mlops":               "🚀",
+};
 
 const CATEGORY_COLORS = {
   prompting:   "#00f5ff",
@@ -23,9 +54,13 @@ export function groupIntoJourneys(missions) {
   missions.forEach(m => {
     const key = m.journeyId || m.id;
     if (!map[key]) {
+      // Derive a clean journey title: prefer the lookup map, then journeyDescription prefix, then journeyId slug
+      const lookupTitle = JOURNEY_NAMES[key];
+      const slugTitle = key.replace(/-/g, " ").replace(/^ai \d+ /i, "").replace(/\b\w/g, c => c.toUpperCase());
       map[key] = {
         journeyId:          key,
-        journeyTitle:       m.title.replace(/: Lesson \d+.*$/, "").replace(/ — Unit.*$/, ""),
+        journeyTitle:       lookupTitle || slugTitle,
+        journeyEmoji:       JOURNEY_EMOJIS[key] || "🗺️",
         journeyDescription: m.journeyDescription || m.description,
         category:           m.category,
         totalLessons:       m.totalLessons || 1,
@@ -72,15 +107,28 @@ export default function DeepDiveCard({ journey, completedIds = [], onClick }) {
   return (
     <div
       onClick={() => onClick(nextLesson)}
-      className="rounded-3xl border bg-card p-5 space-y-4 active:scale-[0.98] transition-transform cursor-pointer"
-      style={{ borderColor: `${color}35` }}
+      className="rounded-3xl border bg-card active:scale-[0.98] transition-transform cursor-pointer overflow-hidden"
+      style={{
+        borderColor: `${color}40`,
+        boxShadow: isStarted ? `0 0 20px ${color}12` : undefined,
+      }}
     >
+      {/* Colored top accent strip */}
+      <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${color}, ${color}55)` }} />
+
+      <div className="p-5 space-y-4">
       {/* Header row */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
+          {/* Emoji + Title */}
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-2xl leading-none">{journey.journeyEmoji}</span>
+            <h3 className="text-lg font-black leading-snug">{journey.journeyTitle}</h3>
+          </div>
+          {/* Tags row */}
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             <span
-              className="text-[10px] font-bold px-2.5 py-0.5 rounded-full"
+              className="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide"
               style={{ background: `${color}22`, color }}
             >
               {journey.category}
@@ -99,16 +147,9 @@ export default function DeepDiveCard({ journey, completedIds = [], onClick }) {
               {statusLabel}
             </span>
           </div>
-          <h3 className="text-base font-black leading-snug">{journey.journeyTitle}</h3>
-          <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">
+          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
             {journey.journeyDescription}
           </p>
-        </div>
-        <div
-          className="shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center"
-          style={{ background: `${color}18` }}
-        >
-          <BookOpen className="w-5 h-5" style={{ color }} />
         </div>
       </div>
 
@@ -163,25 +204,26 @@ export default function DeepDiveCard({ journey, completedIds = [], onClick }) {
 
       {/* Encouraging message when in progress */}
       {isStarted && !isComplete && (
-      <p className="text-[10px] font-bold px-1" style={{ color: "#39ff14" }}>{encouragement}</p>
+        <p className="text-[10px] font-bold px-1" style={{ color: "#39ff14" }}>{encouragement}</p>
       )}
 
       {/* CTA */}
       <div
-      className="flex items-center justify-between px-4 py-3 rounded-2xl"
-      style={{ background: `${color}12` }}
+        className="flex items-center justify-between px-4 py-3 rounded-2xl"
+        style={{ background: `${color}12`, border: `1px solid ${color}25` }}
       >
-      <div>
-        <p className="text-xs font-black" style={{ color }}>
-          {isComplete ? "🎓 Journey Complete!" : isStarted ? "▶ Continue Journey" : "🚀 Start Journey"}
-        </p>
-        {!isComplete && nextLesson && (
-          <p className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[200px]">
-            {nextLesson.unitTitle || nextLesson.title}
+        <div>
+          <p className="text-xs font-black" style={{ color }}>
+            {isComplete ? "🎓 Journey Complete!" : isStarted ? "▶ Continue Journey" : "🚀 Start Journey"}
           </p>
-        )}
+          {!isComplete && nextLesson && (
+            <p className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[220px]">
+              {nextLesson.unitTitle || nextLesson.title}
+            </p>
+          )}
+        </div>
+        <ChevronRight className="w-5 h-5" style={{ color }} />
       </div>
-      <ChevronRight className="w-5 h-5" style={{ color }} />
       </div>
     </div>
   );
