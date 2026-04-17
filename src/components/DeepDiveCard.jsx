@@ -1,5 +1,4 @@
-import { BookOpen, ChevronRight, Star, Lock } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { BookOpen, ChevronRight, CheckCircle2 } from "lucide-react";
 
 const CATEGORY_COLORS = {
   prompting:   "#00f5ff",
@@ -36,10 +35,8 @@ export function groupIntoJourneys(missions) {
     }
     map[key].lessons.push(m);
     map[key].xpReward += m.xpReward || 0;
-    // Keep totalLessons as the declared value (most reliable)
     if (m.totalLessons) map[key].totalLessons = m.totalLessons;
   });
-  // Sort lessons within each journey
   Object.values(map).forEach(j => {
     j.lessons.sort((a, b) => (a.lessonNumber || 0) - (b.lessonNumber || 0));
   });
@@ -55,133 +52,136 @@ export default function DeepDiveCard({ journey, completedIds = [], onClick }) {
   const isStarted = completedCount > 0;
   const isComplete = completedCount >= total;
 
-  const encouragements = [
-    "You're building real mastery 🔥",
-    "Keep going — you're leveling up! ⚡",
-    "Great progress — don't stop now!",
-    "You're in the zone. Stay consistent 💪",
-  ];
-  const encouragement = encouragements[completedCount % encouragements.length];
-
-  const statusLabel = isComplete
-    ? "✅ Mastered"
+  const ctaLabel = isComplete
+    ? "🎓 Review Journey"
     : isStarted
-    ? `Lesson ${completedCount + 1} of ${total}`
-    : `${total} lessons`;
+    ? "Continue Journey →"
+    : "Start Journey →";
+
+  const progressLabel = isComplete
+    ? `All ${total} lessons complete`
+    : isStarted
+    ? `Lesson ${completedCount + 1} of ${total} • ${pct}% complete`
+    : `${total} lessons • ${journey.xpReward} XP total`;
 
   return (
     <div
       onClick={() => onClick(nextLesson)}
-      className="rounded-3xl border bg-card p-5 space-y-4 active:scale-[0.98] transition-transform cursor-pointer"
-      style={{ borderColor: `${color}35` }}
+      className="rounded-2xl cursor-pointer active:scale-[0.985] transition-all duration-150 overflow-hidden"
+      style={{
+        border: `1px solid ${color}30`,
+        background: "hsl(var(--card))",
+        boxShadow: `0 2px 20px ${color}0a`,
+      }}
     >
-      {/* Header row */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <span
-              className="text-[10px] font-bold px-2.5 py-0.5 rounded-full"
-              style={{ background: `${color}22`, color }}
-            >
-              {journey.category}
-            </span>
-            <span
-              className="text-[10px] font-bold px-2.5 py-0.5 rounded-full"
-              style={{
-                background: isComplete
-                  ? "rgba(57,255,20,0.15)"
-                  : isStarted
-                  ? "rgba(251,146,60,0.15)"
-                  : "rgba(255,255,255,0.06)",
-                color: isComplete ? "#39ff14" : isStarted ? "#fb923c" : "#888",
-              }}
-            >
-              {statusLabel}
-            </span>
-          </div>
-          <h3 className="text-base font-black leading-snug">{journey.journeyTitle}</h3>
-          <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">
-            {journey.journeyDescription}
-          </p>
-        </div>
-        <div
-          className="shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center"
-          style={{ background: `${color}18` }}
-        >
-          <BookOpen className="w-5 h-5" style={{ color }} />
-        </div>
-      </div>
+      {/* Color accent bar */}
+      <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${color}, ${color}55)` }} />
 
-      {/* Progress bar */}
-      <div className="space-y-1.5">
-        <div className="h-2 rounded-full bg-secondary overflow-hidden">
+      <div className="p-5 space-y-4">
+        {/* Header */}
+        <div className="flex items-start gap-3">
           <div
-            className="h-full rounded-full transition-all duration-700"
-            style={{
-              width: `${pct}%`,
-              background: isComplete
-                ? "linear-gradient(90deg, #39ff14, #00f5ff)"
-                : `linear-gradient(90deg, ${color}, ${color}99)`,
-            }}
-          />
-        </div>
-        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-          <span>{completedCount} / {total} lessons complete</span>
-          <span className="font-semibold" style={{ color }}>
-            {journey.xpReward} XP total
-          </span>
-        </div>
-      </div>
-
-      {/* Lesson chips */}
-      <div className="flex gap-1.5 flex-wrap">
-        {journey.lessons.slice(0, 8).map((lesson, i) => {
-          const done = completedIds.includes(lesson.id);
-          const isNext = lesson.id === nextLesson?.id && !isComplete;
-          return (
-            <div
-              key={lesson.id}
-              className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border-2 transition-all"
-              style={
-                done
-                  ? { background: `${color}30`, borderColor: color, color }
-                  : isNext
-                  ? { background: color, borderColor: color, color: "#000" }
-                  : { background: "transparent", borderColor: "hsl(var(--border))", color: "hsl(var(--muted-foreground))" }
-              }
-            >
-              {done ? "✓" : isNext ? "▶" : i + 1}
-            </div>
-          );
-        })}
-        {journey.lessons.length > 8 && (
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-border text-muted-foreground">
-            +{journey.lessons.length - 8}
+            className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center mt-0.5"
+            style={{ background: `${color}18` }}
+          >
+            <BookOpen className="w-5 h-5" style={{ color }} />
           </div>
-        )}
-      </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              <span
+                className="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide"
+                style={{ background: `${color}20`, color }}
+              >
+                {journey.category}
+              </span>
+              {isComplete && (
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full"
+                  style={{ background: "rgba(57,255,20,0.15)", color: "#39ff14" }}>
+                  ✅ Mastered
+                </span>
+              )}
+              {isStarted && !isComplete && (
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full"
+                  style={{ background: "rgba(251,146,60,0.15)", color: "#fb923c" }}>
+                  In Progress
+                </span>
+              )}
+            </div>
+            <h3 className="text-base font-black leading-snug">{journey.journeyTitle}</h3>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">
+              {journey.journeyDescription}
+            </p>
+          </div>
+        </div>
 
-      {/* Encouraging message when in progress */}
-      {isStarted && !isComplete && (
-      <p className="text-[10px] font-bold px-1" style={{ color: "#39ff14" }}>{encouragement}</p>
-      )}
+        {/* Progress section */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold text-muted-foreground">{progressLabel}</span>
+            {isStarted && !isComplete && (
+              <span className="font-black" style={{ color }}>{pct}%</span>
+            )}
+          </div>
+          <div className="h-2.5 rounded-full bg-secondary overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{
+                width: `${Math.max(pct, pct > 0 ? 4 : 0)}%`,
+                background: isComplete
+                  ? "linear-gradient(90deg, #39ff14, #00f5ff)"
+                  : `linear-gradient(90deg, ${color}ee, ${color}77)`,
+              }}
+            />
+          </div>
+        </div>
 
-      {/* CTA */}
-      <div
-      className="flex items-center justify-between px-4 py-3 rounded-2xl"
-      style={{ background: `${color}12` }}
-      >
-      <div>
-        <p className="text-xs font-black" style={{ color }}>
-          {isComplete ? "🎓 Journey Complete!" : isStarted ? "▶ Continue Journey" : "🚀 Start Journey"}
-        </p>
-        {!isComplete && nextLesson && (
-          <p className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[200px]">
-            {nextLesson.unitTitle || nextLesson.title}
+        {/* Lesson dots */}
+        <div className="flex gap-1.5 flex-wrap">
+          {journey.lessons.slice(0, 10).map((lesson, i) => {
+            const done = completedIds.includes(lesson.id);
+            const isNext = lesson.id === nextLesson?.id && !isComplete;
+            return (
+              <div
+                key={lesson.id}
+                className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black border transition-all"
+                title={lesson.unitTitle || lesson.title}
+                style={
+                  done
+                    ? { background: `${color}28`, borderColor: color, color }
+                    : isNext
+                    ? { background: color, borderColor: color, color: "#000" }
+                    : { background: "transparent", borderColor: "hsl(var(--border))", color: "hsl(var(--muted-foreground))" }
+                }
+              >
+                {done ? <CheckCircle2 className="w-3 h-3" /> : isNext ? "▶" : i + 1}
+              </div>
+            );
+          })}
+          {journey.lessons.length > 10 && (
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black border border-border text-muted-foreground">
+              +{journey.lessons.length - 10}
+            </div>
+          )}
+        </div>
+
+        {/* Encouragement */}
+        {isStarted && !isComplete && (
+          <p className="text-xs font-semibold" style={{ color: "#39ff14" }}>
+            🔥 Great work — you're building real mastery. Keep the momentum!
           </p>
         )}
-      </div>
-      <ChevronRight className="w-5 h-5" style={{ color }} />
+
+        {/* CTA button */}
+        <button
+          className="w-full py-3.5 rounded-xl text-sm font-black flex items-center justify-center gap-2 transition-all active:scale-95"
+          style={isComplete
+            ? { background: `${color}18`, color, border: `1px solid ${color}40` }
+            : { background: color, color: "#000", boxShadow: `0 0 16px ${color}44` }
+          }
+        >
+          {ctaLabel}
+          {!isComplete && <ChevronRight className="w-4 h-4" />}
+        </button>
       </div>
     </div>
   );
