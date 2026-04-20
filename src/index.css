@@ -151,7 +151,18 @@
     border-radius: 10px;
     padding: 1rem 1.125rem;
     overflow-x: auto;
-    white-space: pre;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .reading-surface strong {
+    font-weight: 600;
+    color: hsl(var(--reading-text));
+  }
+
+  .reading-surface em {
+    font-style: italic;
+    color: hsl(var(--reading-secondary));
   }
 
   .reading-surface h1,
