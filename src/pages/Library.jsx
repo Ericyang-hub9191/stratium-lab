@@ -91,13 +91,11 @@ export default function Library() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 md:px-8 py-6 md:py-10 space-y-6">
-
       <div className="space-y-1">
         <div className="ui-eyebrow">Library</div>
         <h1 className="text-2xl md:text-3xl ui-heading">Everything to learn</h1>
       </div>
 
-      {/* Tabs */}
       <div className="flex border-b border-border">
         {[
           { id: "journeys", label: "Journeys", count: journeys.length },
@@ -116,7 +114,6 @@ export default function Library() {
         ))}
       </div>
 
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
         <input
@@ -127,7 +124,6 @@ export default function Library() {
         />
       </div>
 
-      {/* Filter chips */}
       <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 pb-1">
         {filterOptions.map(opt => (
           <button
@@ -145,31 +141,18 @@ export default function Library() {
         ))}
       </div>
 
-      {/* Content */}
       {loading ? (
         <div className="flex justify-center py-16">
           <div className="w-5 h-5 rounded-full border-2 border-border border-t-accent animate-spin" />
         </div>
       ) : tab === "journeys" ? (
-        filteredJourneys.length === 0 ? (
-          <EmptyState label="No journeys match your filters." />
-        ) : (
-          <div className="space-y-2">
-            {filteredJourneys.map(j => (
-              <JourneyCard key={j.id} journey={j} navigate={navigate} />
-            ))}
-          </div>
-        )
+        filteredJourneys.length === 0
+          ? <EmptyState label="No journeys match your filters." />
+          : <div className="space-y-2">{filteredJourneys.map(j => <JourneyCard key={j.id} journey={j} navigate={navigate} />)}</div>
       ) : (
-        filteredBoosts.length === 0 ? (
-          <EmptyState label="No boosts match your filters." />
-        ) : (
-          <div className="space-y-2">
-            {filteredBoosts.map(b => (
-              <BoostCard key={b.id} boost={b} done={completedSet.boost.has(b.id)} navigate={navigate} />
-            ))}
-          </div>
-        )
+        filteredBoosts.length === 0
+          ? <EmptyState label="No boosts match your filters." />
+          : <div className="space-y-2">{filteredBoosts.map(b => <BoostCard key={b.id} boost={b} done={completedSet.boost.has(b.id)} navigate={navigate} />)}</div>
       )}
     </div>
   );
@@ -186,14 +169,10 @@ function JourneyCard({ journey, navigate }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 mb-1">
             <span className="ui-eyebrow !text-text-muted">{journey.track}</span>
-            {journey.difficulty && (
-              <span className="ui-eyebrow !text-text-muted">· {DIFFICULTY_LABEL[journey.difficulty] ?? journey.difficulty}</span>
-            )}
+            {journey.difficulty && <span className="ui-eyebrow !text-text-muted">· {DIFFICULTY_LABEL[journey.difficulty] ?? journey.difficulty}</span>}
           </div>
           <h3 className="text-base font-medium text-text-primary leading-snug">{journey.title}</h3>
-          {journey.subtitle && (
-            <p className="text-sm text-text-secondary mt-1 leading-relaxed line-clamp-2">{journey.subtitle}</p>
-          )}
+          {journey.subtitle && <p className="text-sm text-text-secondary mt-1 leading-relaxed line-clamp-2">{journey.subtitle}</p>}
           <div className="flex items-center gap-3 mt-3 text-xs text-text-muted">
             <span>{journey.totalLessons} lesson{journey.totalLessons === 1 ? "" : "s"}</span>
             {journey.estimatedHours && <><span>·</span><span>~{journey.estimatedHours}h</span></>}
@@ -218,9 +197,7 @@ function BoostCard({ boost, done, navigate }) {
             {done && <span className="ui-eyebrow text-success">· Done</span>}
           </div>
           <h3 className="text-base font-medium text-text-primary leading-snug">{boost.title}</h3>
-          {boost.subtitle && (
-            <p className="text-sm text-text-secondary mt-1 leading-relaxed line-clamp-1">{boost.subtitle}</p>
-          )}
+          {boost.subtitle && <p className="text-sm text-text-secondary mt-1 leading-relaxed line-clamp-1">{boost.subtitle}</p>}
           <div className="flex items-center gap-3 mt-2 text-xs text-text-muted">
             <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{boost.estimatedMinutes ?? 4} min</span>
             <span>·</span>

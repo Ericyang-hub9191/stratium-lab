@@ -77,9 +77,7 @@ export default function LessonExperience() {
       const next = { ...prev, ...partial };
       if (persistTimer.current) clearTimeout(persistTimer.current);
       persistTimer.current = setTimeout(() => {
-        if (next.id) {
-          base44.entities.UserProgress.update(next.id, partial).catch(() => {});
-        }
+        if (next.id) base44.entities.UserProgress.update(next.id, partial).catch(() => {});
       }, 600);
       return next;
     });
@@ -140,8 +138,6 @@ export default function LessonExperience() {
 
   return (
     <div className="min-h-screen bg-bg flex flex-col">
-
-      {/* ── Top bar ── */}
       <div className="sticky top-0 z-20 bg-bg/90 backdrop-blur-xl border-b border-border">
         <div className="max-w-3xl mx-auto px-4 md:px-6 py-3 flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="btn btn-ghost !py-1.5 !px-2.5" aria-label="Back">
@@ -164,13 +160,12 @@ export default function LessonExperience() {
         </div>
       </div>
 
-      {/* ── Reading surface ── */}
       <div className="flex-1 reading-surface py-10 md:py-14 px-4 md:px-8 animate-fade-in">
         <article className="max-w-2xl mx-auto space-y-6 pb-32">
           <header className="space-y-3 pb-4 mb-2 border-b" style={{ borderColor: "hsl(var(--reading-border))" }}>
             {journey && (
               <div className="eyebrow">
-                {journey.title}{lesson.order ? ` · Lesson ${lesson.order}` : ""}
+                {journey.title}{lesson.order ? ` · Lesson ${lesson.order}${lesson.totalLessonsInJourney ? ` of ${lesson.totalLessonsInJourney}` : ""}` : ""}
               </div>
             )}
             <h1 className="!mt-0">{lesson.title}</h1>
@@ -180,28 +175,17 @@ export default function LessonExperience() {
           </header>
 
           {(lesson.blocks ?? []).map(block => (
-            <Block
-              key={block.id}
-              block={block}
-              progress={progress}
-              onProgress={handleProgressUpdate}
-            />
+            <Block key={block.id} block={block} progress={progress} onProgress={handleProgressUpdate} />
           ))}
         </article>
       </div>
 
-      {/* ── Completion bar ── */}
-      <div
-        className="fixed bottom-0 left-0 right-0 z-30 border-t border-border backdrop-blur-xl"
-        style={{ background: "hsla(var(--bg), 0.92)" }}
-      >
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border backdrop-blur-xl" style={{ background: "hsla(var(--bg), 0.92)" }}>
         <div className="max-w-3xl mx-auto px-4 md:px-6 py-3.5 flex items-center gap-4">
           {hasChecks ? (
             <div className="flex-1 text-xs text-text-secondary">
               {isCompleted ? (
-                <span className="flex items-center gap-1.5 text-success">
-                  <Check className="w-3.5 h-3.5" /> Completed · +{progress?.xpAwarded ?? lesson.xpReward} XP
-                </span>
+                <span className="flex items-center gap-1.5 text-success"><Check className="w-3.5 h-3.5" /> Completed · +{progress?.xpAwarded ?? lesson.xpReward} XP</span>
               ) : canComplete ? (
                 <span className="text-text-primary">All checks passed. Ready to mark complete.</span>
               ) : (
@@ -216,19 +200,13 @@ export default function LessonExperience() {
               }
             </div>
           )}
-
-          <button
-            onClick={handleComplete}
-            disabled={!canComplete || completing || isCompleted}
-            className="btn btn-primary"
-          >
+          <button onClick={handleComplete} disabled={!canComplete || completing || isCompleted} className="btn btn-primary">
             {isCompleted ? <><Check className="w-4 h-4" /> Completed</>
               : completing ? "Saving…"
               : `Mark complete · +${lesson.xpReward} XP`}
           </button>
         </div>
       </div>
-
     </div>
   );
 }

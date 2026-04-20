@@ -203,10 +203,7 @@ function CheckBlock({ block, progress, onProgress }) {
     });
   };
 
-  const retry = () => {
-    setSubmitted(false);
-    setChosen(null);
-  };
+  const retry = () => { setSubmitted(false); setChosen(null); };
 
   const isCorrect = submitted && chosen === block.correct;
   const isWrong   = submitted && chosen !== block.correct;
@@ -224,15 +221,15 @@ function CheckBlock({ block, progress, onProgress }) {
 
       <div className="space-y-2">
         {(block.choices ?? []).map(choice => {
-          const isChosen = chosen === choice.id;
+          const isChosen        = chosen === choice.id;
           const isCorrectAnswer = submitted && choice.id === block.correct;
           const isWrongChoice   = submitted && isChosen && choice.id !== block.correct;
 
           let borderColor = "hsl(var(--reading-border))";
           let bg          = "transparent";
           if (submitted) {
-            if (isCorrectAnswer) { borderColor = "hsla(152, 45%, 45%, 0.6)"; bg = "hsla(152, 45%, 55%, 0.08)"; }
-            else if (isWrongChoice) { borderColor = "hsla(0, 60%, 55%, 0.5)"; bg = "hsla(0, 60%, 55%, 0.06)"; }
+            if (isCorrectAnswer)  { borderColor = "hsla(152, 45%, 45%, 0.6)"; bg = "hsla(152, 45%, 55%, 0.08)"; }
+            else if (isWrongChoice) { borderColor = "hsla(0, 60%, 55%, 0.5)";  bg = "hsla(0, 60%, 55%, 0.06)"; }
           } else if (isChosen) {
             borderColor = "hsl(var(--reading-accent))";
             bg          = "hsla(250, 70%, 58%, 0.05)";
@@ -294,16 +291,14 @@ function CheckBlock({ block, progress, onProgress }) {
 
 // ─── PRACTICE ───────────────────────────────────────────────
 function PracticeBlock({ block, progress, onProgress }) {
-  const saved = progress?.practiceEntries?.[block.id] ?? "";
+  const saved     = progress?.practiceEntries?.[block.id] ?? "";
   const [value, setValue] = useState(saved);
   const minLength = block.validation === "length" ? 40 : 0;
   const meetsMin  = value.trim().length >= minLength;
 
   const save = (v) => {
     setValue(v);
-    onProgress?.({
-      practiceEntries: { ...(progress?.practiceEntries ?? {}), [block.id]: v },
-    });
+    onProgress?.({ practiceEntries: { ...(progress?.practiceEntries ?? {}), [block.id]: v } });
   };
 
   return (
@@ -312,15 +307,13 @@ function PracticeBlock({ block, progress, onProgress }) {
       <div className="text-[1.0625em] font-medium" style={{ color: "hsl(var(--reading-text))" }}>
         {inlineMd(block.instruction ?? "")}
       </div>
-      {block.deliverable && (
-        <div className="text-[0.9em] muted italic">Write: {block.deliverable}</div>
-      )}
+      {block.deliverable && <div className="text-[0.9em] muted italic">Write: {block.deliverable}</div>}
       <textarea
         value={value}
         onChange={(e) => save(e.target.value)}
         placeholder={block.placeholder ?? "Write your answer here…"}
         rows={5}
-        className="w-full rounded-lg px-3.5 py-3 text-[0.95em] resize-y font-reading"
+        className="w-full rounded-lg px-3.5 py-3 text-[0.95em] resize-y"
         style={{
           background: "hsl(var(--reading-surface))",
           border: "1px solid hsl(var(--reading-border))",
@@ -344,9 +337,7 @@ function WriteBlock({ block, progress, onProgress }) {
   const [value, setValue] = useState(saved);
   const save = (v) => {
     setValue(v);
-    onProgress?.({
-      writeEntries: { ...(progress?.writeEntries ?? {}), [block.id]: v },
-    });
+    onProgress?.({ writeEntries: { ...(progress?.writeEntries ?? {}), [block.id]: v } });
   };
   return (
     <div className="reading-card rounded-xl p-5 space-y-3 my-2">
@@ -384,9 +375,7 @@ function ReferenceBlock({ block }) {
     >
       <ExternalLink className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "hsl(var(--reading-accent))" }} />
       <div className="flex-1">
-        <div className="font-medium" style={{ color: "hsl(var(--reading-text))" }}>
-          {block.title ?? block.url}
-        </div>
+        <div className="font-medium" style={{ color: "hsl(var(--reading-text))" }}>{block.title ?? block.url}</div>
         {block.note && <div className="text-[0.88em] mt-1 muted">{block.note}</div>}
       </div>
     </a>
@@ -398,7 +387,7 @@ function DividerBlock() {
   return <hr className="my-2" style={{ border: "none", borderTop: "1px solid hsl(var(--reading-border))" }} />;
 }
 
-// ─── Block router ──────────────────────────────────────────
+// ─── Block router ───────────────────────────────────────────
 export default function Block({ block, progress, onProgress }) {
   switch (block.type) {
     case "heading":   return <HeadingBlock block={block} />;
@@ -419,7 +408,6 @@ export default function Block({ block, progress, onProgress }) {
   }
 }
 
-// Helper: given a lesson's blocks and progress, are all required checks passed?
 export function allRequiredChecksPassed(blocks, progress) {
   const checks = blocks.filter(b => b.type === "check" && b.required !== false);
   if (checks.length === 0) return true;

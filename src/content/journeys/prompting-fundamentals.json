@@ -25,74 +25,18 @@
       "xpReward": 80,
       "isPublished": true,
       "blocks": [
-        {
-          "id": "b1",
-          "type": "text",
-          "markdown": "Most people who say _\"ChatGPT gave me a bad answer\"_ actually gave ChatGPT an under-specified question. The model did exactly what was asked — the asker just didn't realize how much of the task lived in their own head.\n\nBefore we cover techniques, we need one uncomfortable idea: a prompt is not a question. A prompt is an **instruction for producing a specific output**. Questions can be vague; instructions can't."
-        },
-        {
-          "id": "b2",
-          "type": "compare",
-          "left":  { "label": "Vague question",       "content": "Write me an email to my boss about the Q3 project." },
-          "right": { "label": "Specific instruction", "content": "Write a 120-word email to my boss requesting a 2-week extension on the Q3 data-migration project. Mention that one vendor dependency slipped, propose a new deadline of Oct 31, and keep the tone concise but not apologetic." }
-        },
-        {
-          "id": "b3",
-          "type": "text",
-          "markdown": "The second prompt is better not because it's longer. It's better because it answered questions the first prompt implicitly left for the model to guess: length, reason, proposed solution, tone.\n\nEvery time you leave a question implicit, the model fills it in with its training-data average. That average is often mediocre, and _always_ generic."
-        },
-        {
-          "id": "b4",
-          "type": "callout",
-          "variant": "tip",
-          "title": "A useful reframe",
-          "body": "Before you send a prompt, ask yourself: _if a smart stranger read this prompt with no other context, could they produce the output I want?_ If the answer is no, your prompt is under-specified."
-        },
-        {
-          "id": "b5",
-          "type": "heading",
-          "level": 2,
-          "text": "The four things a good prompt answers"
-        },
-        {
-          "id": "b6",
-          "type": "text",
-          "markdown": "Most reliable prompts make four things explicit:\n\n1. **Role** — who is the model being, and who is the output for? (\"Act as a senior security engineer writing for a CEO\" is different from \"Write a security report.\")\n2. **Context** — what's the situation, the constraints, the inputs?\n3. **Task** — what exactly should be produced?\n4. **Format** — how should the output be structured, sized, and styled?\n\nYou'll internalize this as **R-C-T-F**. Most prompts you write casually have only the Task. The other three live in your head. Moving them into the prompt is most of the skill."
-        },
-        {
-          "id": "b7",
-          "type": "check",
-          "question": "A colleague says: _\"The AI is useless — I asked it to summarize our customer interviews and the summary was generic.\"_ Based on what we've covered, which is the single most likely root cause?",
-          "choices": [
-            { "id": "a", "text": "The model they used was too weak for summarization." },
-            { "id": "b", "text": "The prompt specified the task (summarize) but left role, context, and format implicit." },
-            { "id": "c", "text": "Summarization is a known weak point of current AI systems." },
-            { "id": "d", "text": "The interviews probably didn't have enough signal to summarize." }
-          ],
-          "correct": "b",
-          "explanation": "Current frontier models summarize extremely well when given a clear role (_\"You are a product researcher looking for unmet needs\"_), context (_\"These are transcripts from 8 interviews with B2B finance users\"_), and format (_\"Return 5 unmet-need bullets, each with a supporting quote\"_). A generic summary is almost always a generic prompt.",
-          "required": true
-        },
-        {
-          "id": "b8",
-          "type": "heading",
-          "level": 2,
-          "text": "Why this matters more than \"prompt tricks\""
-        },
-        {
-          "id": "b9",
-          "type": "text",
-          "markdown": "The internet is full of _\"10 magic prompts!\"_ lists. Most of that content ages badly — the clever phrasings that worked on GPT-3.5 often don't transfer. What _does_ transfer is R-C-T-F.\n\nThink of it like this: tricks are local. Structure is global. Every lesson in this journey builds on R-C-T-F."
-        },
-        {
-          "id": "b10",
-          "type": "write",
-          "content": "Think of the last time you used ChatGPT, Claude, or Gemini and the output wasn't great. In your own words: which of the four (Role / Context / Task / Format) did you leave implicit?",
-          "placeholder": "Last time I…"
-        }
+        { "id": "b1", "type": "text", "markdown": "Most people who say _\"ChatGPT gave me a bad answer\"_ actually gave ChatGPT an under-specified question. The model did exactly what was asked — the asker just didn't realize how much of the task lived in their own head.\n\nBefore we cover techniques, we need one uncomfortable idea: a prompt is not a question. A prompt is an **instruction for producing a specific output**. Questions can be vague; instructions can't." },
+        { "id": "b2", "type": "compare", "left": { "label": "Vague question", "content": "Write me an email to my boss about the Q3 project." }, "right": { "label": "Specific instruction", "content": "Write a 120-word email to my boss requesting a 2-week extension on the Q3 data-migration project. Mention that one vendor dependency slipped, propose a new deadline of Oct 31, and keep the tone concise but not apologetic." } },
+        { "id": "b3", "type": "text", "markdown": "The second prompt is better not because it's longer. It's better because it answered questions the first prompt implicitly left for the model to guess: length, reason, proposed solution, tone.\n\nEvery time you leave a question implicit, the model fills it in with its training-data average. That average is often mediocre, and _always_ generic." },
+        { "id": "b4", "type": "callout", "variant": "tip", "title": "A useful reframe", "body": "Before you send a prompt, ask yourself: _if a smart stranger read this prompt with no other context, could they produce the output I want?_ If the answer is no, your prompt is under-specified." },
+        { "id": "b5", "type": "heading", "level": 2, "text": "The four things a good prompt answers" },
+        { "id": "b6", "type": "text", "markdown": "Most reliable prompts make four things explicit:\n\n1. **Role** — who is the model being, and who is the output for? (\"Act as a senior security engineer writing for a CEO\" is different from \"Write a security report.\")\n2. **Context** — what's the situation, the constraints, the inputs?\n3. **Task** — what exactly should be produced?\n4. **Format** — how should the output be structured, sized, and styled?\n\nYou'll internalize this as **R-C-T-F**. Most prompts you write casually have only the Task. The other three live in your head. Moving them into the prompt is most of the skill." },
+        { "id": "b7", "type": "check", "question": "A colleague says: _\"The AI is useless — I asked it to summarize our customer interviews and the summary was generic.\"_ Based on what we've covered, which is the single most likely root cause?", "choices": [ { "id": "a", "text": "The model they used was too weak for summarization." }, { "id": "b", "text": "The prompt specified the task (summarize) but left role, context, and format implicit." }, { "id": "c", "text": "Summarization is a known weak point of current AI systems." }, { "id": "d", "text": "The interviews probably didn't have enough signal to summarize." } ], "correct": "b", "explanation": "Current frontier models summarize extremely well when given a clear role (_\"You are a product researcher looking for unmet needs\"_), context (_\"These are transcripts from 8 interviews with B2B finance users\"_), and format (_\"Return 5 unmet-need bullets, each with a supporting quote\"_). A generic summary is almost always a generic prompt.", "required": true },
+        { "id": "b8", "type": "heading", "level": 2, "text": "Why this matters more than \"prompt tricks\"" },
+        { "id": "b9", "type": "text", "markdown": "The internet is full of _\"10 magic prompts!\"_ lists. Most of that content ages badly — the clever phrasings that worked on GPT-3.5 often don't transfer. What _does_ transfer is R-C-T-F.\n\nThink of it like this: tricks are local. Structure is global. Every lesson in this journey builds on R-C-T-F." },
+        { "id": "b10", "type": "write", "content": "Think of the last time you used ChatGPT, Claude, or Gemini and the output wasn't great. In your own words: which of the four (Role / Context / Task / Format) did you leave implicit?", "placeholder": "Last time I…" }
       ]
     },
-
     {
       "journeyId": "prompting-fundamentals",
       "slug": "role-context-task-format",
@@ -103,113 +47,23 @@
       "xpReward": 100,
       "isPublished": true,
       "blocks": [
-        {
-          "id": "b1",
-          "type": "text",
-          "markdown": "In the last lesson we named the four things a prompt should make explicit: **Role, Context, Task, Format**. This lesson is the mechanic — how to actually write each one."
-        },
-        {
-          "id": "b2",
-          "type": "heading",
-          "level": 2,
-          "text": "Role"
-        },
-        {
-          "id": "b3",
-          "type": "text",
-          "markdown": "Role does two jobs: it tells the model whose voice and judgment to use, and it tells it _whom_ the output is for. A role isn't a costume — it's an instruction about which slice of the model's knowledge and tone to pull from.\n\nThe useful pattern is: `Act as a [SPECIFIC ROLE] writing for [SPECIFIC AUDIENCE].`"
-        },
-        {
-          "id": "b4",
-          "type": "example",
-          "label": "Role, done vaguely vs. specifically",
-          "content": "**Vague:** _\"Act as a writer.\"_\n\n**Specific:** _\"Act as a veteran B2B SaaS copywriter who has worked on developer-tools landing pages. You are writing for a technical founder who is skeptical of marketing jargon.\"_"
-        },
-        {
-          "id": "b5",
-          "type": "heading",
-          "level": 2,
-          "text": "Context"
-        },
-        {
-          "id": "b6",
-          "type": "text",
-          "markdown": "Context is everything the model would need to know to do the task well that it can't infer. This includes background situation, constraints (time, tone, audience sensitivities), and any input material.\n\nThe most common mistake here isn't too little context — it's context the user _forgot_ to say out loud because it was obvious to them."
-        },
-        {
-          "id": "b7",
-          "type": "callout",
-          "variant": "warning",
-          "title": "The \"obvious to you\" trap",
-          "body": "If you find yourself thinking _\"the AI should have known I meant…\"_ — that's the context you forgot to include. Write it down."
-        },
-        {
-          "id": "b8",
-          "type": "heading",
-          "level": 2,
-          "text": "Task"
-        },
-        {
-          "id": "b9",
-          "type": "text",
-          "markdown": "Task is the only part people reliably do. The failure mode here is task that's _too big_ — \"Write our company's marketing strategy\" is a project, not a task.\n\nA good task is:\n\n- **One output.** Not _\"write a plan and an email and a tweet.\"_\n- **Single verb.** _Summarize, rewrite, classify, outline, compare._\n- **Scoped.** _\"Summarize in 5 bullets.\"_ not _\"Summarize.\"_"
-        },
-        {
-          "id": "b10",
-          "type": "heading",
-          "level": 2,
-          "text": "Format"
-        },
-        {
-          "id": "b11",
-          "type": "text",
-          "markdown": "Format is underrated. The shape of the output (length, structure, tone register) often matters more than the content, because content you can edit — shape is exhausting to reshape.\n\nCommon format levers: length (word count, bullet count), structure (headings, table, JSON), tone (formal/casual/blunt), constraints (\"no adjectives,\" \"avoid jargon\")."
-        },
-        {
-          "id": "b12",
-          "type": "prompt",
-          "prompt": "Act as a senior engineering manager writing a weekly update for a non-technical executive team.\n\nContext: This is week 7 of a 12-week migration from legacy system A to system B. We've completed 40% of services, are on track, and hit one issue (a vendor dependency changed its API) which we resolved in 3 days.\n\nTask: Write the weekly update.\n\nFormat:\n- Exactly 150 words.\n- Three bullets: Progress, Risks, Next week.\n- Plain English, no acronyms.",
-          "annotation": "Every part of R-C-T-F is explicit. Try this in Claude or ChatGPT — you'll get something publishable on the first try, not the fifth."
-        },
-        {
-          "id": "b13",
-          "type": "check",
-          "question": "Which of these is the _weakest_ part of a good prompt?",
-          "choices": [
-            { "id": "a", "text": "\"Act as a technical writer.\"" },
-            { "id": "b", "text": "\"Return the output in a 3-column markdown table.\"" },
-            { "id": "c", "text": "\"The audience is our VP of Sales, who hasn't seen the product yet.\"" },
-            { "id": "d", "text": "\"Summarize this transcript.\"" }
-          ],
-          "correct": "a",
-          "explanation": "All four are legitimate prompt components, but (a) is the weakest _as-written_: \"technical writer\" is too generic to meaningfully shape the output. A stronger role would be \"senior developer-tools technical writer who writes in the style of Stripe's docs.\"",
-          "required": true
-        },
-        {
-          "id": "b14",
-          "type": "practice",
-          "instruction": "Pick a real task you'd actually send to an AI this week. Write a prompt for it that explicitly covers all four: Role, Context, Task, Format. Don't use a template — write it as a paragraph or short structured block, whatever reads naturally.",
-          "deliverable": "your prompt",
-          "validation": "length",
-          "placeholder": "Act as a…"
-        },
-        {
-          "id": "b15",
-          "type": "check",
-          "question": "You write a prompt for a blog-post draft. You specify Role, Context, and Task clearly. The output is technically correct but reads much longer than you wanted and uses headings when you wanted prose. What's the fix?",
-          "choices": [
-            { "id": "a", "text": "Rewrite the whole prompt from scratch." },
-            { "id": "b", "text": "Regenerate with a different model." },
-            { "id": "c", "text": "Add Format constraints: target word count, \"prose only, no headings.\"" },
-            { "id": "d", "text": "Ask the model to try again, without changing the prompt." }
-          ],
-          "correct": "c",
-          "explanation": "This is a pure Format failure — everything else was right. Adding \"Write as continuous prose, no headings. Target 400 words.\" will fix it on the next run. Most prompt iteration is format iteration.",
-          "required": true
-        }
+        { "id": "b1", "type": "text", "markdown": "In the last lesson we named the four things a prompt should make explicit: **Role, Context, Task, Format**. This lesson is the mechanic — how to actually write each one." },
+        { "id": "b2", "type": "heading", "level": 2, "text": "Role" },
+        { "id": "b3", "type": "text", "markdown": "Role does two jobs: it tells the model whose voice and judgment to use, and it tells it _whom_ the output is for. A role isn't a costume — it's an instruction about which slice of the model's knowledge and tone to pull from.\n\nThe useful pattern is: `Act as a [SPECIFIC ROLE] writing for [SPECIFIC AUDIENCE].`" },
+        { "id": "b4", "type": "example", "label": "Role, done vaguely vs. specifically", "content": "**Vague:** _\"Act as a writer.\"_\n\n**Specific:** _\"Act as a veteran B2B SaaS copywriter who has worked on developer-tools landing pages. You are writing for a technical founder who is skeptical of marketing jargon.\"_" },
+        { "id": "b5", "type": "heading", "level": 2, "text": "Context" },
+        { "id": "b6", "type": "text", "markdown": "Context is everything the model would need to know to do the task well that it can't infer. This includes background situation, constraints (time, tone, audience sensitivities), and any input material.\n\nThe most common mistake here isn't too little context — it's context the user _forgot_ to say out loud because it was obvious to them." },
+        { "id": "b7", "type": "callout", "variant": "warning", "title": "The \"obvious to you\" trap", "body": "If you find yourself thinking _\"the AI should have known I meant…\"_ — that's the context you forgot to include. Write it down." },
+        { "id": "b8", "type": "heading", "level": 2, "text": "Task" },
+        { "id": "b9", "type": "text", "markdown": "Task is the only part people reliably do. The failure mode here is task that's _too big_ — \"Write our company's marketing strategy\" is a project, not a task.\n\nA good task is:\n\n- **One output.** Not _\"write a plan and an email and a tweet.\"_\n- **Single verb.** _Summarize, rewrite, classify, outline, compare._\n- **Scoped.** _\"Summarize in 5 bullets.\"_ not _\"Summarize.\"_" },
+        { "id": "b10", "type": "heading", "level": 2, "text": "Format" },
+        { "id": "b11", "type": "text", "markdown": "Format is underrated. The shape of the output (length, structure, tone register) often matters more than the content, because content you can edit — shape is exhausting to reshape.\n\nCommon format levers: length (word count, bullet count), structure (headings, table, JSON), tone (formal/casual/blunt), constraints (\"no adjectives,\" \"avoid jargon\")." },
+        { "id": "b12", "type": "prompt", "prompt": "Act as a senior engineering manager writing a weekly update for a non-technical executive team.\n\nContext: This is week 7 of a 12-week migration from legacy system A to system B. We've completed 40% of services, are on track, and hit one issue (a vendor dependency changed its API) which we resolved in 3 days.\n\nTask: Write the weekly update.\n\nFormat:\n- Exactly 150 words.\n- Three bullets: Progress, Risks, Next week.\n- Plain English, no acronyms.", "annotation": "Every part of R-C-T-F is explicit. Try this in Claude or ChatGPT — you'll get something publishable on the first try, not the fifth." },
+        { "id": "b13", "type": "check", "question": "Which of these is the _weakest_ part of a good prompt?", "choices": [ { "id": "a", "text": "\"Act as a technical writer.\"" }, { "id": "b", "text": "\"Return the output in a 3-column markdown table.\"" }, { "id": "c", "text": "\"The audience is our VP of Sales, who hasn't seen the product yet.\"" }, { "id": "d", "text": "\"Summarize this transcript.\"" } ], "correct": "a", "explanation": "All four are legitimate prompt components, but (a) is the weakest _as-written_: \"technical writer\" is too generic to meaningfully shape the output. A stronger role would be \"senior developer-tools technical writer who writes in the style of Stripe's docs.\"", "required": true },
+        { "id": "b14", "type": "practice", "instruction": "Pick a real task you'd actually send to an AI this week. Write a prompt for it that explicitly covers all four: Role, Context, Task, Format. Don't use a template — write it as a paragraph or short structured block, whatever reads naturally.", "deliverable": "your prompt", "validation": "length", "placeholder": "Act as a…" },
+        { "id": "b15", "type": "check", "question": "You write a prompt for a blog-post draft. You specify Role, Context, and Task clearly. The output is technically correct but reads much longer than you wanted and uses headings when you wanted prose. What's the fix?", "choices": [ { "id": "a", "text": "Rewrite the whole prompt from scratch." }, { "id": "b", "text": "Regenerate with a different model." }, { "id": "c", "text": "Add Format constraints: target word count, \"prose only, no headings.\"" }, { "id": "d", "text": "Ask the model to try again, without changing the prompt." } ], "correct": "c", "explanation": "This is a pure Format failure — everything else was right. Adding \"Write as continuous prose, no headings. Target 400 words.\" will fix it on the next run. Most prompt iteration is format iteration.", "required": true }
       ]
     },
-
     {
       "journeyId": "prompting-fundamentals",
       "slug": "iterating-when-output-is-wrong",
@@ -220,76 +74,18 @@
       "xpReward": 90,
       "isPublished": true,
       "blocks": [
-        {
-          "id": "b1",
-          "type": "text",
-          "markdown": "When an output isn't what you wanted, most people do one of two unhelpful things: they throw away the prompt and start over, or they add _\"make it better\"_ to the end and regenerate. Both waste time."
-        },
-        {
-          "id": "b2",
-          "type": "text",
-          "markdown": "The move is to diagnose. Output problems fall into one of four categories, and each maps to one part of R-C-T-F:\n\n- Output in **wrong voice** or tone → Role is wrong or missing.\n- Output **factually off** or misses constraints → Context is missing.\n- Output **doesn't do the right thing** → Task is ambiguous or too big.\n- Output **right content, wrong shape** → Format is missing."
-        },
-        {
-          "id": "b3",
-          "type": "callout",
-          "variant": "info",
-          "title": "Don't re-run the same prompt hoping for better",
-          "body": "If the prompt was under-specified in a given dimension, re-running just samples a different wrong answer from the same generic distribution. Fix the prompt, then re-run."
-        },
-        {
-          "id": "b4",
-          "type": "heading",
-          "level": 2,
-          "text": "A worked example"
-        },
-        {
-          "id": "b5",
-          "type": "text",
-          "markdown": "Suppose you prompt:\n\n> _\"Write a LinkedIn post announcing our new security feature for developers.\"_\n\nYou get back a cheerful, emoji-laden, 500-word post with bullet lists. You wanted something sober and short. Let's diagnose."
-        },
-        {
-          "id": "b6",
-          "type": "compare",
-          "left": { "label": "What went wrong",   "content": "Tone: too cheerful. Length: too long. Format: too many bullets.\n\nRoot cause: no Role (default LinkedIn-post voice is hypey), no Format (no length, no style constraint)." },
-          "right": { "label": "Fixed prompt",      "content": "_\"Act as a technical-security product marketer writing for senior developers who distrust marketing. Write a 90-word LinkedIn post announcing our new SSO feature. Plain prose, no bullets, no emojis. End with one specific reason a developer would care.\"_" }
-        },
-        {
-          "id": "b7",
-          "type": "check",
-          "question": "You prompt the model to summarize a PDF and the summary invents a paragraph that isn't in the PDF. Which part of R-C-T-F is most likely at fault?",
-          "choices": [
-            { "id": "a", "text": "Role — the model wasn't given a summarizer persona." },
-            { "id": "b", "text": "Context — the PDF content probably wasn't actually included in the prompt, or was truncated." },
-            { "id": "c", "text": "Task — \"summarize\" wasn't specific enough." },
-            { "id": "d", "text": "Format — the output should've been in a table." }
-          ],
-          "correct": "b",
-          "explanation": "Hallucinated content in a summary is almost always a Context failure: the source material is missing, truncated, or the tool used didn't actually pass the PDF through. Adding \"only use information from the attached document; if something isn't there, say 'not in source'\" helps, but the root cause is usually that the document didn't make it into the model's input.",
-          "required": true
-        },
-        {
-          "id": "b8",
-          "type": "heading",
-          "level": 2,
-          "text": "The \"show, don't tell\" shortcut"
-        },
-        {
-          "id": "b9",
-          "type": "text",
-          "markdown": "When you can't articulate what's wrong, show an example of what right looks like. A single good example beats paragraphs of adjectives.\n\n_\"Write in this style:\"_ followed by a short passage you like is one of the highest-leverage moves in prompting. The model is much better at imitating a concrete example than at parsing abstract style instructions."
-        },
-        {
-          "id": "b10",
-          "type": "practice",
-          "instruction": "Take the last AI output you weren't happy with. Diagnose it using R-C-T-F: which dimension was under-specified? Write out the diagnosis in 1-2 sentences.",
-          "deliverable": "your diagnosis",
-          "validation": "length",
-          "placeholder": "The output was wrong because the prompt missed…"
-        }
+        { "id": "b1", "type": "text", "markdown": "When an output isn't what you wanted, most people do one of two unhelpful things: they throw away the prompt and start over, or they add _\"make it better\"_ to the end and regenerate. Both waste time." },
+        { "id": "b2", "type": "text", "markdown": "The move is to diagnose. Output problems fall into one of four categories, and each maps to one part of R-C-T-F:\n\n- Output in **wrong voice** or tone → Role is wrong or missing.\n- Output **factually off** or misses constraints → Context is missing.\n- Output **doesn't do the right thing** → Task is ambiguous or too big.\n- Output **right content, wrong shape** → Format is missing." },
+        { "id": "b3", "type": "callout", "variant": "info", "title": "Don't re-run the same prompt hoping for better", "body": "If the prompt was under-specified in a given dimension, re-running just samples a different wrong answer from the same generic distribution. Fix the prompt, then re-run." },
+        { "id": "b4", "type": "heading", "level": 2, "text": "A worked example" },
+        { "id": "b5", "type": "text", "markdown": "Suppose you prompt:\n\n> _\"Write a LinkedIn post announcing our new security feature for developers.\"_\n\nYou get back a cheerful, emoji-laden, 500-word post with bullet lists. You wanted something sober and short. Let's diagnose." },
+        { "id": "b6", "type": "compare", "left": { "label": "What went wrong", "content": "Tone: too cheerful. Length: too long. Format: too many bullets.\n\nRoot cause: no Role (default LinkedIn-post voice is hypey), no Format (no length, no style constraint)." }, "right": { "label": "Fixed prompt", "content": "_\"Act as a technical-security product marketer writing for senior developers who distrust marketing. Write a 90-word LinkedIn post announcing our new SSO feature. Plain prose, no bullets, no emojis. End with one specific reason a developer would care.\"_" } },
+        { "id": "b7", "type": "check", "question": "You prompt the model to summarize a PDF and the summary invents a paragraph that isn't in the PDF. Which part of R-C-T-F is most likely at fault?", "choices": [ { "id": "a", "text": "Role — the model wasn't given a summarizer persona." }, { "id": "b", "text": "Context — the PDF content probably wasn't actually included in the prompt, or was truncated." }, { "id": "c", "text": "Task — \"summarize\" wasn't specific enough." }, { "id": "d", "text": "Format — the output should've been in a table." } ], "correct": "b", "explanation": "Hallucinated content in a summary is almost always a Context failure: the source material is missing, truncated, or the tool used didn't actually pass the PDF through. Adding \"only use information from the attached document; if something isn't there, say 'not in source'\" helps, but the root cause is usually that the document didn't make it into the model's input.", "required": true },
+        { "id": "b8", "type": "heading", "level": 2, "text": "The \"show, don't tell\" shortcut" },
+        { "id": "b9", "type": "text", "markdown": "When you can't articulate what's wrong, show an example of what right looks like. A single good example beats paragraphs of adjectives.\n\n_\"Write in this style:\"_ followed by a short passage you like is one of the highest-leverage moves in prompting. The model is much better at imitating a concrete example than at parsing abstract style instructions." },
+        { "id": "b10", "type": "practice", "instruction": "Take the last AI output you weren't happy with. Diagnose it using R-C-T-F: which dimension was under-specified? Write out the diagnosis in 1-2 sentences.", "deliverable": "your diagnosis", "validation": "length", "placeholder": "The output was wrong because the prompt missed…" }
       ]
     },
-
     {
       "journeyId": "prompting-fundamentals",
       "slug": "reasoning-vs-open-ended",
@@ -300,87 +96,17 @@
       "xpReward": 100,
       "isPublished": true,
       "blocks": [
-        {
-          "id": "b1",
-          "type": "text",
-          "markdown": "R-C-T-F applies to every prompt. But _how_ you write each part depends heavily on whether the task is **reasoning-heavy** (there's a right answer, and getting there takes steps) or **open-ended** (the space of good answers is wide, and taste matters more than correctness)."
-        },
-        {
-          "id": "b2",
-          "type": "compare",
-          "left":  { "label": "Reasoning-heavy", "content": "_Find the bug in this code. Plan a project timeline given these constraints. Analyze which marketing channel has the best ROI given this data._" },
-          "right": { "label": "Open-ended",      "content": "_Write a product announcement. Brainstorm taglines. Draft an email to reschedule a meeting._" }
-        },
-        {
-          "id": "b3",
-          "type": "heading",
-          "level": 2,
-          "text": "For reasoning tasks: ask for the work, not just the answer"
-        },
-        {
-          "id": "b4",
-          "type": "text",
-          "markdown": "On reasoning tasks, the biggest failure mode is the model _jumping to an answer_ that sounds right but isn't. The single most effective fix is to make the model show its work before committing.\n\nConcretely: add to your prompt: _\"Think step by step. First list what you know, then list what you need to figure out, then work through it, and only at the end give your final answer.\"_\n\nReasoning-trained models (Claude Opus, o-series from OpenAI, etc.) do this internally now, but forcing it explicitly still helps on harder questions — and lets you _see_ the reasoning so you can catch errors."
-        },
-        {
-          "id": "b5",
-          "type": "callout",
-          "variant": "tip",
-          "title": "The disagree-and-verify pattern",
-          "body": "For high-stakes reasoning, add: _\"After your answer, argue against it. Is there a case where it's wrong?\"_ This costs nothing and catches a lot of overconfident mistakes."
-        },
-        {
-          "id": "b6",
-          "type": "heading",
-          "level": 2,
-          "text": "For open-ended tasks: generate more, then cut"
-        },
-        {
-          "id": "b7",
-          "type": "text",
-          "markdown": "On open-ended tasks, the biggest failure mode is settling for the first thing the model produces. The model's first draft is _almost always_ the generic-average draft — because that's the distribution it samples from.\n\nThe fix is to ask for variance, then curate:\n\n- _\"Give me 5 radically different versions. One should be blunt and short; one should be witty; one should be plain and factual; one should be emotional; one should be ambitious.\"_\n- Then pick the direction that's closest and iterate on that one.\n\nThis uses the same time as regenerating a single draft over and over, but gives you real optionality."
-        },
-        {
-          "id": "b8",
-          "type": "check",
-          "question": "You ask the model to plan a marketing campaign and it returns a plausible-looking plan with specific numbers (\"Budget 60% to paid, 25% to content, 15% to events\"). How should you treat those numbers?",
-          "choices": [
-            { "id": "a", "text": "As authoritative — the model was trained on marketing literature." },
-            { "id": "b", "text": "As a starting proposal to stress-test against your own context, since the model has no knowledge of your actual budget, channels that work for you, or team size." },
-            { "id": "c", "text": "As definitely wrong — AI shouldn't be trusted with numbers." },
-            { "id": "d", "text": "As fine to use as-is, but re-prompt for a \"more aggressive\" version." }
-          ],
-          "correct": "b",
-          "explanation": "Models produce specific-sounding numbers even when they have no basis for them — it's a stylistic tic, not a signal of grounding. Treat any quantity the model produces without source as a _proposal_ to check. Your judgment + the model's suggestion is stronger than either alone. This is the single biggest habit separating experienced AI users from beginners.",
-          "required": true
-        },
-        {
-          "id": "b9",
-          "type": "write",
-          "content": "Of the tasks you actually use AI for, which are reasoning-heavy and which are open-ended? Where have you been applying the wrong style of prompt?",
-          "placeholder": "Most of what I use AI for is…"
-        },
-        {
-          "id": "b10",
-          "type": "reference",
-          "title": "Anthropic — Prompt engineering overview",
-          "url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview",
-          "note": "A longer technical reference. Deeper than this journey needs, but good if you want to go further."
-        },
-        {
-          "id": "b11",
-          "type": "check",
-          "question": "You finish this journey. Tomorrow you're writing a prompt to summarize 3 customer interviews. Which single move will do the most for output quality?",
-          "choices": [
-            { "id": "a", "text": "Using a fancier model." },
-            { "id": "b", "text": "Making Role, Context, and Format explicit — not just Task." },
-            { "id": "c", "text": "Asking the model to \"do its best.\"" },
-            { "id": "d", "text": "Running the prompt 5 times and picking the best." }
-          ],
-          "correct": "b",
-          "explanation": "A cleaner prompt (explicit R-C-T-F) reliably beats model swaps, multiple samples, and motivational phrasing. If you take one thing from this journey, take this: the prompt is usually the variable — not the model.",
-          "required": true
-        }
+        { "id": "b1", "type": "text", "markdown": "R-C-T-F applies to every prompt. But _how_ you write each part depends heavily on whether the task is **reasoning-heavy** (there's a right answer, and getting there takes steps) or **open-ended** (the space of good answers is wide, and taste matters more than correctness)." },
+        { "id": "b2", "type": "compare", "left": { "label": "Reasoning-heavy", "content": "_Find the bug in this code. Plan a project timeline given these constraints. Analyze which marketing channel has the best ROI given this data._" }, "right": { "label": "Open-ended", "content": "_Write a product announcement. Brainstorm taglines. Draft an email to reschedule a meeting._" } },
+        { "id": "b3", "type": "heading", "level": 2, "text": "For reasoning tasks: ask for the work, not just the answer" },
+        { "id": "b4", "type": "text", "markdown": "On reasoning tasks, the biggest failure mode is the model _jumping to an answer_ that sounds right but isn't. The single most effective fix is to make the model show its work before committing.\n\nConcretely: add to your prompt: _\"Think step by step. First list what you know, then list what you need to figure out, then work through it, and only at the end give your final answer.\"_\n\nReasoning-trained models (Claude Opus, o-series from OpenAI, etc.) do this internally now, but forcing it explicitly still helps on harder questions — and lets you _see_ the reasoning so you can catch errors." },
+        { "id": "b5", "type": "callout", "variant": "tip", "title": "The disagree-and-verify pattern", "body": "For high-stakes reasoning, add: _\"After your answer, argue against it. Is there a case where it's wrong?\"_ This costs nothing and catches a lot of overconfident mistakes." },
+        { "id": "b6", "type": "heading", "level": 2, "text": "For open-ended tasks: generate more, then cut" },
+        { "id": "b7", "type": "text", "markdown": "On open-ended tasks, the biggest failure mode is settling for the first thing the model produces. The model's first draft is _almost always_ the generic-average draft — because that's the distribution it samples from.\n\nThe fix is to ask for variance, then curate:\n\n- _\"Give me 5 radically different versions. One should be blunt and short; one should be witty; one should be plain and factual; one should be emotional; one should be ambitious.\"_\n- Then pick the direction that's closest and iterate on that one.\n\nThis uses the same time as regenerating a single draft over and over, but gives you real optionality." },
+        { "id": "b8", "type": "check", "question": "You ask the model to plan a marketing campaign and it returns a plausible-looking plan with specific numbers (\"Budget 60% to paid, 25% to content, 15% to events\"). How should you treat those numbers?", "choices": [ { "id": "a", "text": "As authoritative — the model was trained on marketing literature." }, { "id": "b", "text": "As a starting proposal to stress-test against your own context, since the model has no knowledge of your actual budget, channels that work for you, or team size." }, { "id": "c", "text": "As definitely wrong — AI shouldn't be trusted with numbers." }, { "id": "d", "text": "As fine to use as-is, but re-prompt for a \"more aggressive\" version." } ], "correct": "b", "explanation": "Models produce specific-sounding numbers even when they have no basis for them — it's a stylistic tic, not a signal of grounding. Treat any quantity the model produces without source as a _proposal_ to check. Your judgment + the model's suggestion is stronger than either alone. This is the single biggest habit separating experienced AI users from beginners.", "required": true },
+        { "id": "b9", "type": "write", "content": "Of the tasks you actually use AI for, which are reasoning-heavy and which are open-ended? Where have you been applying the wrong style of prompt?", "placeholder": "Most of what I use AI for is…" },
+        { "id": "b10", "type": "reference", "title": "Anthropic — Prompt engineering overview", "url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview", "note": "A longer technical reference. Deeper than this journey needs, but good if you want to go further." },
+        { "id": "b11", "type": "check", "question": "You finish this journey. Tomorrow you're writing a prompt to summarize 3 customer interviews. Which single move will do the most for output quality?", "choices": [ { "id": "a", "text": "Using a fancier model." }, { "id": "b", "text": "Making Role, Context, and Format explicit — not just Task." }, { "id": "c", "text": "Asking the model to \"do its best.\"" }, { "id": "d", "text": "Running the prompt 5 times and picking the best." } ], "correct": "b", "explanation": "A cleaner prompt (explicit R-C-T-F) reliably beats model swaps, multiple samples, and motivational phrasing. If you take one thing from this journey, take this: the prompt is usually the variable — not the model.", "required": true }
       ]
     }
   ]

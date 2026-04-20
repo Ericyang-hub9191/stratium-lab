@@ -159,12 +159,7 @@ export default function BoostExperience() {
           </header>
 
           {(boost.blocks ?? []).map(block => (
-            <Block
-              key={block.id}
-              block={block}
-              progress={progress}
-              onProgress={handleProgressUpdate}
-            />
+            <Block key={block.id} block={block} progress={progress} onProgress={handleProgressUpdate} />
           ))}
         </article>
       </div>

@@ -54,13 +54,12 @@ export default function JourneyDetail() {
     );
   }
 
-  const completed = lessons.filter(l => completedIds.has(l.id)).length;
-  const pct = lessons.length > 0 ? Math.round((completed / lessons.length) * 100) : 0;
+  const completed  = lessons.filter(l => completedIds.has(l.id)).length;
+  const pct        = lessons.length > 0 ? Math.round((completed / lessons.length) * 100) : 0;
   const nextLesson = lessons.find(l => !completedIds.has(l.id));
 
   return (
     <div className="max-w-2xl mx-auto px-4 md:px-8 py-6 md:py-10 space-y-7">
-
       <button onClick={() => navigate(-1)} className="btn btn-quiet !px-0 -ml-1 text-sm">
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
@@ -69,7 +68,7 @@ export default function JourneyDetail() {
         <div className="ui-eyebrow">{journey.track} · {journey.difficulty ?? "intro"}</div>
         <h1 className="text-3xl ui-heading">{journey.title}</h1>
         {journey.subtitle && <p className="text-base text-text-secondary leading-relaxed">{journey.subtitle}</p>}
-        {journey.summary && <p className="text-sm text-text-secondary leading-relaxed">{journey.summary}</p>}
+        {journey.summary  && <p className="text-sm text-text-secondary leading-relaxed">{journey.summary}</p>}
         <div className="flex items-center gap-4 pt-1 text-xs text-text-muted">
           <span>{lessons.length} lesson{lessons.length === 1 ? "" : "s"}</span>
           {journey.estimatedHours && <span>~{journey.estimatedHours}h total</span>}
@@ -77,14 +76,11 @@ export default function JourneyDetail() {
         </div>
       </header>
 
-      {/* Progress + CTA */}
       <div className="rounded-lg border border-border bg-surface-1 p-4 flex items-center gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between mb-2">
             <span className="text-sm text-text-primary font-medium">
-              {completed === 0 ? "Not started"
-                : completed === lessons.length ? "Completed"
-                : `${completed} of ${lessons.length} complete`}
+              {completed === 0 ? "Not started" : completed === lessons.length ? "Completed" : `${completed} of ${lessons.length} complete`}
             </span>
             <span className="text-xs text-text-muted tabular-nums">{pct}%</span>
           </div>
@@ -99,10 +95,9 @@ export default function JourneyDetail() {
         )}
       </div>
 
-      {/* Lesson list */}
       <ol className="space-y-1.5">
         {lessons.map((l, idx) => {
-          const done = completedIds.has(l.id);
+          const done   = completedIds.has(l.id);
           const isNext = !done && l.id === nextLesson?.id;
           return (
             <li key={l.id}>
@@ -110,26 +105,20 @@ export default function JourneyDetail() {
                 onClick={() => navigate(`/lesson/${l.id}`)}
                 className={cn(
                   "w-full text-left flex items-start gap-3 p-3.5 rounded-lg border transition-colors",
-                  done
+                  done || !isNext
                     ? "border-border bg-surface-1 hover:border-border-strong"
-                    : isNext
-                    ? "border-accent bg-[hsla(var(--accent),0.06)] hover:bg-[hsla(var(--accent),0.10)]"
-                    : "border-border bg-surface-1 hover:border-border-strong"
+                    : "border-accent bg-[hsla(var(--accent),0.06)] hover:bg-[hsla(var(--accent),0.10)]"
                 )}
               >
-                <span
-                  className={cn(
-                    "shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-xs font-medium tabular-nums",
-                    done ? "bg-success text-bg" : isNext ? "bg-accent text-bg" : "bg-surface-2 text-text-secondary"
-                  )}
-                >
+                <span className={cn(
+                  "shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-xs font-medium tabular-nums",
+                  done ? "bg-success text-bg" : isNext ? "bg-accent text-bg" : "bg-surface-2 text-text-secondary"
+                )}>
                   {done ? <Check className="w-3.5 h-3.5" /> : (l.order ?? idx + 1)}
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-text-primary">{l.title}</div>
-                  {l.subtitle && (
-                    <div className="text-xs text-text-secondary mt-0.5 line-clamp-1">{l.subtitle}</div>
-                  )}
+                  {l.subtitle && <div className="text-xs text-text-secondary mt-0.5 line-clamp-1">{l.subtitle}</div>}
                   <div className="flex items-center gap-2 mt-1.5 text-[11px] text-text-muted">
                     {l.estimatedMinutes && <><Clock className="w-3 h-3" />{l.estimatedMinutes} min</>}
                     <span>·</span>
