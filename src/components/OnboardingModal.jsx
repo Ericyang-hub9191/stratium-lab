@@ -1,85 +1,120 @@
+/* ─────────────────────────────────────────────────────────────
+   OnboardingModal — first-run personalization.
+   ───────────────────────────────────────────────────────────── */
+
 import { useState } from "react";
 
-const SLIDES = [
-  {
-    emoji: "⚡",
-    title: "Welcome to Synthetica",
-    body: ["Build real AI skills through daily practice — not theory.", "Every session makes you measurably better."],
-  },
-  {
-    emoji: "🔥",
-    title: "Your streak is everything",
-    body: ["Complete one Boost every day to keep your streak alive.", "Miss a day and it resets. Consistency is the skill."],
-  },
-  {
-    emoji: "🗺️",
-    title: "Two modes, one goal",
-    body: ["Quick Boost: 3–5 minutes, apply it today. Deep Dive: multi-lesson journeys for real mastery.", "Toggle between them anytime at the top."],
-  },
+const TRACK_OPTIONS = [
+  { id: "prompting",       label: "Better prompting",          desc: "Day-to-day skill for any AI tool" },
+  { id: "writing",         label: "Writing with AI",           desc: "Drafts, edits, voice" },
+  { id: "research",        label: "Research & summarization",  desc: "Reading, condensing, fact-finding" },
+  { id: "automation",      label: "Automation",                desc: "Repetitive work, scripts, workflows" },
+  { id: "python",          label: "Python with AI",            desc: "Code with AI as a pair" },
+  { id: "data",            label: "Data analysis",             desc: "Spreadsheets, queries, charts" },
+  { id: "business",        label: "Business strategy",         desc: "Planning, decisions, frameworks" },
+  { id: "biology",         label: "AI in biology",             desc: "Scientific applications" },
+  { id: "psychology",      label: "AI in psychology",          desc: "Behavior, cognition, research" },
+  { id: "safety",          label: "Safety & alignment",        desc: "How models can fail and how to think about it" },
+  { id: "mlops",           label: "MLOps",                     desc: "Production ML systems" },
+  { id: "build-your-own",  label: "Build your own AI",         desc: "APIs, agents, RAG" },
 ];
 
-export default function OnboardingModal({ onDismiss }) {
+export default function OnboardingModal({ onDone }) {
   const [slide, setSlide] = useState(0);
-  const isLast = slide === SLIDES.length - 1;
-  const { emoji, title, body } = SLIDES[slide];
+  const [selected, setSelected] = useState([]);
 
-  const handleNext = () => {
+  const totalSlides = 3;
+  const isLast = slide === totalSlides - 1;
+
+  const toggle = (id) => {
+    setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const next = () => {
     if (isLast) {
-      onDismiss();
+      onDone({ tracks: selected });
     } else {
       setSlide(s => s + 1);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
-      <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
-      <div
-        className="relative w-full max-w-sm rounded-3xl border overflow-hidden"
-        style={{ background: "hsl(var(--background))", borderColor: "rgba(0,245,255,0.25)", boxShadow: "0 0 60px rgba(0,245,255,0.1)" }}
-      >
-        <div className="p-7 space-y-6 text-center">
-          {/* Emoji */}
-          <div className="text-6xl leading-none">{emoji}</div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/75 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-xl border border-border bg-bg p-6 md:p-8 space-y-6 animate-slide-up">
 
-          {/* Text */}
-          <div className="space-y-2">
-            <h2 className="text-xl font-black">{title}</h2>
-            {body.map((line, i) => (
-              <p key={i} className="text-sm text-muted-foreground leading-relaxed">{line}</p>
-            ))}
-          </div>
-
-          {/* Dot indicators */}
-          <div className="flex items-center justify-center gap-2">
-            {SLIDES.map((_, i) => (
-              <div
-                key={i}
-                className="rounded-full transition-all duration-300"
-                style={{
-                  width: i === slide ? 20 : 6,
-                  height: 6,
-                  background: i === slide ? "#00f5ff" : "hsl(var(--muted))",
-                }}
-              />
-            ))}
-          </div>
-
-          {/* CTA button */}
-          <button
-            onClick={handleNext}
-            className="w-full py-4 rounded-2xl text-base font-black text-black transition-all active:scale-95"
-            style={isLast ? {
-              background: "linear-gradient(90deg, #39ff14, #00f5ff)",
-              boxShadow: "0 0 24px rgba(57,255,20,0.4)",
-            } : {
-              background: "#00f5ff",
-              boxShadow: "0 0 20px rgba(0,245,255,0.35)",
-            }}
-          >
-            {isLast ? "Let's go ⚡" : "Next →"}
-          </button>
+        {/* Dots */}
+        <div className="flex items-center justify-center gap-1.5">
+          {Array.from({ length: totalSlides }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-full transition-all duration-300"
+              style={{
+                width: i === slide ? 24 : 6,
+                height: 6,
+                background: i <= slide ? "hsl(var(--accent))" : "hsl(var(--surface-2))",
+              }}
+            />
+          ))}
         </div>
+
+        {slide === 0 && (
+          <div className="space-y-4 text-center">
+            <h2 className="text-xl ui-heading">Welcome to Synthetica.</h2>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              A serious tool for getting better at using AI. Two formats: short Boosts you can do in 3 minutes, and longer Journeys that build real depth.
+            </p>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              Every lesson has a checkpoint — not to test you, but to make sure something actually stuck.
+            </p>
+          </div>
+        )}
+
+        {slide === 1 && (
+          <div className="space-y-4">
+            <div className="text-center space-y-1.5">
+              <h2 className="text-xl ui-heading">What do you want to learn?</h2>
+              <p className="text-sm text-text-secondary">Pick any number. We'll use this to recommend journeys and boosts. You can change it later.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5 max-h-[300px] overflow-y-auto pr-1">
+              {TRACK_OPTIONS.map(opt => {
+                const on = selected.includes(opt.id);
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => toggle(opt.id)}
+                    className={`text-left rounded-lg p-3 border transition-colors duration-150 ${
+                      on
+                        ? "border-accent bg-[hsla(var(--accent),0.08)]"
+                        : "border-border bg-surface-1 hover:border-border-strong"
+                    }`}
+                  >
+                    <div className="text-sm font-medium text-text-primary">{opt.label}</div>
+                    <div className="text-[11px] text-text-secondary mt-0.5 leading-snug">{opt.desc}</div>
+                  </button>
+                );
+              })}
+            </div>
+            {selected.length === 0 && (
+              <p className="text-xs text-text-muted text-center">You can also skip — we'll show you everything.</p>
+            )}
+          </div>
+        )}
+
+        {slide === 2 && (
+          <div className="space-y-4 text-center">
+            <h2 className="text-xl ui-heading">One last thing.</h2>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              Streaks here aren't a punishment system. The point is the work, not the number. Come back when you can — but try to come back.
+            </p>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              When you finish a lesson, the answer to "did I really learn that?" lives in the checkpoint. Take it seriously.
+            </p>
+          </div>
+        )}
+
+        <button onClick={next} className="btn btn-primary w-full">
+          {isLast ? "Get started" : "Next"}
+        </button>
       </div>
     </div>
   );

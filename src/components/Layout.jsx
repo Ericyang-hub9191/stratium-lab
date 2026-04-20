@@ -1,61 +1,32 @@
+/* ─────────────────────────────────────────────────────────────
+   Layout — app chrome, mobile + desktop.
+   ───────────────────────────────────────────────────────────── */
+
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
-import { Home, Zap, TrendingUp, User } from "lucide-react";
+import { Home, BookOpen, BarChart3, User, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import { levelFromXp } from "@/lib/progress-utils";
 
 const TABS = [
-  { path: "/",         icon: Home,       label: "Home"     },
-  { path: "/missions", icon: Zap,        label: "Missions" },
-  { path: "/progress", icon: TrendingUp, label: "Progress" },
-  { path: "/me",       icon: User,       label: "Me"       },
+  { path: "/",         icon: Home,      label: "Home" },
+  { path: "/library",  icon: BookOpen,  label: "Library" },
+  { path: "/signals",  icon: Radio,     label: "Signals" },
+  { path: "/progress", icon: BarChart3, label: "Progress" },
+  { path: "/me",       icon: User,      label: "You" },
 ];
 
 export default function Layout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
-  // Sync dark mode with system preference
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const apply = (dark) => document.documentElement.classList.toggle('dark', dark);
-    apply(mq.matches);
-    mq.addEventListener('change', e => apply(e.matches));
-    return () => mq.removeEventListener('change', e => apply(e.matches));
+    document.documentElement.classList.add("dark");
   }, []);
 
-  const [deepDive, setDeepDive] = useState(false);
-  const [streak,   setStreak]   = useState(0);
-  const [xp,       setXp]       = useState(0);
-  const [gems,     setGems]     = useState(0);
-  const [headerFlash, setHeaderFlash] = useState(null); // null | "#39ff14" | "#00f5ff"
-  const [showToggleHint, setShowToggleHint] = useState(
-    () => !localStorage.getItem("synthetica_toggle_hint_seen")
-  );
-
-  const handleToggle = () => {
-    const next = !deepDive;
-    setDeepDive(next);
-    // Flash header border
-    const flashColor = next ? "#39ff14" : "#00f5ff";
-    setHeaderFlash(flashColor);
-    setTimeout(() => setHeaderFlash(null), 800);
-    // Dismiss tooltip
-    if (showToggleHint) {
-      setShowToggleHint(false);
-      localStorage.setItem("synthetica_toggle_hint_seen", "1");
-    }
-  };
-
-  useEffect(() => {
-    if (!showToggleHint) return;
-    const t = setTimeout(() => {
-      setShowToggleHint(false);
-      localStorage.setItem("synthetica_toggle_hint_seen", "1");
-    }, 4000);
-    return () => clearTimeout(t);
-  }, [showToggleHint]);
+  const [streak, setStreak] = useState(0);
+  const [xp, setXp] = useState(0);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -66,170 +37,71 @@ export default function Layout() {
       ]);
       setStreak(streaks[0]?.currentStreak ?? 0);
       setXp(stats[0]?.totalXp ?? 0);
-      setGems(stats[0]?.gems ?? 10);
     } catch (_) {}
   }, []);
 
   useEffect(() => { fetchStats(); }, [pathname, fetchStats]);
 
   useEffect(() => {
-    const handleOptimistic = (e) => {
-      const delta = e.detail?.xpDelta ?? 0;
-      setXp(prev => prev + delta);
-      setStreak(prev => prev + 1);
-    };
-    window.addEventListener('win-logged-optimistic', handleOptimistic);
-    window.addEventListener('win-logged', fetchStats);
-    return () => {
-      window.removeEventListener('win-logged-optimistic', handleOptimistic);
-      window.removeEventListener('win-logged', fetchStats);
-    };
+    const onUpdate = () => { setTimeout(fetchStats, 200); };
+    window.addEventListener("progress-updated", onUpdate);
+    return () => window.removeEventListener("progress-updated", onUpdate);
   }, [fetchStats]);
 
-  const isHighStreak = streak >= 7;
+  const { level } = levelFromXp(xp);
 
-  // ── Shared header content ──────────────────────────────────────────
-  // isMobile: used to conditionally render streak label
-  const MobileStreakBtn = () => (
-    <button
-      onClick={() => pathname !== "/streak" && navigate("/streak")}
-      className="flex flex-col items-start active:scale-95 transition-transform"
-      style={{ WebkitTapHighlightColor: "transparent" }}
-    >
-      {/* Wordmark */}
-      <div className="flex items-center gap-1 leading-none">
-        <span style={{ fontSize: 13, color: "#00f5ff" }}>⚡</span>
-        <span style={{ fontSize: 15, fontWeight: 900, color: "#00f5ff", letterSpacing: "-0.02em" }}>Synthetica</span>
-      </div>
-      {/* Streak */}
-      <div className="flex items-center gap-1 mt-0.5">
-        <span
-          className={cn("leading-none select-none", isHighStreak ? "animate-streak-fire" : "")}
-          style={{
-            fontSize: 14,
-            filter: isHighStreak
-              ? "drop-shadow(0 0 6px #ff6b35) drop-shadow(0 0 12px #ff6b35)"
-              : "drop-shadow(0 0 3px #ff6b35)",
-          }}
-        >🔥</span>
-        <span className="font-black tabular-nums leading-none" style={{ fontSize: 14, color: "#00f5ff" }}>{streak}</span>
-        <span className="text-muted-foreground font-medium" style={{ fontSize: 10 }}>streak</span>
-      </div>
-    </button>
-  );
-
-  const DesktopStreakBtn = () => (
-    <button
-      onClick={() => pathname !== "/streak" && navigate("/streak")}
-      className="flex items-center gap-2 active:scale-95 transition-transform"
-      style={{ WebkitTapHighlightColor: "transparent" }}
-    >
+  const Wordmark = ({ size = "md" }) => (
+    <Link to="/" className="flex items-center gap-2" style={{ WebkitTapHighlightColor: "transparent" }}>
       <span
-        className={cn("text-[32px] leading-none select-none", isHighStreak ? "animate-pulse-glow" : "animate-streak-fire")}
+        className="inline-block rounded"
         style={{
-          display: "inline-block",
-          filter: isHighStreak
-            ? "drop-shadow(0 0 10px #ff6b35) drop-shadow(0 0 20px #ff6b35)"
-            : "drop-shadow(0 0 4px #ff6b35)",
+          width: size === "lg" ? 18 : 14,
+          height: size === "lg" ? 18 : 14,
+          background: "hsl(var(--accent))",
         }}
-      >🔥</span>
-      <span className="text-2xl font-black tabular-nums text-[#00f5ff] leading-none">{streak}</span>
-      <span className="text-xs text-muted-foreground font-medium">streak</span>
+      />
+      <span
+        className={cn("font-medium tracking-tight text-text-primary", size === "lg" ? "text-lg" : "text-sm")}
+        style={{ letterSpacing: "-0.02em" }}
+      >
+        Synthetica
+      </span>
+    </Link>
+  );
+
+  const StreakChip = () => (
+    <button
+      onClick={() => pathname !== "/streak" && navigate("/streak")}
+      className="flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
+      style={{ WebkitTapHighlightColor: "transparent" }}
+    >
+      <span style={{ color: streak > 0 ? "hsl(var(--streak))" : "hsl(var(--text-muted))" }}>●</span>
+      <span className="font-medium tabular-nums text-text-primary">{streak}</span>
+      <span>day{streak === 1 ? "" : "s"}</span>
     </button>
   );
 
-  const ToggleWithHint = () => (
-    <div className="relative flex flex-col items-center">
-      <button
-        onClick={handleToggle}
-        role="switch"
-        aria-checked={deepDive}
-        className="relative flex items-center rounded-full border transition-colors duration-300 overflow-hidden p-1 min-w-[148px]"
-        style={{ borderColor: deepDive ? "#39ff14" : "#00f5ff" }}
-      >
-        <span
-          className="absolute top-1 bottom-1 rounded-full transition-all duration-300 ease-in-out"
-          style={{
-            left:       deepDive ? "calc(50% + 2px)" : "4px",
-            right:      deepDive ? "4px"             : "calc(50% + 2px)",
-            background: deepDive ? "#39ff14"         : "#00f5ff",
-          }}
-        />
-        <span className={cn("relative z-10 flex-1 text-center text-[11px] font-black py-1 select-none transition-colors duration-200", !deepDive ? "text-black" : "text-muted-foreground")}>
-          Quick Boost
-        </span>
-        <span className={cn("relative z-10 flex-1 text-center text-[11px] font-black py-1 select-none transition-colors duration-200", deepDive ? "text-black" : "text-muted-foreground")}>
-          Deep Dive
-        </span>
-      </button>
-      {showToggleHint && (
-        <div
-          className="absolute top-full mt-2 whitespace-nowrap text-center pointer-events-none z-50"
-          style={{ fontSize: 11, color: "hsl(var(--muted-foreground))" }}
-        >
-          Switch between daily Boosts and multi-lesson journeys
-        </div>
-      )}
-    </div>
+  const LevelChip = () => (
+    <Link
+      to="/progress"
+      className="text-xs text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5"
+    >
+      <span className="font-medium text-text-primary tabular-nums">L{level}</span>
+      <span className="hidden sm:inline">·</span>
+      <span className="hidden sm:inline tabular-nums">{xp.toLocaleString()} XP</span>
+    </Link>
   );
 
-  const GemsXp = () => (
-    <div className="flex items-center gap-3">
-      <div className="flex items-center gap-1">
-        <span className="text-base leading-none">💎</span>
-        <span className="text-sm font-black tabular-nums" style={{ color: "#a78bfa" }}>{gems}</span>
-      </div>
-      <div className="flex items-center gap-1">
-        <span className="text-base leading-none">⚡</span>
-        <span className="text-lg font-black tabular-nums text-[#39ff14]">{xp}</span>
-        <span className="text-xs text-muted-foreground font-medium">XP</span>
-      </div>
-    </div>
-  );
-
-  // ── Page transition wrapper ────────────────────────────────────────
-  const PageContent = ({ mobilePadding }) => (
-    <AnimatePresence mode="wait" initial={false}>
-      <motion.div
-        key={pathname}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.18, ease: 'easeInOut' }}
-      >
-        <Outlet context={{ deepDive, streak, xp }} />
-      </motion.div>
-    </AnimatePresence>
-  );
-
-  // ══════════════════════════════════════════════════════════════════
-  // MOBILE layout  (< md)
-  // ══════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-bg">
 
-      {/* ─── DESKTOP LAYOUT (md+) ─────────────────────────────────── */}
+      {/* ═══ DESKTOP (md+) ═══════════════════════════════ */}
       <div className="hidden md:flex min-h-screen">
-
-        {/* Left sidebar */}
-        <aside
-          className="w-56 shrink-0 flex flex-col sticky top-0 h-screen border-r border-border bg-background/95 backdrop-blur-xl z-40"
-          style={{ WebkitUserSelect: 'none', userSelect: 'none' }}
-        >
-          {/* Brand */}
-          <div className="px-5 py-6 border-b border-border">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">⚡</span>
-              <span className="text-lg font-black tracking-tight text-[#00f5ff]">Synthetica</span>
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-1">AI habit formation</p>
-            <p className="text-[10px] font-bold mt-1 transition-colors duration-300" style={{ color: deepDive ? "#39ff14" : "#00f5ff" }}>
-              {deepDive ? "🗺️ Deep Dive mode" : "⚡ Quick Boost mode"}
-            </p>
+        <aside className="w-60 shrink-0 flex flex-col sticky top-0 h-screen border-r border-border bg-bg z-30">
+          <div className="px-5 py-5 border-b border-border">
+            <Wordmark size="lg" />
           </div>
-
-          {/* Nav links */}
-          <nav className="flex-1 px-3 py-4 space-y-1">
+          <nav className="flex-1 px-2.5 py-4 space-y-0.5">
             {TABS.map(({ path, icon: Icon, label }) => {
               const active = path === "/" ? pathname === "/" : pathname.startsWith(path);
               return (
@@ -237,156 +109,62 @@ export default function Layout() {
                   key={path}
                   to={path}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150",
+                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors duration-150",
                     active
-                      ? "text-black"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                      ? "bg-surface-2 text-text-primary font-medium"
+                      : "text-text-secondary hover:text-text-primary hover:bg-surface-1"
                   )}
-                  style={active ? { background: "linear-gradient(90deg, #00f5ff, #39ff14)", color: "#000" } : {}}
                 >
-                  <Icon
-                    style={{
-                      width: 18, height: 18,
-                      color: active ? "#000" : undefined,
-                      strokeWidth: active ? 2.5 : 1.8,
-                    }}
-                  />
-                  {label}
+                  <Icon className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+                  <span>{label}</span>
                 </Link>
               );
             })}
           </nav>
-
-          {/* Streak stat in sidebar footer — tappable */}
-          <div className="px-4 py-5 border-t border-border space-y-3">
-            <button
-              onClick={() => pathname !== "/streak" && navigate("/streak")}
-              className="flex items-center gap-2 active:scale-95 transition-transform w-full text-left"
-              style={{ WebkitTapHighlightColor: "transparent" }}
-            >
-              <span
-                className={cn("text-2xl leading-none select-none", isHighStreak ? "animate-streak-fire" : "")}
-                style={{ filter: "drop-shadow(0 0 6px #ff6b35)" }}
-              >🔥</span>
-              <div>
-                <div className="text-xl font-black tabular-nums text-[#00f5ff]">{streak}</div>
-                <div className="text-[10px] text-muted-foreground">day streak</div>
-              </div>
-            </button>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                <span className="text-sm">💎</span>
-                <span className="text-sm font-black tabular-nums" style={{ color: "#a78bfa" }}>{gems}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-sm">⚡</span>
-                <span className="text-sm font-black tabular-nums text-[#39ff14]">{xp}</span>
-                <span className="text-xs text-muted-foreground">XP</span>
-              </div>
-            </div>
+          <div className="border-t border-border px-3 py-3 flex items-center justify-between">
+            <StreakChip />
+            <LevelChip />
           </div>
-
         </aside>
-
-        {/* Main column */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Desktop header */}
-          <header
-            className="sticky top-0 z-30 bg-background/90 backdrop-blur-xl px-6 py-3 flex items-center justify-between gap-4"
-            style={{
-              WebkitUserSelect: 'none',
-              userSelect: 'none',
-              borderBottomWidth: 1,
-              borderBottomStyle: 'solid',
-              borderBottomColor: headerFlash ?? 'hsl(var(--border))',
-              transition: headerFlash ? 'none' : 'border-bottom-color 0.8s ease',
-            }}
-          >
-            <DesktopStreakBtn />
-            <ToggleWithHint />
-            <GemsXp />
-          </header>
-
-          {/* Desktop page content */}
-          <main className="flex-1 overflow-y-auto">
-            <div className="max-w-4xl mx-auto px-6 py-4">
-              <PageContent />
-            </div>
-          </main>
-        </div>
+        <main className="flex-1 min-w-0">
+          <Outlet />
+        </main>
       </div>
 
-      {/* ─── MOBILE LAYOUT (< md) ─────────────────────────────────── */}
-      <div className="flex md:hidden flex-col max-w-lg mx-auto min-h-screen">
-
-        {/* Mobile header */}
-        <header
-          className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl px-4 flex items-center gap-2"
-          style={{
-            paddingTop: 'max(env(safe-area-inset-top), 14px)',
-            paddingBottom: '12px',
-            WebkitUserSelect: 'none',
-            userSelect: 'none',
-            borderBottomWidth: 1,
-            borderBottomStyle: 'solid',
-            borderBottomColor: headerFlash ?? 'hsl(var(--border))',
-            transition: headerFlash ? 'none' : 'border-bottom-color 0.8s ease',
-          }}
-        >
-          <MobileStreakBtn />
-          <div className="flex-1 flex justify-center">
-            <ToggleWithHint />
-          </div>
-          <GemsXp />
-        </header>
-
-        {/* Mobile page content */}
-        <main
-          className="flex-1 overflow-y-auto"
-          style={{
-            WebkitOverflowScrolling: 'touch',
-            overscrollBehavior: 'contain',
-            paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))',
-          }}
-        >
-          <PageContent />
-        </main>
-
-        {/* Mobile bottom tab bar */}
-        <nav
-          className="fixed bottom-0 inset-x-0 z-50 flex justify-center"
-          style={{ WebkitUserSelect: 'none', userSelect: 'none' }}
-        >
-          <div
-            className="w-full max-w-lg bg-background/95 backdrop-blur-xl border-t border-border"
-            style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
-          >
-            <div className="flex items-stretch h-14">
-              {TABS.map(({ path, icon: Icon, label }) => {
-                const active = path === "/" ? pathname === "/" : pathname.startsWith(path);
-                return (
-                  <Link
-                    key={path}
-                    to={path}
-                    className="flex flex-col items-center justify-center gap-0.5 flex-1 active:scale-90 transition-transform duration-150"
-                    style={{ opacity: active ? 1 : 0.4, WebkitTapHighlightColor: 'transparent' }}
-                  >
-                    <Icon
-                      style={{
-                        width: 22, height: 22,
-                        color: active ? "#00f5ff" : undefined,
-                        transform: active ? "scale(1.15)" : "scale(1)",
-                        transition: "transform 0.18s, color 0.18s",
-                        strokeWidth: active ? 2.5 : 1.8,
-                      }}
-                    />
-                    <span className="text-[10px] font-bold" style={{ color: active ? "#00f5ff" : undefined }}>
-                      {label}
-                    </span>
-                  </Link>
-                );
-              })}
+      {/* ═══ MOBILE (< md) ═══════════════════════════════ */}
+      <div className="md:hidden flex flex-col min-h-screen">
+        <header className="sticky top-0 z-30 bg-bg/95 backdrop-blur-xl border-b border-border">
+          <div className="flex items-center justify-between px-4 h-12">
+            <Wordmark />
+            <div className="flex items-center gap-3">
+              <StreakChip />
+              <span className="text-text-muted">·</span>
+              <LevelChip />
             </div>
+          </div>
+        </header>
+        <main className="flex-1 pb-16">
+          <Outlet />
+        </main>
+        <nav className="fixed bottom-0 left-0 right-0 z-30 bg-bg/95 backdrop-blur-xl border-t border-border">
+          <div className="grid grid-cols-5">
+            {TABS.map(({ path, icon: Icon, label }) => {
+              const active = path === "/" ? pathname === "/" : pathname.startsWith(path);
+              return (
+                <Link
+                  key={path}
+                  to={path}
+                  className={cn(
+                    "flex flex-col items-center gap-0.5 py-2.5 transition-colors",
+                    active ? "text-text-primary" : "text-text-muted"
+                  )}
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                >
+                  <Icon className="w-[18px] h-[18px]" strokeWidth={active ? 2 : 1.75} />
+                  <span className="text-[10px] font-medium">{label}</span>
+                </Link>
+              );
+            })}
           </div>
         </nav>
       </div>

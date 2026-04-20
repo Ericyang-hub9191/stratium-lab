@@ -1,280 +1,220 @@
-import { Bell, HelpCircle, LogOut, ChevronRight, Settings, Trash2, AlertTriangle, CheckCircle } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+/* ─────────────────────────────────────────────────────────────
+   Me — profile and account.
+   ───────────────────────────────────────────────────────────── */
+
+import { useEffect, useState } from "react";
+import { LogOut, Bell, AlertTriangle, Edit2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Switch } from "@/components/ui/switch";
+import { levelFromXp } from "@/lib/progress-utils";
 
-const MENU = [
-  { icon: HelpCircle, label: "Help", desc: "How missions and streaks work" },
-];
+const ALL_TRACKS = ["prompting", "writing", "research", "automation", "python", "data", "rag", "business", "biology", "safety", "psychology", "mlops", "build-your-own"];
 
 export default function Me() {
-  const [totalXp, setTotalXp] = useState(0);
-  const [currentLevel, setCurrentLevel] = useState(1);
-  const [currentStreak, setCurrentStreak] = useState(0);
-  const [totalMissions, setTotalMissions] = useState(0);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [resetting, setResetting] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(
-    () => localStorage.getItem("synthetica_notifications") === "true"
+  const [user, setUser]   = useState(null);
+  const [stats, setStats] = useState(null);
+  const [streak, setStreak] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [editingTracks, setEditingTracks] = useState(false);
+  const [draftTracks, setDraftTracks] = useState([]);
+  const [savingTracks, setSavingTracks] = useState(false);
+
+  const [notifications, setNotifications] = useState(
+    () => typeof window !== "undefined" && localStorage.getItem("synthetica_notifications") === "true"
   );
-  const [notifMsg, setNotifMsg] = useState("");
-  const notifTimer = useRef(null);
+
+  const [showDelete, setShowDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
-        const user = await base44.auth.me();
+        const u = await base44.auth.me();
+        if (cancelled) return;
+        setUser(u);
         const [statsArr, streakArr] = await Promise.all([
-          base44.entities.UserStats.filter({ userId: user.id }),
-          base44.entities.Streak.filter({ userId: user.id }),
+          base44.entities.UserStats.filter({ userId: u.id }),
+          base44.entities.Streak.filter({ userId: u.id }),
         ]);
-        setTotalXp(statsArr[0]?.totalXp ?? 0);
-        setCurrentLevel(statsArr[0]?.currentLevel ?? 1);
-        setTotalMissions(statsArr[0]?.totalMissionsCompleted ?? 0);
-        setCurrentStreak(streakArr[0]?.currentStreak ?? 0);
-      } catch (_) {}
-      setStatsLoading(false);
+        if (cancelled) return;
+        setStats(statsArr[0] ?? null);
+        setStreak(streakArr[0] ?? null);
+        setDraftTracks(statsArr[0]?.favoriteTracks ?? []);
+      } catch (e) {
+        console.error("Me load failed:", e);
+      }
+      if (!cancelled) setLoading(false);
     })();
+    return () => { cancelled = true; };
   }, []);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [deleted, setDeleted] = useState(false);
 
-  const handleDeleteAccount = async () => {
-    setDeleting(true);
+  const toggleTrack = (t) => {
+    setDraftTracks(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
+  };
+
+  const saveTracks = async () => {
+    if (!stats) return;
+    setSavingTracks(true);
     try {
-      const user = await base44.auth.me();
-      const [streaks, stats, wins, progress] = await Promise.all([
-        base44.entities.Streak.filter({ userId: user.id }),
-        base44.entities.UserStats.filter({ userId: user.id }),
-        base44.entities.WinLog.filter({ userId: user.id }),
-        base44.entities.UserProgress.filter({ userId: user.id }),
-      ]);
-      await Promise.all([
-        ...streaks.map(r => base44.entities.Streak.delete(r.id)),
-        ...stats.map(r => base44.entities.UserStats.delete(r.id)),
-        ...wins.map(r => base44.entities.WinLog.delete(r.id)),
-        ...progress.map(r => base44.entities.UserProgress.delete(r.id)),
-      ]);
-      await base44.auth.deleteMe();
-      setDeleted(true);
-      setTimeout(() => base44.auth.logout(), 2500);
+      await base44.entities.UserStats.update(stats.id, { favoriteTracks: draftTracks });
+      setStats(s => ({ ...s, favoriteTracks: draftTracks }));
+      setEditingTracks(false);
     } catch (e) {
-      setDeleting(false);
-      // Show inline error
+      console.error("Save tracks failed:", e);
+    } finally {
+      setSavingTracks(false);
     }
   };
 
-  const handleReset = async () => {
-    if (!confirm("Reset all progress? This deletes your XP, streak, and win logs. Cannot be undone.")) return;
-    setResetting(true);
+  const deleteAccount = async () => {
+    if (!user) return;
+    setDeleting(true);
     try {
-      const user = await base44.auth.me();
-      const [streaks, stats, wins, progress] = await Promise.all([
+      const [streaks, statsList, progressList] = await Promise.all([
         base44.entities.Streak.filter({ userId: user.id }),
         base44.entities.UserStats.filter({ userId: user.id }),
-        base44.entities.WinLog.filter({ userId: user.id }),
         base44.entities.UserProgress.filter({ userId: user.id }),
       ]);
       await Promise.all([
         ...streaks.map(r => base44.entities.Streak.delete(r.id)),
-        ...stats.map(r => base44.entities.UserStats.delete(r.id)),
-        ...wins.map(r => base44.entities.WinLog.delete(r.id)),
-        ...progress.map(r => base44.entities.UserProgress.delete(r.id)),
+        ...statsList.map(r => base44.entities.UserStats.delete(r.id)),
+        ...progressList.map(r => base44.entities.UserProgress.delete(r.id)),
       ]);
-      window.dispatchEvent(new CustomEvent('win-logged'));
-    } catch (_) {}
-    setResetting(false);
+      await base44.auth.deleteMe();
+      setTimeout(() => base44.auth.logout(), 1500);
+    } catch (e) {
+      console.error("Delete failed:", e);
+      setDeleting(false);
+    }
   };
 
+  if (loading) {
+    return <div className="min-h-[60vh] flex items-center justify-center"><div className="w-5 h-5 rounded-full border-2 border-border border-t-accent animate-spin" /></div>;
+  }
+
+  const { level } = levelFromXp(stats?.totalXp ?? 0);
+
   return (
-    <div className="px-4 py-6 space-y-6 pb-24">
-      {/* Profile */}
-      <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl border"
-          style={{ borderColor: "rgba(0,245,255,0.4)", background: "rgba(0,245,255,0.08)" }}>
-          🧠
-        </div>
-        <div className="flex-1">
-          <h1 className="text-lg font-black">Your Profile</h1>
-          <div className="flex gap-2 mt-1">
-            {statsLoading ? (
-              <div className="w-4 h-4 border-2 border-border border-t-[#00f5ff] rounded-full animate-spin" />
-            ) : (
-              <>
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: "rgba(0,245,255,0.15)", color: "#00f5ff" }}>Level {currentLevel}</span>
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: "rgba(57,255,20,0.15)", color: "#39ff14" }}>{totalXp} XP</span>
-              </>
-            )}
-          </div>
-        </div>
-        <button className="p-2 rounded-xl border bg-secondary">
-          <Settings className="w-4 h-4 text-muted-foreground" />
-        </button>
+    <div className="max-w-2xl mx-auto px-4 md:px-8 py-6 md:py-10 space-y-7">
+
+      <div className="space-y-1">
+        <div className="ui-eyebrow">Account</div>
+        <h1 className="text-2xl md:text-3xl ui-heading">{user?.full_name ?? "You"}</h1>
+        {user?.email && <p className="text-sm text-text-secondary">{user.email}</p>}
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-2">
-        {[
-          { emoji: "🔥", value: String(currentStreak), label: "Streak" },
-          { emoji: "🏆", value: String(totalMissions), label: "Impact" },
-          { emoji: "🛡️", value: "3", label: "Freezes" },
-        ].map(({ emoji, value, label }) => (
-          <div key={label} className="rounded-2xl border bg-card p-3 text-center space-y-0.5">
-            <div className="text-xl">{emoji}</div>
-            <div className="text-lg font-black">{value}</div>
-            <div className="text-[10px] text-muted-foreground">{label}</div>
-          </div>
-        ))}
+        <Stat label="Level" value={`L${level}`} />
+        <Stat label="Streak" value={`${streak?.currentStreak ?? 0}d`} />
+        <Stat label="Total XP" value={(stats?.totalXp ?? 0).toLocaleString()} />
       </div>
 
-      {/* Menu */}
-      <div className="rounded-2xl border bg-card divide-y divide-border overflow-hidden">
-        {/* Notifications toggle */}
-        <div className="px-4 py-3.5">
-          <div className="flex items-center gap-3">
-            <Bell className="w-4 h-4 text-muted-foreground shrink-0" />
-            <div className="flex-1">
-              <div className="text-sm font-semibold">Notifications</div>
-              <div className="text-xs text-muted-foreground">Daily mission reminders</div>
-            </div>
-            <Switch
-              checked={notificationsEnabled}
-              onCheckedChange={(val) => {
-                setNotificationsEnabled(val);
-                localStorage.setItem("synthetica_notifications", String(val));
-                if (notifTimer.current) clearTimeout(notifTimer.current);
-                if (val) {
-                  setNotifMsg("You'll be reminded daily at 9am");
-                  notifTimer.current = setTimeout(() => setNotifMsg(""), 3000);
-                } else {
-                  setNotifMsg("");
-                }
-              }}
-            />
-          </div>
-          {notifMsg && (
-            <p className="mt-1.5 pl-7 transition-opacity" style={{ fontSize: 11, color: "#39ff14" }}>
-              {notifMsg}
-            </p>
+      <section>
+        <div className="flex items-baseline justify-between mb-3">
+          <h3 className="text-sm ui-heading">Tracks you care about</h3>
+          {!editingTracks && (
+            <button onClick={() => setEditingTracks(true)} className="text-xs text-text-secondary hover:text-text-primary flex items-center gap-1.5">
+              <Edit2 className="w-3 h-3" /> Edit
+            </button>
           )}
         </div>
-        {/* Other menu items */}
-        {MENU.map(({ icon: Icon, label, desc }) => (
-          <button key={label}
-            className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary/50 transition-colors text-left">
-            <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-            <div className="flex-1">
-              <div className="text-sm font-semibold">{label}</div>
-              <div className="text-xs text-muted-foreground">{desc}</div>
+        {editingTracks ? (
+          <div className="rounded-lg border border-border bg-surface-1 p-4 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {ALL_TRACKS.map(t => {
+                const on = draftTracks.includes(t);
+                return (
+                  <button
+                    key={t}
+                    onClick={() => toggleTrack(t)}
+                    className={`px-3 py-1.5 rounded-full text-xs border transition-colors capitalize ${
+                      on
+                        ? "border-accent bg-[hsla(var(--accent),0.12)] text-text-primary"
+                        : "border-border text-text-secondary hover:border-border-strong"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                );
+              })}
             </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </button>
-        ))}
-      </div>
-
-      {/* Reset progress (testing) */}
-      <button
-        onClick={handleReset}
-        disabled={resetting}
-        className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-orange-500/30 text-orange-400 text-sm font-bold transition-colors disabled:opacity-50"
-      >
-        <Trash2 className="w-4 h-4" /> {resetting ? "Resetting…" : "Reset Progress (Testing)"}
-      </button>
-
-      {/* Danger Zone */}
-      <div className="rounded-3xl border border-red-500/30 p-4 space-y-3"
-        style={{ background: "rgba(239,68,68,0.04)" }}>
-        <p className="text-xs font-black uppercase tracking-wider text-red-400">Danger Zone</p>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          Permanently deletes your account and all associated data. This cannot be undone.
-        </p>
-        <button
-          onClick={() => setShowDeleteDialog(true)}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-red-500/40 text-red-400 text-sm font-black transition-all active:scale-95"
-          style={{ background: "rgba(239,68,68,0.08)" }}
-        >
-          <AlertTriangle className="w-4 h-4" /> Delete My Account
-        </button>
-      </div>
-
-      {/* Sign out */}
-      <button onClick={() => base44.auth.logout()}
-        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-destructive/30 text-destructive text-sm font-bold transition-colors">
-        <LogOut className="w-4 h-4" /> Sign Out
-      </button>
-
-      {/* Delete Account Confirmation Dialog */}
-      {showDeleteDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
-          <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={() => !deleting && setShowDeleteDialog(false)} />
-          <div className="relative w-full max-w-sm rounded-3xl border border-red-500/40 overflow-hidden"
-            style={{ background: 'hsl(var(--background))', boxShadow: '0 0 60px rgba(239,68,68,0.2)' }}>
-
-            {/* Success state */}
-            {deleted ? (
-              <div className="flex flex-col items-center justify-center py-12 px-6 space-y-4 text-center">
-                <CheckCircle className="w-12 h-12 text-[#39ff14]" />
-                <h2 className="text-xl font-black">Account Deleted</h2>
-                <p className="text-sm text-muted-foreground">Your data has been permanently removed. Signing you out…</p>
-              </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <button onClick={() => { setEditingTracks(false); setDraftTracks(stats?.favoriteTracks ?? []); }} className="btn btn-quiet text-sm">Cancel</button>
+              <button onClick={saveTracks} disabled={savingTracks} className="btn btn-primary">{savingTracks ? "Saving…" : "Save"}</button>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-border bg-surface-1 p-4">
+            {(stats?.favoriteTracks ?? []).length === 0 ? (
+              <p className="text-sm text-text-secondary">No tracks selected. Edit to pick the ones you want recommendations from.</p>
             ) : (
-              <div className="p-6 space-y-5">
-                {/* Header */}
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                    style={{ background: "rgba(239,68,68,0.15)" }}>
-                    <AlertTriangle className="w-5 h-5 text-red-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-black">Delete Account</h2>
-                    <p className="text-xs text-muted-foreground">This cannot be undone</p>
-                  </div>
-                </div>
-
-                {/* What gets deleted */}
-                <div className="rounded-2xl border border-red-500/20 p-4 space-y-2"
-                  style={{ background: "rgba(239,68,68,0.06)" }}>
-                  <p className="text-xs font-black text-red-400 uppercase tracking-wide">Permanently deleted:</p>
-                  <ul className="text-xs text-muted-foreground space-y-1.5">
-                    <li className="flex items-center gap-2"><span className="text-red-400">✕</span> All streak history and freeze power-ups</li>
-                    <li className="flex items-center gap-2"><span className="text-red-400">✕</span> All win logs and XP earned</li>
-                    <li className="flex items-center gap-2"><span className="text-red-400">✕</span> All badges, stats, and mission progress</li>
-                    <li className="flex items-center gap-2"><span className="text-red-400">✕</span> Your user account and profile</li>
-                  </ul>
-                </div>
-
-                <p className="text-xs text-muted-foreground text-center">
-                  This will permanently delete your account, all streaks, win logs, stats, and progress. This action cannot be undone.
-                </p>
-
-                {/* Actions */}
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setShowDeleteDialog(false)}
-                    disabled={deleting}
-                    className="py-3.5 rounded-2xl border bg-secondary text-sm font-bold transition-all active:scale-95 disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleDeleteAccount}
-                    disabled={deleting}
-                    className="py-3.5 rounded-2xl text-sm font-black text-white transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
-                    style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', boxShadow: '0 0 20px rgba(239,68,68,0.35)' }}
-                  >
-                    {deleting ? (
-                      <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Deleting…</>
-                    ) : "Delete Forever"}
-                  </button>
-                </div>
+              <div className="flex flex-wrap gap-1.5">
+                {stats.favoriteTracks.map(t => (
+                  <span key={t} className="px-2.5 py-1 rounded-full text-xs border border-border text-text-secondary capitalize">{t}</span>
+                ))}
               </div>
             )}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h3 className="text-sm ui-heading mb-3">Reminders</h3>
+        <div className="rounded-lg border border-border bg-surface-1 p-4 flex items-center gap-3">
+          <Bell className="w-4 h-4 text-text-secondary shrink-0" />
+          <div className="flex-1">
+            <div className="text-sm text-text-primary">Daily reminder</div>
+            <div className="text-xs text-text-secondary mt-0.5">A 9am nudge to keep your streak.</div>
+          </div>
+          <Switch
+            checked={notifications}
+            onCheckedChange={(v) => {
+              setNotifications(v);
+              localStorage.setItem("synthetica_notifications", String(v));
+            }}
+          />
+        </div>
+      </section>
+
+      <button onClick={() => base44.auth.logout()} className="btn btn-ghost w-full">
+        <LogOut className="w-4 h-4" /> Sign out
+      </button>
+
+      <section className="pt-4 border-t border-border">
+        <h3 className="text-xs font-medium text-danger mb-2 uppercase tracking-wider">Danger zone</h3>
+        <p className="text-xs text-text-secondary mb-3">Permanently delete your account and all data. Cannot be undone.</p>
+        <button
+          onClick={() => setShowDelete(true)}
+          className="btn btn-ghost border-danger/40 text-danger hover:bg-[hsla(0,72%,62%,0.06)] hover:border-danger w-full"
+        >
+          <AlertTriangle className="w-4 h-4" /> Delete account
+        </button>
+      </section>
+
+      {showDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-5 bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-xl border border-danger/40 bg-bg p-5 space-y-4">
+            <h2 className="text-base font-medium text-text-primary">Delete account?</h2>
+            <p className="text-sm text-text-secondary">All your progress, streak, XP, and saved reflections will be permanently removed. This cannot be undone.</p>
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => setShowDelete(false)} disabled={deleting} className="btn btn-ghost">Cancel</button>
+              <button onClick={deleteAccount} disabled={deleting} className="btn" style={{ background: "hsl(var(--danger))", color: "white" }}>
+                {deleting ? "Deleting…" : "Delete forever"}
+              </button>
+            </div>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function Stat({ label, value }) {
+  return (
+    <div className="rounded-lg border border-border bg-surface-1 px-3 py-3 text-center">
+      <div className="text-xl font-medium text-text-primary tabular-nums">{value}</div>
+      <div className="text-[10px] text-text-muted mt-0.5">{label}</div>
     </div>
   );
 }

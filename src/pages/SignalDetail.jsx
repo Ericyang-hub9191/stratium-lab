@@ -1,47 +1,54 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Zap, Archive } from "lucide-react";
-import { base44 } from "@/api/base44Client";
-import { useState, useEffect } from "react";
+/* ─────────────────────────────────────────────────────────────
+   SignalDetail — single-signal reader.
+   ───────────────────────────────────────────────────────────── */
 
-const CATEGORY_LABELS = {
-  prompting:   "Prompting",
-  writing:     "Writing",
-  research:    "Research",
-  automation:  "Automation",
-  rag:         "RAG",
-  python:      "Python",
-  data:        "Data",
-  productivity:"Productivity",
-};
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, ExternalLink, BookOpen, Zap } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 export default function SignalDetail() {
-  const { id }   = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const [signal, setSignal] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [relatedJourney, setRelatedJourney] = useState(null);
+  const [relatedBoost, setRelatedBoost] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-      const results = await base44.entities.Signal.filter({ id });
-      setSignal(results[0] ?? null);
-      setLoading(false);
+      try {
+        let results = await base44.entities.Signal.filter({ slug });
+        if (!results.length) results = await base44.entities.Signal.filter({ id: slug });
+        const sig = results[0] ?? null;
+        if (cancelled) return;
+        setSignal(sig);
+
+        if (sig?.relatedJourneySlug) {
+          const j = await base44.entities.Journey.filter({ slug: sig.relatedJourneySlug });
+          if (!cancelled) setRelatedJourney(j[0] ?? null);
+        }
+        if (sig?.relatedBoostSlug) {
+          const b = await base44.entities.Boost.filter({ slug: sig.relatedBoostSlug });
+          if (!cancelled) setRelatedBoost(b[0] ?? null);
+        }
+      } catch (e) {
+        console.error("Signal load failed:", e);
+      }
+      if (!cancelled) setLoading(false);
     })();
-  }, [id]);
+    return () => { cancelled = true; };
+  }, [slug]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-border border-t-[#a78bfa] rounded-full animate-spin" />
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center bg-bg"><div className="w-5 h-5 rounded-full border-2 border-border border-t-accent animate-spin" /></div>;
   }
-
   if (!signal) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="text-4xl">📡</p>
-        <p className="text-muted-foreground text-sm">Signal not found.</p>
-        <button onClick={() => navigate("/signals")} className="text-sm font-bold text-[#a78bfa]">← Back to Signals</button>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center bg-bg">
+        <p className="text-text-secondary">Signal not found.</p>
+        <button onClick={() => navigate("/signals")} className="btn btn-ghost">All signals</button>
       </div>
     );
   }
@@ -50,101 +57,75 @@ export default function SignalDetail() {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
 
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
+  const paragraphs = (signal.body ?? "").split(/\n\n+/).filter(Boolean);
 
-      {/* Top bar */}
-      <div className="flex items-center gap-3 px-4 py-4 sticky top-0 z-30 bg-background/90 backdrop-blur-xl border-b border-border">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 rounded-xl border bg-secondary flex items-center gap-1.5 text-sm font-medium"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
-        <span
-          className="text-[10px] font-black px-2.5 py-1 rounded-full text-black"
-          style={{ background: "#a78bfa" }}
-        >
-          📡 SIGNAL
-        </span>
-        <button
-          onClick={() => navigate("/signals")}
-          className="ml-auto flex items-center gap-1.5 text-xs font-black px-3 py-2 rounded-xl border transition-all active:scale-95"
-          style={{ borderColor: "rgba(167,139,250,0.4)", color: "#a78bfa", background: "rgba(167,139,250,0.08)" }}
-        >
-          <Archive className="w-3.5 h-3.5" /> See All Signals
-        </button>
+  return (
+    <div className="min-h-screen bg-bg flex flex-col">
+
+      <div className="sticky top-0 z-20 bg-bg/90 backdrop-blur-xl border-b border-border">
+        <div className="max-w-2xl mx-auto px-4 md:px-6 py-3 flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="btn btn-ghost !py-1.5 !px-2.5" aria-label="Back">
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <div className="ui-eyebrow text-accent">Signal · {signal.sourceName}</div>
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-5 space-y-6 pb-24 max-w-2xl mx-auto w-full">
+      <div className="flex-1 reading-surface py-10 md:py-14 px-4 md:px-8 animate-fade-in">
+        <article className="max-w-2xl mx-auto pb-16">
+          <div className="eyebrow mb-3">{formattedDate}</div>
+          <h1 className="!mt-0 !mb-3">{signal.title}</h1>
+          <p className="text-[1.15em] muted !mt-1 mb-6" style={{ lineHeight: 1.5 }}>{signal.teaser}</p>
 
-        {/* Date */}
-        <div className="text-xs text-muted-foreground font-semibold">{formattedDate}</div>
-
-        {/* Title */}
-        <h1 className="text-2xl font-black leading-tight">{signal.title}</h1>
-
-        {/* Short teaser pill */}
-        <div
-          className="rounded-2xl px-4 py-3 text-sm font-medium leading-relaxed"
-          style={{
-            background: "rgba(167,139,250,0.1)",
-            borderLeft: "3px solid #a78bfa",
-            color: "#a78bfa",
-          }}
-        >
-          {signal.shortTeaser}
-        </div>
-
-        {/* Full text */}
-        <div className="space-y-4">
-          {signal.fullText.split("\n\n").map((para, i) => (
-            <p key={i} className="text-sm text-foreground leading-relaxed">{para}</p>
-          ))}
-        </div>
-
-        {/* Source */}
-        <div
-          className="rounded-2xl border p-4 flex items-start gap-3"
-          style={{ borderColor: "rgba(0,245,255,0.2)", background: "rgba(0,245,255,0.04)" }}
-        >
-          <ExternalLink className="w-4 h-4 text-[#00f5ff] shrink-0 mt-0.5" />
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#00f5ff] mb-1">Source</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">{signal.source}</p>
+          <div className="space-y-5 mt-8">
+            {paragraphs.map((p, i) => <p key={i}>{p}</p>)}
           </div>
-        </div>
 
-        {/* Apply This Insight CTA */}
-        {signal.relatedCategory && (
-          <div
-            className="rounded-3xl border p-5 space-y-3"
-            style={{
-              borderColor: "rgba(57,255,20,0.3)",
-              background: "linear-gradient(135deg, rgba(57,255,20,0.06), rgba(0,245,255,0.03))",
-            }}
+          <a
+            href={signal.sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="reading-card rounded-xl p-4 flex items-start gap-3 mt-10 no-underline hover:border-[hsl(var(--reading-accent))] transition-colors"
           >
-            <div>
-              <p className="text-xs font-black uppercase tracking-widest text-[#39ff14] mb-1">Apply This Insight</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                This signal relates to <span className="font-bold text-foreground">{CATEGORY_LABELS[signal.relatedCategory] ?? signal.relatedCategory}</span>. 
-                Try a Quick-Win mission in that category to immediately apply what you've learned.
-              </p>
+            <ExternalLink className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "hsl(var(--reading-accent))" }} />
+            <div className="flex-1 min-w-0">
+              <div className="font-medium" style={{ color: "hsl(var(--reading-text))" }}>Read the source</div>
+              <div className="text-[0.88em] mt-1 muted truncate">{signal.sourceUrl}</div>
             </div>
-            <button
-              onClick={() => navigate("/missions")}
-              className="w-full py-3.5 rounded-2xl text-sm font-black text-black flex items-center justify-center gap-2 transition-all active:scale-95"
-              style={{
-                background: "linear-gradient(90deg, #39ff14, #00f5ff)",
-                boxShadow: "0 0 20px rgba(57,255,20,0.3)",
-              }}
-            >
-              <Zap className="w-4 h-4" /> Find a {CATEGORY_LABELS[signal.relatedCategory]} Mission
-            </button>
-          </div>
-        )}
+          </a>
 
+          {(relatedJourney || relatedBoost) && (
+            <div className="mt-10 pt-6 border-t" style={{ borderColor: "hsl(var(--reading-border))" }}>
+              <div className="eyebrow mb-3">Act on this</div>
+              <div className="space-y-2">
+                {relatedJourney && (
+                  <button
+                    onClick={() => navigate(`/journey/${relatedJourney.slug}`)}
+                    className="reading-card w-full text-left rounded-xl p-4 flex items-start gap-3 hover:border-[hsl(var(--reading-accent))] transition-colors"
+                  >
+                    <BookOpen className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "hsl(var(--reading-accent))" }} />
+                    <div>
+                      <div className="font-medium" style={{ color: "hsl(var(--reading-text))" }}>{relatedJourney.title}</div>
+                      <div className="text-[0.88em] mt-1 muted">{relatedJourney.subtitle}</div>
+                    </div>
+                  </button>
+                )}
+                {relatedBoost && (
+                  <button
+                    onClick={() => navigate(`/boost/${relatedBoost.id}`)}
+                    className="reading-card w-full text-left rounded-xl p-4 flex items-start gap-3 hover:border-[hsl(var(--reading-accent))] transition-colors"
+                  >
+                    <Zap className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "hsl(var(--reading-accent))" }} />
+                    <div>
+                      <div className="font-medium" style={{ color: "hsl(var(--reading-text))" }}>{relatedBoost.title}</div>
+                      <div className="text-[0.88em] mt-1 muted">{relatedBoost.subtitle}</div>
+                    </div>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </article>
       </div>
     </div>
   );
