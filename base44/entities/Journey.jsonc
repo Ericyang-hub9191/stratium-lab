@@ -1,0 +1,91 @@
+{
+  "name": "Journey",
+  "type": "object",
+  "description": "A multi-lesson learning path. Lessons are stored in the Lesson entity and reference this journey by journeyId.",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "URL-safe identifier (e.g., 'prompting-fundamentals'). Used in routes and as journeyId on Lesson records."
+    },
+    "title": {
+      "type": "string",
+      "description": "Journey title shown on cards and at the top of lessons."
+    },
+    "subtitle": {
+      "type": "string",
+      "description": "One-line positioning statement."
+    },
+    "summary": {
+      "type": "string",
+      "description": "2-3 sentence description of what the learner will be able to do after finishing."
+    },
+    "track": {
+      "type": "string",
+      "enum": [
+        "prompting",
+        "writing",
+        "research",
+        "automation",
+        "python",
+        "data",
+        "productivity",
+        "rag",
+        "business",
+        "biology",
+        "safety",
+        "psychology",
+        "mlops",
+        "build-your-own"
+      ],
+      "description": "Top-level category for browsing and filtering."
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "intro",
+        "core",
+        "advanced"
+      ],
+      "description": "intro = no prior exposure needed; core = comfortable with AI tools; advanced = deep technical background assumed."
+    },
+    "estimatedHours": {
+      "type": "number",
+      "description": "Total estimated reading + practice time across all lessons."
+    },
+    "totalLessons": {
+      "type": "number",
+      "description": "Denormalized count of lessons in this journey."
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of prerequisite journey slugs."
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Searchable keywords."
+    },
+    "author": {
+      "type": "string",
+      "description": "Who wrote it."
+    },
+    "isPublished": {
+      "type": "boolean",
+      "default": false,
+      "description": "Only published journeys appear in the user-facing library."
+    }
+  },
+  "required": [
+    "slug",
+    "title",
+    "track",
+    "difficulty",
+    "summary",
+    "totalLessons"
+  ]
+}
