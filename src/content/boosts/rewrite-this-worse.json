@@ -1,0 +1,59 @@
+{
+  "slug": "the-rewrite-this-worse-trick",
+  "title": "The \"rewrite this worse\" trick",
+  "subtitle": "A 3-minute move for instantly cleaner AI writing.",
+  "category": "writing",
+  "estimatedMinutes": 3,
+  "xpReward": 40,
+  "tags": ["writing", "editing", "claude", "chatgpt"],
+  "isPublished": true,
+
+  "blocks": [
+    {
+      "id": "b1",
+      "type": "text",
+      "markdown": "AI outputs have a predictable house style: over-polished, vaguely corporate, and longer than needed. You can feel it when you read it — _\"delving into,\"_ _\"comprehensive solutions,\"_ _\"in today's rapidly evolving landscape.\"_\n\nThere's a 30-second move that fixes this more reliably than any other prompt trick: tell the model to _write it worse on purpose, then keep the good parts._"
+    },
+    {
+      "id": "b2",
+      "type": "heading",
+      "level": 2,
+      "text": "The trick"
+    },
+    {
+      "id": "b3",
+      "type": "prompt",
+      "prompt": "Rewrite your previous response in a bluntly human voice. Imagine a smart friend wrote it in 90 seconds. Short sentences. No marketing words. Cut anything that sounds like it was written to impress.",
+      "annotation": "The rough tone instruction lets the model break out of its default register. Most of the time, the \"bluntly human\" version is 90% of what you wanted — you just take that and smooth it slightly."
+    },
+    {
+      "id": "b4",
+      "type": "callout",
+      "variant": "tip",
+      "title": "Why it works",
+      "body": "Models have a strong default bias toward \"professional\" register. Asking for plainness directly doesn't fully counteract it. Asking for something _slightly rougher than you actually want_ does, because you're pulling hard on the other end."
+    },
+    {
+      "id": "b5",
+      "type": "practice",
+      "instruction": "Take an AI-written paragraph from your recent chats (or generate one now — ask ChatGPT or Claude for a short product update). Run the rewrite instruction above. Paste the cleaner version below.",
+      "deliverable": "the rewritten version",
+      "validation": "length",
+      "placeholder": "Paste the rewritten version here…"
+    },
+    {
+      "id": "b6",
+      "type": "check",
+      "question": "You apply this trick and the rewrite goes _too_ rough — it now sounds sloppy, not plain. What's the next move?",
+      "choices": [
+        { "id": "a", "text": "Give up and accept the original AI draft." },
+        { "id": "b", "text": "Take the rewrite's structure but manually edit 2-3 lines that went too casual." },
+        { "id": "c", "text": "Run the trick again, more aggressively." },
+        { "id": "d", "text": "Ask the model to \"be more professional.\"" }
+      ],
+      "correct": "b",
+      "explanation": "The trick's power isn't in the AI's output — it's in the _axis_ it gives you to edit along. The rewrite pulls the draft toward human; your final pass pulls it back toward polished. You can't get there by asking \"be more professional\" without sliding back into the default house style.",
+      "required": true
+    }
+  ]
+}
