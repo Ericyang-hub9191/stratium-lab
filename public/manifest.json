@@ -1,16 +1,22 @@
 {
   "name": "Synthetica",
   "short_name": "Synthetica",
-  "description": "AI mastery through daily practice",
+  "description": "A serious tool for getting better at using AI.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0d1117",
-  "theme_color": "#00f5ff",
+  "background_color": "#0d1014",
+  "theme_color": "#0d1014",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>",
-      "sizes": "any",
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }

@@ -1,4 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+/* ─────────────────────────────────────────────────────────────
+   Synthetica design tokens & base styles.
+
+   Two surfaces:
+   - App chrome (dark, editorial, sans-serif UI)
+   - Reading surface (warmer, lighter, serif body type for lesson content)
+
+   One accent (violet). Orange reserved for streak UI only.
+   ───────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,112 +16,234 @@
 
 @layer base {
   :root {
-    --font-sans: 'Inter', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    /* Typography */
+    --font-ui:      'Inter', system-ui, -apple-system, sans-serif;
+    --font-reading: 'Newsreader', Georgia, 'Iowan Old Style', serif;
+    --font-mono:    'JetBrains Mono', ui-monospace, Menlo, monospace;
 
-    --background: 210 20% 98%;
-    --foreground: 220 25% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 25% 10%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 10% 46%;
-    --accent: 142 71% 45%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 217 91% 60%;
+    /* ─ Dark app chrome (default) ───────────────────────── */
+    --bg:               220 18% 6%;     /* near-black, faint cool */
+    --surface-1:        222 16% 10%;    /* cards */
+    --surface-2:        222 14% 14%;    /* elevated */
+    --surface-inset:    220 18% 5%;     /* wells / code bg in UI */
+    --border:           222 12% 19%;
+    --border-strong:    222 12% 26%;
 
-    --chart-1: 217 91% 60%;
-    --chart-2: 142 71% 45%;
-    --chart-3: 262 83% 58%;
-    --chart-4: 38 92% 50%;
-    --chart-5: 0 84% 60%;
+    --text-primary:     220 14% 93%;
+    --text-secondary:   220 10% 68%;
+    --text-muted:       220 8%  48%;
 
-    --radius: 0.75rem;
+    --accent:           250 100% 74%;   /* violet #8b7cff-ish */
+    --accent-hover:     250 100% 78%;
+    --accent-soft:      250 100% 74% / 0.12;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 220 25% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217 91% 60%;
+    --success:          152 48% 54%;    /* muted green, not neon */
+    --warning:          35  90% 60%;
+    --danger:           0   72% 62%;
+    --streak:           16  90% 58%;    /* warm orange — streak ONLY */
 
-    --streak: 38 92% 50%;
-    --streak-foreground: 0 0% 100%;
-    --xp: 262 83% 58%;
-    --xp-foreground: 0 0% 100%;
-    --win: 142 71% 45%;
-    --win-foreground: 0 0% 100%;
+    /* ─ Reading surface (lesson body — warmer, brighter) ── */
+    --reading-bg:       38  32% 95%;    /* off-white with warmth */
+    --reading-surface:  0   0%  100%;
+    --reading-text:     220 24% 14%;
+    --reading-secondary:220 12% 40%;
+    --reading-muted:    220 8%  56%;
+    --reading-border:   38  12% 85%;
+    --reading-accent:   250 70%  58%;
+    --reading-code-bg:  220 16% 96%;
+
+    /* ─ Shadcn-compat shims (old components still reference these) ─ */
+    --background:            var(--bg);
+    --foreground:            var(--text-primary);
+    --card:                  var(--surface-1);
+    --card-foreground:       var(--text-primary);
+    --popover:               var(--surface-2);
+    --popover-foreground:    var(--text-primary);
+    --primary:               var(--accent);
+    --primary-foreground:    220 18% 6%;
+    --secondary:             var(--surface-2);
+    --secondary-foreground:  var(--text-primary);
+    --muted:                 var(--surface-2);
+    --muted-foreground:      var(--text-secondary);
+    --accent-foreground:     var(--text-primary);
+    --destructive:           var(--danger);
+    --destructive-foreground:0 0% 100%;
+    --input:                 var(--border);
+    --ring:                  var(--accent);
+
+    --radius: 0.625rem;
   }
 
-  .dark {
-    --background: 222 30% 8%;
-    --foreground: 210 20% 96%;
-    --card: 222 25% 12%;
-    --card-foreground: 210 20% 96%;
-    --popover: 222 25% 12%;
-    --popover-foreground: 210 20% 96%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 222 20% 16%;
-    --secondary-foreground: 210 20% 96%;
-    --muted: 222 20% 16%;
-    --muted-foreground: 220 10% 55%;
-    --accent: 142 71% 45%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 222 20% 18%;
-    --input: 222 20% 18%;
-    --ring: 217 91% 60%;
-
-    --chart-1: 217 91% 60%;
-    --chart-2: 142 71% 45%;
-    --chart-3: 262 83% 58%;
-    --chart-4: 38 92% 50%;
-    --chart-5: 0 84% 60%;
-
-    --sidebar-background: 222 30% 8%;
-    --sidebar-foreground: 210 20% 96%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 20% 16%;
-    --sidebar-accent-foreground: 210 20% 96%;
-    --sidebar-border: 222 20% 18%;
-    --sidebar-ring: 217 91% 60%;
-
-    --streak: 38 92% 50%;
-    --streak-foreground: 0 0% 100%;
-    --xp: 262 83% 58%;
-    --xp-foreground: 0 0% 100%;
-    --win: 142 71% 45%;
-    --win-foreground: 0 0% 100%;
+  /* Light mode: we keep everything dark for UI chrome to preserve the editorial feel.
+     The "light" surface lives inside lessons via .reading-surface. We still define a
+     light .light class if needed later. */
+  .light {
+    /* deliberately left thin — we're a dark-chrome product. */
   }
-}
 
-@layer base {
   * {
     @apply border-border outline-ring/50;
+    -webkit-tap-highlight-color: transparent;
   }
+
   html {
     overscroll-behavior: none;
     -webkit-text-size-adjust: 100%;
+    font-family: var(--font-ui);
   }
+
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    overscroll-behavior: none;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01", "ss03";
+    letter-spacing: -0.005em;
   }
-  button, a {
-    -webkit-tap-highlight-color: transparent;
+
+  /* Honour reduced motion globally */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
   }
+}
+
+/* ─── Reading surface (lesson body) ───────────────────────── */
+@layer components {
+  .reading-surface {
+    background: hsl(var(--reading-bg));
+    color: hsl(var(--reading-text));
+    font-family: var(--font-reading);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    letter-spacing: 0.002em;
+  }
+
+  .reading-surface .reading-card {
+    background: hsl(var(--reading-surface));
+    border: 1px solid hsl(var(--reading-border));
+    color: hsl(var(--reading-text));
+  }
+
+  .reading-surface a {
+    color: hsl(var(--reading-accent));
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+
+  .reading-surface code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: hsl(var(--reading-code-bg));
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    border: 1px solid hsl(var(--reading-border));
+  }
+
+  .reading-surface pre {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    line-height: 1.55;
+    background: hsl(var(--reading-code-bg));
+    border: 1px solid hsl(var(--reading-border));
+    border-radius: 10px;
+    padding: 1rem 1.125rem;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .reading-surface h1,
+  .reading-surface h2,
+  .reading-surface h3 {
+    font-family: var(--font-reading);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    color: hsl(var(--reading-text));
+  }
+
+  .reading-surface h1 { font-size: 2rem;    line-height: 1.15; }
+  .reading-surface h2 { font-size: 1.5rem;  line-height: 1.2;  margin-top: 2rem; }
+  .reading-surface h3 { font-size: 1.2rem;  line-height: 1.25; margin-top: 1.5rem; }
+
+  .reading-surface .eyebrow {
+    font-family: var(--font-ui);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: hsl(var(--reading-muted));
+  }
+
+  .reading-surface .muted {
+    color: hsl(var(--reading-secondary));
+  }
+
+  /* ─── UI typographic primitives ───────────────────────── */
+  .ui-eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: hsl(var(--text-muted));
+  }
+
+  .ui-heading {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: hsl(var(--text-primary));
+  }
+
+  /* ─── Buttons — restrained, no glow, no scale-on-tap ─── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.625rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+    cursor: pointer;
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-primary {
+    background: hsl(var(--accent));
+    color: hsl(220 18% 6%);
+  }
+  .btn-primary:hover:not(:disabled) { background: hsl(var(--accent-hover)); }
+
+  .btn-ghost {
+    background: transparent;
+    color: hsl(var(--text-primary));
+    border-color: hsl(var(--border));
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: hsl(var(--surface-2));
+    border-color: hsl(var(--border-strong));
+  }
+
+  .btn-quiet {
+    background: transparent;
+    color: hsl(var(--text-secondary));
+  }
+  .btn-quiet:hover:not(:disabled) {
+    color: hsl(var(--text-primary));
+  }
+
+  /* ─── Focus ring — single consistent style ──────────── */
+  :focus-visible {
+    outline: 2px solid hsl(var(--accent));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* ─── Utility: hide scrollbar for horizontal rails ──── */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
