@@ -1,39 +1,68 @@
 {
   "name": "UserProgress",
   "type": "object",
+  "description": "Tracks a user's progress on a single Lesson or Boost. One record per user + contentId. Checkpoint answers and reflection text persist here so the user's work is retrievable.",
   "properties": {
     "userId": {
+      "type": "string"
+    },
+    "contentId": {
       "type": "string",
-      "description": "ID of the user"
+      "description": "Lesson.id or Boost.id."
     },
-    "completedMissionIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "IDs of all missions the user has won"
+    "contentType": {
+      "type": "string",
+      "enum": [
+        "lesson",
+        "boost"
+      ]
     },
-    "categoryXp": {
+    "journeyId": {
+      "type": "string",
+      "description": "Only set when contentType = lesson."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "in-progress",
+        "completed"
+      ],
+      "description": "A record is only created when the user starts; no 'unstarted' state stored."
+    },
+    "checkAnswers": {
       "type": "object",
-      "description": "XP breakdown by category \u2014 e.g. { prompting: 120, writing: 80 }"
+      "description": "Map of blockId \u2192 { chosenId: string, correct: boolean, attempts: number }. Updated as the user answers checks."
     },
-    "streakId": {
+    "practiceEntries": {
+      "type": "object",
+      "description": "Map of blockId \u2192 user's submitted text for practice blocks."
+    },
+    "writeEntries": {
+      "type": "object",
+      "description": "Map of blockId \u2192 user's reflection text for write blocks. Persisted across sessions."
+    },
+    "startedAt": {
       "type": "string",
-      "description": "Reference to the user's Streak record for streak-power-up integration"
+      "description": "ISO timestamp."
     },
-    "favoriteCategories": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "User's preferred mission categories used to surface relevant quick-wins"
-    },
-    "lastMissionDate": {
+    "completedAt": {
       "type": "string",
-      "description": "ISO date of the user's most recent mission attempt"
+      "description": "ISO timestamp. Null until all required checks are answered correctly."
+    },
+    "timeSpentSeconds": {
+      "type": "number",
+      "description": "Sum of active time in the lesson. Updated on exit."
+    },
+    "xpAwarded": {
+      "type": "number",
+      "description": "XP credited for completion. 0 until complete."
     }
   },
   "required": [
-    "userId"
+    "userId",
+    "contentId",
+    "contentType",
+    "status",
+    "startedAt"
   ]
 }

@@ -1,42 +1,56 @@
 {
   "name": "Signal",
   "type": "object",
+  "description": "A single daily AI-news briefing. In the rebuild, Signals are generated via web_search against trusted domains, and every Signal MUST include a working sourceUrl. The generator (Round 2) will refuse to create a Signal it can't cite with a real URL.",
   "properties": {
-    "id": {
-      "type": "string",
-      "description": "Unique identifier for the signal"
-    },
     "date": {
       "type": "string",
-      "description": "Publication date in YYYY-MM-DD format"
+      "description": "YYYY-MM-DD. One Signal per day."
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL slug derived from title + date."
     },
     "title": {
       "type": "string",
-      "description": "Signal headline"
+      "description": "Max ~80 chars. A compelling headline."
     },
-    "shortTeaser": {
+    "teaser": {
       "type": "string",
-      "description": "Short teaser summary of the signal"
+      "description": "One-sentence summary, max ~150 chars."
     },
-    "fullText": {
+    "body": {
       "type": "string",
-      "format": "long-text",
-      "description": "Full body text of the signal"
+      "description": "3-4 paragraphs of analysis. Markdown supported."
     },
-    "source": {
+    "sourceUrl": {
       "type": "string",
-      "description": "Source attribution for the signal"
+      "description": "REQUIRED. The canonical URL the Signal cites. No Signal ships without this."
     },
-    "relatedCategory": {
+    "sourceName": {
       "type": "string",
-      "description": "Optional related skill category (e.g. prompting, research, python)"
+      "description": "Human-readable publisher (e.g., 'The Wall Street Journal')."
+    },
+    "publishedAt": {
+      "type": "string",
+      "description": "ISO timestamp of the source article, not the Signal creation time."
+    },
+    "relatedJourneySlug": {
+      "type": "string",
+      "description": "Optional \u2014 if there's a Journey this ties into, link it."
+    },
+    "relatedBoostSlug": {
+      "type": "string",
+      "description": "Optional \u2014 a same-day boost the reader could do to act on this."
     }
   },
   "required": [
     "date",
+    "slug",
     "title",
-    "shortTeaser",
-    "fullText",
-    "source"
+    "teaser",
+    "body",
+    "sourceUrl",
+    "sourceName"
   ]
 }

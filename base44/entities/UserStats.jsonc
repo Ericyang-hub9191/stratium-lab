@@ -1,37 +1,37 @@
 {
   "name": "UserStats",
   "type": "object",
+  "description": "Aggregate counters for a user. Updated atomically when a Lesson or Boost is completed. Level is derived from totalXp.",
   "properties": {
     "userId": {
-      "type": "string",
-      "description": "ID of the user"
+      "type": "string"
     },
     "totalXp": {
       "type": "number",
-      "default": 0,
-      "description": "Lifetime XP accumulated across all mission wins"
+      "default": 0
     },
-    "currentLevel": {
+    "totalLessonsCompleted": {
       "type": "number",
-      "default": 1,
-      "description": "Current mastery level derived from totalXp"
+      "default": 0
     },
-    "totalTimeSaved": {
+    "totalBoostsCompleted": {
       "type": "number",
-      "default": 0,
-      "description": "Total minutes saved in the real world as logged across all wins"
+      "default": 0
     },
-    "totalMissionsCompleted": {
+    "totalJourneysCompleted": {
       "type": "number",
-      "default": 0,
-      "description": "Lifetime count of mission wins logged"
+      "default": 0
     },
-    "badges": {
+    "favoriteTracks": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "IDs of power-up badges earned through streaks, wins, and milestones"
+      "description": "Selected during onboarding. Used to prioritize recommendations on Home."
+    },
+    "lastActivityAt": {
+      "type": "string",
+      "description": "ISO timestamp of most recent lesson or boost completion."
     }
   },
   "required": [
