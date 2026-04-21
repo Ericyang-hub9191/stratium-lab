@@ -194,36 +194,54 @@ function CompareBlock({ block }) {
 
 // ─── CHECK (multiple choice checkpoint — THE learning loop) ─
 //
-// Data model:
-//   - `question`: markdown string
-//   - `choices`: [{ id, text }]
-//   - `correct`: id of right answer
-//   - `explanation`: fallback prose shown when there's no per-choice feedback
-//   - `choiceExplanations`: optional { [choiceId]: string } — per-option reasoning.
-//                           When present, the chosen answer's explanation appears first,
-//                           and the other three are available via a "Why not the others?"
-//                           expandable section.
-//   - `required`: boolean (default true) — must be correct to mark lesson complete.
+// Data model persisted in UserProgress.checkAnswers[blockId]:
+//   {
+//     chosenId:          id of the answer currently on screen (latest submission)
+//     correct:           whether the current submission is right
+//     attempts:          how many times the user submitted
+//     firstWrongChoice:  id of the FIRST wrong choice, if the user was ever wrong.
+//                        Set once on the first wrong submission and never overwritten,
+//                        so reviewing the lesson later shows what the learner was
+//                        confused about, not just that they eventually got it right.
+//   }
 //
-// After submission we persist: { chosenId, correct, attempts } so the surrounding
-// lesson can later show which checkpoints were nailed first-try (✓) vs needed
-// retries (⚠).
+// Block definition fields:
+//   - question, choices, correct         — standard multiple-choice shape
+//   - explanation                        — fallback prose when no per-choice feedback
+//   - choiceExplanations: { [id]: str }  — optional per-option reasoning
+//   - required: boolean (default true)   — must be correct to mark lesson complete
 function CheckBlock({ block, progress, onProgress }) {
   const saved = progress?.checkAnswers?.[block.id];
-  const [chosen, setChosen]       = useState(saved?.chosenId ?? null);
-  const [submitted, setSubmitted] = useState(Boolean(saved));
-  const [showWhyNot, setShowWhyNot] = useState(false);
-  const priorAttempts = saved?.attempts ?? 0;
+  // When the user has already answered correctly in a previous session,
+  // we render the block in review mode — the choices are locked, the
+  // outcome is summarized in the eyebrow, and the first wrong choice
+  // (if any) is marked so review is useful.
+  const inReviewMode = Boolean(saved?.correct);
+
+  const [chosen,      setChosen]      = useState(saved?.chosenId ?? null);
+  const [submitted,   setSubmitted]   = useState(Boolean(saved));
+  const [showWhyNot,  setShowWhyNot]  = useState(false);
+  const priorAttempts     = saved?.attempts ?? 0;
+  const firstWrongChoice  = saved?.firstWrongChoice ?? null;
 
   const submit = () => {
     if (!chosen) return;
     const correct  = chosen === block.correct;
     const attempts = priorAttempts + 1;
     setSubmitted(true);
+    // Preserve `firstWrongChoice` across retries — set once, never overwritten.
+    const nextFirstWrong =
+      firstWrongChoice ||
+      (!correct ? chosen : null);
     onProgress?.({
       checkAnswers: {
         ...(progress?.checkAnswers ?? {}),
-        [block.id]: { chosenId: chosen, correct, attempts },
+        [block.id]: {
+          chosenId: chosen,
+          correct,
+          attempts,
+          ...(nextFirstWrong ? { firstWrongChoice: nextFirstWrong } : {}),
+        },
       },
     });
   };
@@ -231,6 +249,7 @@ function CheckBlock({ block, progress, onProgress }) {
   const retry = () => {
     setSubmitted(false);
     setShowWhyNot(false);
+    // Keep `chosen` cleared so the user can pick again.
     setChosen(null);
   };
 
@@ -243,7 +262,8 @@ function CheckBlock({ block, progress, onProgress }) {
     block.explanation ||
     "";
 
-  // "Why not the others?" — the remaining choices with their individual explanations.
+  // "Why not the others?" — the remaining choices with their individual
+  // explanations. Only meaningful when choiceExplanations exists.
   const otherChoices = (block.choices ?? []).filter(c => c.id !== chosen);
   const hasPerChoiceFeedback = Boolean(block.choiceExplanations);
 
@@ -270,15 +290,23 @@ function CheckBlock({ block, progress, onProgress }) {
 
       <div className="space-y-2">
         {(block.choices ?? []).map(choice => {
-          const isChosen        = chosen === choice.id;
-          const isCorrectAnswer = submitted && choice.id === block.correct;
-          const isWrongChoice   = submitted && isChosen && choice.id !== block.correct;
+          const isChosen          = chosen === choice.id;
+          const isCorrectAnswer   = submitted && choice.id === block.correct;
+          const isWrongChoice     = submitted && isChosen && choice.id !== block.correct;
+          // In review mode, mark the first-wrong-choice too — shows the
+          // learner what they were confused about even if they eventually
+          // got it right.
+          const isFirstWrongTrace =
+            inReviewMode &&
+            firstWrongChoice === choice.id &&
+            choice.id !== block.correct;
 
           let borderColor = "hsl(var(--reading-border))";
           let bg          = "transparent";
           if (submitted) {
-            if (isCorrectAnswer) { borderColor = "hsla(152, 45%, 45%, 0.6)"; bg = "hsla(152, 45%, 55%, 0.08)"; }
-            else if (isWrongChoice) { borderColor = "hsla(0, 60%, 55%, 0.5)"; bg = "hsla(0, 60%, 55%, 0.06)"; }
+            if (isCorrectAnswer)       { borderColor = "hsla(152, 45%, 45%, 0.6)"; bg = "hsla(152, 45%, 55%, 0.08)"; }
+            else if (isWrongChoice || isFirstWrongTrace) {
+                                         borderColor = "hsla(0, 60%, 55%, 0.35)"; bg = "hsla(0, 60%, 55%, 0.04)"; }
           } else if (isChosen) {
             borderColor = "hsl(var(--reading-accent))";
             bg          = "hsla(250, 70%, 58%, 0.05)";
@@ -300,12 +328,18 @@ function CheckBlock({ block, progress, onProgress }) {
                 }}
               >
                 {isCorrectAnswer ? <Check className="w-3 h-3" style={{ color: "hsl(152, 45%, 35%)" }} />
-                 : isWrongChoice ? <X className="w-3 h-3" style={{ color: "hsl(0, 60%, 50%)" }} />
+                 : (isWrongChoice || isFirstWrongTrace) ? <X className="w-3 h-3" style={{ color: "hsl(0, 60%, 50%)" }} />
                  : choice.id.toUpperCase()}
               </span>
               <span className="flex-1 text-[0.95em] leading-snug" style={{ color: "hsl(var(--reading-text))" }}>
                 {inlineMd(choice.text)}
               </span>
+              {isFirstWrongTrace && (
+                <span className="shrink-0 text-[10px] uppercase tracking-wider font-semibold self-center"
+                  style={{ color: "hsl(0, 50%, 50%)", opacity: 0.7 }}>
+                  your first guess
+                </span>
+              )}
             </button>
           );
         })}
