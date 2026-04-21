@@ -13,8 +13,9 @@
    blocks ignore both.
    ───────────────────────────────────────────────────────────── */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Check, X, Copy, ExternalLink, Info, Lightbulb, AlertTriangle, ShieldAlert } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 // ── Tiny markdown: bold/italic/highlight/inline-code/links. Deliberately
 //    minimal — if a block needs richer formatting, use multiple blocks.
@@ -212,10 +213,6 @@ function CompareBlock({ block }) {
 //   - required: boolean (default true)   — must be correct to mark lesson complete
 function CheckBlock({ block, progress, onProgress }) {
   const saved = progress?.checkAnswers?.[block.id];
-  // When the user has already answered correctly in a previous session,
-  // we render the block in review mode — the choices are locked, the
-  // outcome is summarized in the eyebrow, and the first wrong choice
-  // (if any) is marked so review is useful.
   const inReviewMode = Boolean(saved?.correct);
 
   const [chosen,      setChosen]      = useState(saved?.chosenId ?? null);
@@ -229,7 +226,6 @@ function CheckBlock({ block, progress, onProgress }) {
     const correct  = chosen === block.correct;
     const attempts = priorAttempts + 1;
     setSubmitted(true);
-    // Preserve `firstWrongChoice` across retries — set once, never overwritten.
     const nextFirstWrong =
       firstWrongChoice ||
       (!correct ? chosen : null);
@@ -249,21 +245,17 @@ function CheckBlock({ block, progress, onProgress }) {
   const retry = () => {
     setSubmitted(false);
     setShowWhyNot(false);
-    // Keep `chosen` cleared so the user can pick again.
     setChosen(null);
   };
 
   const isCorrect = submitted && chosen === block.correct;
   const isWrong   = submitted && chosen !== block.correct;
 
-  // Per-choice feedback (preferred) vs fallback to block-level explanation.
   const chosenExplanation =
     block.choiceExplanations?.[chosen] ||
     block.explanation ||
     "";
 
-  // "Why not the others?" — the remaining choices with their individual
-  // explanations. Only meaningful when choiceExplanations exists.
   const otherChoices = (block.choices ?? []).filter(c => c.id !== chosen);
   const hasPerChoiceFeedback = Boolean(block.choiceExplanations);
 
@@ -293,9 +285,6 @@ function CheckBlock({ block, progress, onProgress }) {
           const isChosen          = chosen === choice.id;
           const isCorrectAnswer   = submitted && choice.id === block.correct;
           const isWrongChoice     = submitted && isChosen && choice.id !== block.correct;
-          // In review mode, mark the first-wrong-choice too — shows the
-          // learner what they were confused about even if they eventually
-          // got it right.
           const isFirstWrongTrace =
             inReviewMode &&
             firstWrongChoice === choice.id &&
@@ -351,7 +340,6 @@ function CheckBlock({ block, progress, onProgress }) {
         </button>
       ) : (
         <>
-          {/* Feedback for the chosen answer */}
           <div
             className="rounded-lg p-4 text-[0.95em] leading-relaxed"
             style={{
@@ -374,7 +362,6 @@ function CheckBlock({ block, progress, onProgress }) {
             )}
           </div>
 
-          {/* Why not the other options? — only when per-choice feedback exists */}
           {hasPerChoiceFeedback && otherChoices.length > 0 && (
             <div className="pt-1">
               <button
@@ -416,34 +403,143 @@ function CheckBlock({ block, progress, onProgress }) {
   );
 }
 
-// ─── PRACTICE (do-the-thing with optional length validation) ─
+// ─── PRACTICE (user writes, AI grades against a rubric) ─────
+//
+// Persistence shape in UserProgress.practiceEntries[blockId]:
+//   {
+//     text:           string       // latest draft (auto-saves as you type)
+//     submissions: [                // evaluated submissions, oldest first
+//       {
+//         text:        string,
+//         submittedAt: ISO string,
+//         verdict:     "strong" | "workable" | "needs-work",
+//         dimensions:  Array<{ name, verdict, note }>,
+//         feedback:    string,
+//         oneChange:   string | null,
+//       }
+//     ]
+//   }
+//
+// Block definition fields:
+//   - instruction         — markdown; what the user should do
+//   - deliverable         — short inline hint (e.g., "your prompt")
+//   - placeholder         — textarea placeholder
+//   - rubricType          — "rctf" (default) or "brief"
+//   - maxAttempts         — default 2
+//   - lessonContext       — passed to the grader to situate feedback
+//   - softGateChars       — default 40; below this we confirm before submitting
 function PracticeBlock({ block, progress, onProgress }) {
-  const saved = progress?.practiceEntries?.[block.id] ?? "";
-  const [value, setValue] = useState(saved);
-  const minLength = block.validation === "length" ? 40 : 0;
-  const meetsMin  = value.trim().length >= minLength;
+  const savedEntry = progress?.practiceEntries?.[block.id];
+  // Support both old shape (string) and new shape (object) for backward compat.
+  const initialText = typeof savedEntry === "string"
+    ? savedEntry
+    : (savedEntry?.text ?? "");
+  const initialSubmissions = (savedEntry && typeof savedEntry === "object" && Array.isArray(savedEntry.submissions))
+    ? savedEntry.submissions
+    : [];
 
-  const save = (v) => {
+  const [value, setValue]           = useState(initialText);
+  const [submissions, setSubs]      = useState(initialSubmissions);
+  const [grading, setGrading]       = useState(false);
+  const [gradingError, setErr]      = useState(null);
+  const [showShortConfirm, setShow] = useState(false);
+  const blockRef                    = useRef(null);
+
+  const maxAttempts    = block.maxAttempts ?? 2;
+  const softGateChars  = block.softGateChars ?? 40;
+  const rubricType     = block.rubricType ?? "rctf";
+  const attemptsUsed   = submissions.length;
+  const attemptsLeft   = Math.max(0, maxAttempts - attemptsUsed);
+  const canSubmit      = attemptsLeft > 0 && !grading && value.trim().length > 0;
+  const lastSubmission = submissions[submissions.length - 1] ?? null;
+
+  const saveDraft = (v) => {
     setValue(v);
+    const nextEntry = { text: v, submissions };
     onProgress?.({
-      practiceEntries: { ...(progress?.practiceEntries ?? {}), [block.id]: v },
+      practiceEntries: { ...(progress?.practiceEntries ?? {}), [block.id]: nextEntry },
     });
   };
 
+  const doSubmit = async () => {
+    if (!canSubmit) return;
+    if (value.trim().length < softGateChars && !showShortConfirm) {
+      setShow(true);
+      return;
+    }
+    setShow(false);
+    setGrading(true);
+    setErr(null);
+    try {
+      const resp = await base44.functions.invoke("gradePractice", {
+        lessonContext: block.lessonContext ?? "",
+        taskPrompt:    block.instruction ?? "",
+        userResponse:  value.trim(),
+        rubricType,
+        attemptNumber: attemptsUsed + 1,
+      });
+
+      const data = resp?.data ?? resp;
+
+      if (data?.error) {
+        setErr(data.message ?? "Couldn't grade this submission. Try again.");
+        setGrading(false);
+        return;
+      }
+
+      const submission = {
+        text:        value.trim(),
+        submittedAt: new Date().toISOString(),
+        verdict:     data.verdict,
+        dimensions:  data.dimensions ?? [],
+        feedback:    data.feedback,
+        oneChange:   data.oneChange ?? null,
+      };
+      const newSubs = [...submissions, submission];
+      setSubs(newSubs);
+
+      const nextEntry = { text: value, submissions: newSubs };
+      onProgress?.({
+        practiceEntries: { ...(progress?.practiceEntries ?? {}), [block.id]: nextEntry },
+      });
+
+      if (blockRef.current) {
+        blockRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    } catch (e) {
+      console.error("grading failed:", e);
+      setErr("The grader is unavailable right now. Try again in a moment.");
+    } finally {
+      setGrading(false);
+    }
+  };
+
   return (
-    <div className="reading-card rounded-xl p-5 space-y-3 my-2">
-      <div className="eyebrow">Practice</div>
+    <div
+      ref={blockRef}
+      className="reading-card rounded-xl p-5 space-y-3 my-2 transition-opacity"
+      style={{ opacity: grading ? 0.75 : 1 }}
+    >
+      <div className="flex items-center gap-2 eyebrow">
+        <span>Practice</span>
+        {attemptsUsed > 0 && (
+          <span className="opacity-60">— attempt {attemptsUsed}{attemptsLeft > 0 ? ` of ${maxAttempts}` : ""}</span>
+        )}
+      </div>
+
       <div className="text-[1.0625em] font-medium" style={{ color: "hsl(var(--reading-text))" }}>
         {inlineMd(block.instruction ?? "")}
       </div>
       {block.deliverable && (
         <div className="text-[0.9em] muted italic">Write: {block.deliverable}</div>
       )}
+
       <textarea
         value={value}
-        onChange={(e) => save(e.target.value)}
+        onChange={(e) => saveDraft(e.target.value)}
         placeholder={block.placeholder ?? "Write your answer here…"}
         rows={5}
+        disabled={grading || attemptsLeft === 0}
         className="w-full rounded-lg px-3.5 py-3 text-[0.95em] resize-y font-reading"
         style={{
           background: "hsl(var(--reading-surface))",
@@ -453,9 +549,136 @@ function PracticeBlock({ block, progress, onProgress }) {
           lineHeight: 1.55,
         }}
       />
-      {minLength > 0 && (
-        <div className="text-[0.8em] muted">
-          {meetsMin ? <span style={{ color: "hsl(152, 45%, 35%)" }}>✓ Long enough.</span> : `${value.trim().length} / ${minLength} chars`}
+
+      {attemptsLeft > 0 && (
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="text-[0.8em] muted">
+            {value.trim().length > 0 && value.trim().length < softGateChars
+              ? `${value.trim().length} chars — on the short side, but you can submit anyway`
+              : ""}
+          </div>
+          <div className="flex items-center gap-2">
+            {showShortConfirm && (
+              <span className="text-[0.85em] muted">This looks short — submit anyway?</span>
+            )}
+            <button
+              onClick={doSubmit}
+              disabled={!canSubmit}
+              className="btn btn-primary !text-[0.85em] !py-2 !px-4"
+            >
+              {grading
+                ? (attemptsUsed === 0 ? "Reading your prompt…" : "Reading your revision…")
+                : showShortConfirm
+                  ? "Submit anyway"
+                  : attemptsUsed === 0
+                    ? "Submit for feedback"
+                    : "Submit revised attempt"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {gradingError && (
+        <div className="rounded-lg p-3.5 text-[0.9em]"
+          style={{ background: "hsla(0, 60%, 55%, 0.06)", border: "1px solid hsla(0, 60%, 55%, 0.3)", color: "hsl(0, 60%, 42%)" }}>
+          {gradingError}
+        </div>
+      )}
+
+      {grading && (
+        <div className="rounded-lg p-4 space-y-2 animate-pulse"
+          style={{ background: "hsl(var(--reading-code-bg))", border: "1px solid hsl(var(--reading-border))" }}>
+          <div className="h-3 rounded w-1/3" style={{ background: "hsl(var(--reading-border))" }} />
+          <div className="h-2 rounded w-full" style={{ background: "hsl(var(--reading-border))" }} />
+          <div className="h-2 rounded w-5/6" style={{ background: "hsl(var(--reading-border))" }} />
+          <div className="h-2 rounded w-3/4" style={{ background: "hsl(var(--reading-border))" }} />
+        </div>
+      )}
+
+      {!grading && lastSubmission && (
+        <FeedbackPanel submission={lastSubmission} rubricType={rubricType} />
+      )}
+
+      {!grading && lastSubmission && attemptsLeft > 0 && (
+        <div className="text-[0.85em] muted pt-1">
+          Edit your response above and submit a revised attempt. {attemptsLeft} attempt{attemptsLeft === 1 ? "" : "s"} left.
+        </div>
+      )}
+
+      {!grading && attemptsLeft === 0 && (
+        <div className="text-[0.85em] muted pt-1">
+          Your attempts for this practice block are used up. Move on when you're ready.
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Subcomponent: renders structured feedback for a submission.
+function FeedbackPanel({ submission, rubricType }) {
+  const verdictColor =
+    submission.verdict === "strong"    ? "hsl(152, 45%, 35%)" :
+    submission.verdict === "workable"  ? "hsl(40, 70%, 40%)"  :
+                                         "hsl(0, 60%, 45%)";
+  const verdictBg =
+    submission.verdict === "strong"    ? "hsla(152, 45%, 55%, 0.08)" :
+    submission.verdict === "workable"  ? "hsla(40, 70%, 55%, 0.08)"  :
+                                         "hsla(0, 60%, 55%, 0.06)";
+  const verdictBorder =
+    submission.verdict === "strong"    ? "hsla(152, 45%, 45%, 0.35)" :
+    submission.verdict === "workable"  ? "hsla(40, 70%, 50%, 0.35)"  :
+                                         "hsla(0, 60%, 55%, 0.3)";
+  const verdictLabel =
+    submission.verdict === "strong"    ? "Strong"    :
+    submission.verdict === "workable"  ? "Workable"  :
+                                         "Needs work";
+  const verdictIcon =
+    submission.verdict === "strong"    ? "✓" :
+    submission.verdict === "workable"  ? "⚠" : "✗";
+
+  return (
+    <div className="rounded-lg p-4 space-y-3 text-[0.9em] leading-relaxed"
+      style={{ background: verdictBg, border: `1px solid ${verdictBorder}` }}>
+      <div className="flex items-center gap-2 text-[0.85em] font-semibold uppercase tracking-wider"
+        style={{ color: verdictColor }}>
+        <span>{verdictIcon}</span>
+        <span>{verdictLabel}</span>
+      </div>
+
+      {rubricType === "rctf" && submission.dimensions?.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {submission.dimensions.map((d, i) => {
+            const c = d.verdict === "✓" ? "hsl(152, 45%, 35%)"
+                    : d.verdict === "⚠" ? "hsl(40, 70%, 40%)"
+                    :                      "hsl(0, 60%, 45%)";
+            return (
+              <div key={i} className="rounded-md p-2.5"
+                style={{ background: "hsla(0, 0%, 50%, 0.04)", border: "1px solid hsla(0, 0%, 50%, 0.08)" }}>
+                <div className="flex items-center gap-1.5 text-[0.82em] font-medium">
+                  <span style={{ color: c }}>{d.verdict}</span>
+                  <span style={{ color: "hsl(var(--reading-text))" }}>{d.name}</span>
+                </div>
+                {d.note && (
+                  <div className="text-[0.85em] muted mt-1">{d.note}</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div style={{ color: "hsl(var(--reading-text))" }}>
+        {submission.feedback}
+      </div>
+
+      {submission.oneChange && (
+        <div className="pt-2 border-t" style={{ borderColor: verdictBorder }}>
+          <div className="text-[0.75em] uppercase tracking-wider font-semibold mb-1" style={{ color: verdictColor }}>
+            Try this one change
+          </div>
+          <div className="text-[0.92em]" style={{ color: "hsl(var(--reading-text))" }}>
+            {submission.oneChange}
+          </div>
         </div>
       )}
     </div>

@@ -1,0 +1,66 @@
+{
+  "name": "Boost",
+  "type": "object",
+  "description": "A standalone, 3-5 minute practical unit. Uses the same block system as Lesson.",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "URL-safe identifier (e.g., 'role-context-format-prompt')."
+    },
+    "title": {
+      "type": "string",
+      "description": "Boost title. Concrete verb phrase."
+    },
+    "subtitle": {
+      "type": "string",
+      "description": "Optional one-liner under the title."
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "prompting",
+        "writing",
+        "research",
+        "automation",
+        "python",
+        "data",
+        "productivity",
+        "rag"
+      ],
+      "description": "Used for filtering."
+    },
+    "estimatedMinutes": {
+      "type": "number",
+      "default": 4,
+      "description": "Honest upper bound."
+    },
+    "xpReward": {
+      "type": "number",
+      "default": 40,
+      "description": "XP awarded when complete."
+    },
+    "blocks": {
+      "type": "array",
+      "description": "Ordered sequence of blocks. Same shape as Lesson.blocks.",
+      "items": {
+        "type": "object"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "isPublished": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "slug",
+    "title",
+    "category",
+    "blocks"
+  ]
+}
