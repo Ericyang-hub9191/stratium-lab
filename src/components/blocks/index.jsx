@@ -210,8 +210,8 @@ function CompareBlock({ block }) {
 // retries (⚠).
 function CheckBlock({ block, progress, onProgress }) {
   const saved = progress?.checkAnswers?.[block.id];
-  const [chosen, setChosen]         = useState(saved?.chosenId ?? null);
-  const [submitted, setSubmitted]   = useState(Boolean(saved));
+  const [chosen, setChosen]       = useState(saved?.chosenId ?? null);
+  const [submitted, setSubmitted] = useState(Boolean(saved));
   const [showWhyNot, setShowWhyNot] = useState(false);
   const priorAttempts = saved?.attempts ?? 0;
 
@@ -384,7 +384,7 @@ function CheckBlock({ block, progress, onProgress }) {
 
 // ─── PRACTICE (do-the-thing with optional length validation) ─
 function PracticeBlock({ block, progress, onProgress }) {
-  const saved     = progress?.practiceEntries?.[block.id] ?? "";
+  const saved = progress?.practiceEntries?.[block.id] ?? "";
   const [value, setValue] = useState(saved);
   const minLength = block.validation === "length" ? 40 : 0;
   const meetsMin  = value.trim().length >= minLength;
