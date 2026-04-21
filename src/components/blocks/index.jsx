@@ -16,21 +16,28 @@
 import { useState, useMemo } from "react";
 import { Check, X, Copy, ExternalLink, Info, Lightbulb, AlertTriangle, ShieldAlert } from "lucide-react";
 
-// ── Tiny markdown: bold/italic/inline-code/links. Deliberately minimal —
-//    if a block needs richer formatting, use multiple blocks instead.
+// ── Tiny markdown: bold/italic/highlight/inline-code/links. Deliberately
+//    minimal — if a block needs richer formatting, use multiple blocks.
+//    Syntax:
+//      **bold**         → <strong>
+//      _italic_         → <em>
+//      ==highlight==    → <mark> (use sparingly — this is the loudest emphasis)
+//      `code`           → <code>
+//      [text](url)      → <a>
 function inlineMd(text = "") {
   const parts = [];
   let remaining = text;
   let key = 0;
   const push = (node) => parts.push(<span key={key++}>{node}</span>);
 
-  const rx = /(\*\*[^*]+\*\*|_[^_]+_|`[^`]+`|\[[^\]]+\]\([^)]+\))/g;
+  const rx = /(\*\*[^*]+\*\*|==[^=]+==|_[^_]+_|`[^`]+`|\[[^\]]+\]\([^)]+\))/g;
   let lastIdx = 0;
   let match;
   while ((match = rx.exec(remaining)) !== null) {
     if (match.index > lastIdx) push(remaining.slice(lastIdx, match.index));
     const token = match[0];
     if (token.startsWith("**")) push(<strong>{token.slice(2, -2)}</strong>);
+    else if (token.startsWith("==")) push(<mark>{token.slice(2, -2)}</mark>);
     else if (token.startsWith("_")) push(<em>{token.slice(1, -1)}</em>);
     else if (token.startsWith("`")) push(<code>{token.slice(1, -1)}</code>);
     else if (token.startsWith("[")) {
@@ -45,6 +52,7 @@ function inlineMd(text = "") {
 
 // ─── TEXT ──────────────────────────────────────────────────
 function TextBlock({ block }) {
+  // Split on blank lines → paragraphs. Lines starting with "- " become a list.
   const paragraphs = (block.markdown ?? "").split(/\n\n+/).filter(Boolean);
   return (
     <div className="space-y-4">
@@ -102,7 +110,7 @@ function CodeBlock({ block }) {
   );
 }
 
-// ─── EXAMPLE ────────────────────────────────────────────────
+// ─── EXAMPLE (a framed "look at this") ──────────────────────
 function ExampleBlock({ block }) {
   return (
     <figure className="reading-card rounded-xl p-5 my-2">
@@ -136,7 +144,7 @@ function CalloutBlock({ block }) {
   );
 }
 
-// ─── PROMPT ─────────────────────────────────────────────────
+// ─── PROMPT (a prompt the user can copy) ────────────────────
 function PromptBlock({ block }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
@@ -164,7 +172,7 @@ function PromptBlock({ block }) {
   );
 }
 
-// ─── COMPARE ────────────────────────────────────────────────
+// ─── COMPARE (bad vs good side-by-side) ─────────────────────
 function CompareBlock({ block }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -184,16 +192,33 @@ function CompareBlock({ block }) {
   );
 }
 
-// ─── CHECK ──────────────────────────────────────────────────
+// ─── CHECK (multiple choice checkpoint — THE learning loop) ─
+//
+// Data model:
+//   - `question`: markdown string
+//   - `choices`: [{ id, text }]
+//   - `correct`: id of right answer
+//   - `explanation`: fallback prose shown when there's no per-choice feedback
+//   - `choiceExplanations`: optional { [choiceId]: string } — per-option reasoning.
+//                           When present, the chosen answer's explanation appears first,
+//                           and the other three are available via a "Why not the others?"
+//                           expandable section.
+//   - `required`: boolean (default true) — must be correct to mark lesson complete.
+//
+// After submission we persist: { chosenId, correct, attempts } so the surrounding
+// lesson can later show which checkpoints were nailed first-try (✓) vs needed
+// retries (⚠).
 function CheckBlock({ block, progress, onProgress }) {
   const saved = progress?.checkAnswers?.[block.id];
-  const [chosen, setChosen]       = useState(saved?.chosenId ?? null);
-  const [submitted, setSubmitted] = useState(Boolean(saved));
+  const [chosen, setChosen]         = useState(saved?.chosenId ?? null);
+  const [submitted, setSubmitted]   = useState(Boolean(saved));
+  const [showWhyNot, setShowWhyNot] = useState(false);
+  const priorAttempts = saved?.attempts ?? 0;
 
   const submit = () => {
     if (!chosen) return;
-    const correct = chosen === block.correct;
-    const attempts = (saved?.attempts ?? 0) + 1;
+    const correct  = chosen === block.correct;
+    const attempts = priorAttempts + 1;
     setSubmitted(true);
     onProgress?.({
       checkAnswers: {
@@ -203,16 +228,40 @@ function CheckBlock({ block, progress, onProgress }) {
     });
   };
 
-  const retry = () => { setSubmitted(false); setChosen(null); };
+  const retry = () => {
+    setSubmitted(false);
+    setShowWhyNot(false);
+    setChosen(null);
+  };
 
   const isCorrect = submitted && chosen === block.correct;
   const isWrong   = submitted && chosen !== block.correct;
+
+  // Per-choice feedback (preferred) vs fallback to block-level explanation.
+  const chosenExplanation =
+    block.choiceExplanations?.[chosen] ||
+    block.explanation ||
+    "";
+
+  // "Why not the others?" — the remaining choices with their individual explanations.
+  const otherChoices = (block.choices ?? []).filter(c => c.id !== chosen);
+  const hasPerChoiceFeedback = Boolean(block.choiceExplanations);
 
   return (
     <div className="reading-card rounded-xl p-5 space-y-4 my-2">
       <div className="flex items-center gap-2 eyebrow">
         <span>Checkpoint</span>
         {block.required === false && <span className="opacity-60">— optional</span>}
+        {submitted && isCorrect && priorAttempts > 1 && (
+          <span className="ml-auto text-[11px]" style={{ color: "hsl(40, 70%, 38%)" }}>
+            Got it after {priorAttempts} {priorAttempts === 2 ? "try" : "tries"}
+          </span>
+        )}
+        {submitted && isCorrect && priorAttempts === 1 && (
+          <span className="ml-auto text-[11px]" style={{ color: "hsl(152, 45%, 35%)" }}>
+            First try ✓
+          </span>
+        )}
       </div>
 
       <div className="text-[1.0625em] font-medium" style={{ color: "hsl(var(--reading-text))" }}>
@@ -228,8 +277,8 @@ function CheckBlock({ block, progress, onProgress }) {
           let borderColor = "hsl(var(--reading-border))";
           let bg          = "transparent";
           if (submitted) {
-            if (isCorrectAnswer)  { borderColor = "hsla(152, 45%, 45%, 0.6)"; bg = "hsla(152, 45%, 55%, 0.08)"; }
-            else if (isWrongChoice) { borderColor = "hsla(0, 60%, 55%, 0.5)";  bg = "hsla(0, 60%, 55%, 0.06)"; }
+            if (isCorrectAnswer) { borderColor = "hsla(152, 45%, 45%, 0.6)"; bg = "hsla(152, 45%, 55%, 0.08)"; }
+            else if (isWrongChoice) { borderColor = "hsla(0, 60%, 55%, 0.5)"; bg = "hsla(0, 60%, 55%, 0.06)"; }
           } else if (isChosen) {
             borderColor = "hsl(var(--reading-accent))";
             bg          = "hsla(250, 70%, 58%, 0.05)";
@@ -267,38 +316,84 @@ function CheckBlock({ block, progress, onProgress }) {
           Check answer
         </button>
       ) : (
-        <div
-          className="rounded-lg p-4 text-[0.95em] leading-relaxed"
-          style={{
-            background: isCorrect ? "hsla(152, 45%, 55%, 0.08)" : "hsla(0, 60%, 55%, 0.06)",
-            border:     `1px solid ${isCorrect ? "hsla(152, 45%, 45%, 0.35)" : "hsla(0, 60%, 55%, 0.3)"}`,
-          }}
-        >
-          <div className="font-medium mb-1" style={{ color: isCorrect ? "hsl(152, 45%, 32%)" : "hsl(0, 60%, 42%)" }}>
-            {isCorrect ? "Correct." : "Not quite."}
+        <>
+          {/* Feedback for the chosen answer */}
+          <div
+            className="rounded-lg p-4 text-[0.95em] leading-relaxed"
+            style={{
+              background: isCorrect ? "hsla(152, 45%, 55%, 0.08)" : "hsla(0, 60%, 55%, 0.06)",
+              border:     `1px solid ${isCorrect ? "hsla(152, 45%, 45%, 0.35)" : "hsla(0, 60%, 55%, 0.3)"}`,
+            }}
+          >
+            <div className="font-medium mb-1" style={{ color: isCorrect ? "hsl(152, 45%, 32%)" : "hsl(0, 60%, 42%)" }}>
+              {isCorrect ? "Correct." : "Not quite."}
+            </div>
+            <div>{inlineMd(chosenExplanation)}</div>
+            {isWrong && (
+              <button
+                onClick={retry}
+                className="mt-3 text-[0.88em] font-medium underline underline-offset-2"
+                style={{ color: "hsl(var(--reading-accent))" }}
+              >
+                Try again
+              </button>
+            )}
           </div>
-          <div>{inlineMd(block.explanation ?? "")}</div>
-          {isWrong && (
-            <button onClick={retry} className="mt-3 text-[0.88em] font-medium underline underline-offset-2" style={{ color: "hsl(var(--reading-accent))" }}>
-              Try again
-            </button>
+
+          {/* Why not the other options? — only when per-choice feedback exists */}
+          {hasPerChoiceFeedback && otherChoices.length > 0 && (
+            <div className="pt-1">
+              <button
+                onClick={() => setShowWhyNot(v => !v)}
+                className="text-[0.88em] font-medium flex items-center gap-1.5"
+                style={{ color: "hsl(var(--reading-secondary))" }}
+              >
+                <span>{showWhyNot ? "Hide" : "Why weren't the others right?"}</span>
+                <span style={{ transform: showWhyNot ? "rotate(180deg)" : "none", transition: "transform 150ms" }}>↓</span>
+              </button>
+              {showWhyNot && (
+                <div className="mt-3 space-y-3">
+                  {otherChoices.map(c => {
+                    const note = block.choiceExplanations?.[c.id];
+                    if (!note) return null;
+                    return (
+                      <div
+                        key={c.id}
+                        className="rounded-lg p-3.5 text-[0.9em] leading-relaxed"
+                        style={{
+                          background: "hsl(var(--reading-code-bg))",
+                          border: "1px solid hsl(var(--reading-border))",
+                        }}
+                      >
+                        <div className="font-medium mb-1" style={{ color: "hsl(var(--reading-text))" }}>
+                          {c.id.toUpperCase()} · {inlineMd(c.text)}
+                        </div>
+                        <div className="muted">{inlineMd(note)}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );
 }
 
-// ─── PRACTICE ───────────────────────────────────────────────
+// ─── PRACTICE (do-the-thing with optional length validation) ─
 function PracticeBlock({ block, progress, onProgress }) {
-  const saved     = progress?.practiceEntries?.[block.id] ?? "";
+  const saved = progress?.practiceEntries?.[block.id] ?? "";
   const [value, setValue] = useState(saved);
   const minLength = block.validation === "length" ? 40 : 0;
   const meetsMin  = value.trim().length >= minLength;
 
   const save = (v) => {
     setValue(v);
-    onProgress?.({ practiceEntries: { ...(progress?.practiceEntries ?? {}), [block.id]: v } });
+    onProgress?.({
+      practiceEntries: { ...(progress?.practiceEntries ?? {}), [block.id]: v },
+    });
   };
 
   return (
@@ -307,13 +402,15 @@ function PracticeBlock({ block, progress, onProgress }) {
       <div className="text-[1.0625em] font-medium" style={{ color: "hsl(var(--reading-text))" }}>
         {inlineMd(block.instruction ?? "")}
       </div>
-      {block.deliverable && <div className="text-[0.9em] muted italic">Write: {block.deliverable}</div>}
+      {block.deliverable && (
+        <div className="text-[0.9em] muted italic">Write: {block.deliverable}</div>
+      )}
       <textarea
         value={value}
         onChange={(e) => save(e.target.value)}
         placeholder={block.placeholder ?? "Write your answer here…"}
         rows={5}
-        className="w-full rounded-lg px-3.5 py-3 text-[0.95em] resize-y"
+        className="w-full rounded-lg px-3.5 py-3 text-[0.95em] resize-y font-reading"
         style={{
           background: "hsl(var(--reading-surface))",
           border: "1px solid hsl(var(--reading-border))",
@@ -331,13 +428,15 @@ function PracticeBlock({ block, progress, onProgress }) {
   );
 }
 
-// ─── WRITE ──────────────────────────────────────────────────
+// ─── WRITE (reflection, persists) ───────────────────────────
 function WriteBlock({ block, progress, onProgress }) {
   const saved = progress?.writeEntries?.[block.id] ?? "";
   const [value, setValue] = useState(saved);
   const save = (v) => {
     setValue(v);
-    onProgress?.({ writeEntries: { ...(progress?.writeEntries ?? {}), [block.id]: v } });
+    onProgress?.({
+      writeEntries: { ...(progress?.writeEntries ?? {}), [block.id]: v },
+    });
   };
   return (
     <div className="reading-card rounded-xl p-5 space-y-3 my-2">
@@ -375,7 +474,9 @@ function ReferenceBlock({ block }) {
     >
       <ExternalLink className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "hsl(var(--reading-accent))" }} />
       <div className="flex-1">
-        <div className="font-medium" style={{ color: "hsl(var(--reading-text))" }}>{block.title ?? block.url}</div>
+        <div className="font-medium" style={{ color: "hsl(var(--reading-text))" }}>
+          {block.title ?? block.url}
+        </div>
         {block.note && <div className="text-[0.88em] mt-1 muted">{block.note}</div>}
       </div>
     </a>
@@ -387,7 +488,7 @@ function DividerBlock() {
   return <hr className="my-2" style={{ border: "none", borderTop: "1px solid hsl(var(--reading-border))" }} />;
 }
 
-// ─── Block router ───────────────────────────────────────────
+// ─── Block router ──────────────────────────────────────────
 export default function Block({ block, progress, onProgress }) {
   switch (block.type) {
     case "heading":   return <HeadingBlock block={block} />;
@@ -408,6 +509,7 @@ export default function Block({ block, progress, onProgress }) {
   }
 }
 
+// Helper: given a lesson's blocks and progress, are all required checks passed?
 export function allRequiredChecksPassed(blocks, progress) {
   const checks = blocks.filter(b => b.type === "check" && b.required !== false);
   if (checks.length === 0) return true;

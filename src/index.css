@@ -133,6 +133,34 @@
     text-decoration-thickness: 1px;
   }
 
+  /* Emphasis inside the reading surface — serif body is quiet by default,
+     so bold/italic need to actually *pop*. */
+  .reading-surface strong {
+    font-weight: 600;
+    color: hsl(var(--reading-text));
+    /* Use a slightly-denser alternate of the serif so bold is visually
+       distinct, not just heavier. */
+    letter-spacing: -0.005em;
+  }
+
+  .reading-surface em {
+    font-style: italic;
+    color: hsl(var(--reading-text));
+    /* Italic in Newsreader is already expressive; we slightly brighten it
+       against the serif body text to signal "this is the emphasized bit". */
+  }
+
+  /* Highlight syntax — ==like this== — for when italic/bold aren't enough.
+     Looks like a soft highlighter pen. Use sparingly. */
+  .reading-surface mark {
+    background: hsla(250, 70%, 58%, 0.16);
+    color: hsl(var(--reading-text));
+    padding: 0.05em 0.2em;
+    border-radius: 3px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
   .reading-surface code {
     font-family: var(--font-mono);
     font-size: 0.88em;
@@ -153,16 +181,6 @@
     overflow-x: auto;
     white-space: pre-wrap;
     word-break: break-word;
-  }
-
-  .reading-surface strong {
-    font-weight: 600;
-    color: hsl(var(--reading-text));
-  }
-
-  .reading-surface em {
-    font-style: italic;
-    color: hsl(var(--reading-secondary));
   }
 
   .reading-surface h1,
