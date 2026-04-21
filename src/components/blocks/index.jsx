@@ -1,36 +1,16 @@
 /* ─────────────────────────────────────────────────────────────
    Block renderers.
-
-   A Lesson/Boost is an ordered array of blocks. <Block /> is a
-   dispatch component that picks the right renderer based on
-   block.type. All blocks render inside a `.reading-surface`
-   (see index.css) which gives them serif typography and the
-   warmer reading background.
-
-   Interactive blocks (check, practice, write) accept
-   `progress` (the user's saved state for this lesson) and
-   `onProgress` (a callback to persist updates). Pure-content
-   blocks ignore both.
    ───────────────────────────────────────────────────────────── */
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useRef } from "react";
 import { Check, X, Copy, ExternalLink, Info, Lightbulb, AlertTriangle, ShieldAlert } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
-// ── Tiny markdown: bold/italic/highlight/inline-code/links. Deliberately
-//    minimal — if a block needs richer formatting, use multiple blocks.
-//    Syntax:
-//      **bold**         → <strong>
-//      _italic_         → <em>
-//      ==highlight==    → <mark> (use sparingly — this is the loudest emphasis)
-//      `code`           → <code>
-//      [text](url)      → <a>
 function inlineMd(text = "") {
   const parts = [];
   let remaining = text;
   let key = 0;
   const push = (node) => parts.push(<span key={key++}>{node}</span>);
-
   const rx = /(\*\*[^*]+\*\*|==[^=]+==|_[^_]+_|`[^`]+`|\[[^\]]+\]\([^)]+\))/g;
   let lastIdx = 0;
   let match;
@@ -51,7 +31,6 @@ function inlineMd(text = "") {
   return parts;
 }
 
-// ─── TEXT ──────────────────────────────────────────────────
 function TextBlock({ block }) {
   const paragraphs = (block.markdown ?? "").split(/\n\n+/).filter(Boolean);
   return (
@@ -60,18 +39,14 @@ function TextBlock({ block }) {
         if (p.split("\n").every(line => /^\s*-\s+/.test(line))) {
           return (
             <ul key={i} className="list-disc pl-5 space-y-1.5">
-              {p.split("\n").map((line, j) => (
-                <li key={j}>{inlineMd(line.replace(/^\s*-\s+/, ""))}</li>
-              ))}
+              {p.split("\n").map((line, j) => <li key={j}>{inlineMd(line.replace(/^\s*-\s+/, ""))}</li>)}
             </ul>
           );
         }
         if (p.split("\n").every(line => /^\s*\d+\.\s+/.test(line))) {
           return (
             <ol key={i} className="list-decimal pl-5 space-y-1.5">
-              {p.split("\n").map((line, j) => (
-                <li key={j}>{inlineMd(line.replace(/^\s*\d+\.\s+/, ""))}</li>
-              ))}
+              {p.split("\n").map((line, j) => <li key={j}>{inlineMd(line.replace(/^\s*\d+\.\s+/, ""))}</li>)}
             </ol>
           );
         }
@@ -81,14 +56,12 @@ function TextBlock({ block }) {
   );
 }
 
-// ─── HEADING ────────────────────────────────────────────────
 function HeadingBlock({ block }) {
   const level = block.level ?? 2;
   const Tag = level === 1 ? "h1" : level === 3 ? "h3" : "h2";
   return <Tag>{block.text}</Tag>;
 }
 
-// ─── CODE ───────────────────────────────────────────────────
 function CodeBlock({ block }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
@@ -98,19 +71,13 @@ function CodeBlock({ block }) {
     <div className="relative group">
       {block.title && <div className="eyebrow mb-1.5">{block.title}</div>}
       <pre><code>{block.code}</code></pre>
-      <button
-        onClick={copy}
-        className="absolute top-2 right-2 btn btn-ghost !py-1 !px-2 !text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-        style={{ color: "hsl(var(--reading-secondary))" }}
-        aria-label="Copy code"
-      >
+      <button onClick={copy} className="absolute top-2 right-2 btn btn-ghost !py-1 !px-2 !text-xs opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "hsl(var(--reading-secondary))" }} aria-label="Copy code">
         {copied ? <><Check className="w-3 h-3" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
       </button>
     </div>
   );
 }
 
-// ─── EXAMPLE (a framed "look at this") ──────────────────────
 function ExampleBlock({ block }) {
   return (
     <figure className="reading-card rounded-xl p-5 my-2">
@@ -120,7 +87,6 @@ function ExampleBlock({ block }) {
   );
 }
 
-// ─── CALLOUT ────────────────────────────────────────────────
 const CALLOUT_STYLES = {
   info:    { Icon: Info,          color: "hsl(235, 60%, 50%)", bg: "hsla(235, 70%, 50%, 0.06)", border: "hsla(235, 60%, 50%, 0.25)" },
   tip:     { Icon: Lightbulb,     color: "hsl(40,  70%, 38%)", bg: "hsla(40,  80%, 55%, 0.08)", border: "hsla(40, 60%, 45%, 0.28)" },
@@ -131,10 +97,7 @@ function CalloutBlock({ block }) {
   const style = CALLOUT_STYLES[block.variant] ?? CALLOUT_STYLES.info;
   const { Icon } = style;
   return (
-    <aside
-      className="flex gap-3 rounded-lg border px-4 py-3.5 my-1"
-      style={{ background: style.bg, borderColor: style.border }}
-    >
+    <aside className="flex gap-3 rounded-lg border px-4 py-3.5 my-1" style={{ background: style.bg, borderColor: style.border }}>
       <Icon className="w-4 h-4 shrink-0 mt-0.5" style={{ color: style.color }} />
       <div className="flex-1 text-[0.95em]">
         {block.title && <div className="font-medium mb-0.5" style={{ color: style.color }}>{block.title}</div>}
@@ -144,7 +107,6 @@ function CalloutBlock({ block }) {
   );
 }
 
-// ─── PROMPT (a prompt the user can copy) ────────────────────
 function PromptBlock({ block }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
@@ -154,11 +116,7 @@ function PromptBlock({ block }) {
     <div className="reading-card rounded-xl overflow-hidden">
       <div className="flex items-center justify-between px-4 py-2 border-b" style={{ borderColor: "hsl(var(--reading-border))" }}>
         <div className="eyebrow">Prompt</div>
-        <button
-          onClick={copy}
-          className="text-xs font-medium flex items-center gap-1.5 hover:opacity-70 transition-opacity"
-          style={{ color: "hsl(var(--reading-accent))" }}
-        >
+        <button onClick={copy} className="text-xs font-medium flex items-center gap-1.5 hover:opacity-70 transition-opacity" style={{ color: "hsl(var(--reading-accent))" }}>
           {copied ? <><Check className="w-3 h-3" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
         </button>
       </div>
@@ -172,7 +130,6 @@ function PromptBlock({ block }) {
   );
 }
 
-// ─── COMPARE (bad vs good side-by-side) ─────────────────────
 function CompareBlock({ block }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -192,15 +149,13 @@ function CompareBlock({ block }) {
   );
 }
 
-// ─── CHECK (multiple choice checkpoint) ─────────────────────
 function CheckBlock({ block, progress, onProgress }) {
   const saved = progress?.checkAnswers?.[block.id];
   const inReviewMode = Boolean(saved?.correct);
-
   const [chosen,     setChosen]    = useState(saved?.chosenId ?? null);
   const [submitted,  setSubmitted] = useState(Boolean(saved));
   const [showWhyNot, setShowWhyNot] = useState(false);
-  const priorAttempts    = saved?.attempts ?? 0;
+  const priorAttempts   = saved?.attempts ?? 0;
   const firstWrongChoice = saved?.firstWrongChoice ?? null;
 
   const submit = () => {
@@ -212,18 +167,12 @@ function CheckBlock({ block, progress, onProgress }) {
     onProgress?.({
       checkAnswers: {
         ...(progress?.checkAnswers ?? {}),
-        [block.id]: {
-          chosenId: chosen,
-          correct,
-          attempts,
-          ...(nextFirstWrong ? { firstWrongChoice: nextFirstWrong } : {}),
-        },
+        [block.id]: { chosenId: chosen, correct, attempts, ...(nextFirstWrong ? { firstWrongChoice: nextFirstWrong } : {}) },
       },
     });
   };
 
   const retry = () => { setSubmitted(false); setShowWhyNot(false); setChosen(null); };
-
   const isCorrect = submitted && chosen === block.correct;
   const isWrong   = submitted && chosen !== block.correct;
   const chosenExplanation = block.choiceExplanations?.[chosen] || block.explanation || "";
@@ -236,18 +185,14 @@ function CheckBlock({ block, progress, onProgress }) {
         <span>Checkpoint</span>
         {block.required === false && <span className="opacity-60">— optional</span>}
         {submitted && isCorrect && priorAttempts > 1 && (
-          <span className="ml-auto text-[11px]" style={{ color: "hsl(40, 70%, 38%)" }}>
-            Got it after {priorAttempts} {priorAttempts === 2 ? "try" : "tries"}
-          </span>
+          <span className="ml-auto text-[11px]" style={{ color: "hsl(40, 70%, 38%)" }}>Got it after {priorAttempts} {priorAttempts === 2 ? "try" : "tries"}</span>
         )}
         {submitted && isCorrect && priorAttempts === 1 && (
           <span className="ml-auto text-[11px]" style={{ color: "hsl(152, 45%, 35%)" }}>First try ✓</span>
         )}
       </div>
 
-      <div className="text-[1.0625em] font-medium" style={{ color: "hsl(var(--reading-text))" }}>
-        {inlineMd(block.question)}
-      </div>
+      <div className="text-[1.0625em] font-medium" style={{ color: "hsl(var(--reading-text))" }}>{inlineMd(block.question)}</div>
 
       <div className="space-y-2">
         {(block.choices ?? []).map(choice => {
@@ -255,44 +200,26 @@ function CheckBlock({ block, progress, onProgress }) {
           const isCorrectAnswer = submitted && choice.id === block.correct;
           const isWrongChoice   = submitted && isChosen && choice.id !== block.correct;
           const isFirstWrongTrace = inReviewMode && firstWrongChoice === choice.id && choice.id !== block.correct;
-
           let borderColor = "hsl(var(--reading-border))";
           let bg = "transparent";
           if (submitted) {
             if (isCorrectAnswer) { borderColor = "hsla(152, 45%, 45%, 0.6)"; bg = "hsla(152, 45%, 55%, 0.08)"; }
             else if (isWrongChoice || isFirstWrongTrace) { borderColor = "hsla(0, 60%, 55%, 0.35)"; bg = "hsla(0, 60%, 55%, 0.04)"; }
-          } else if (isChosen) {
-            borderColor = "hsl(var(--reading-accent))";
-            bg = "hsla(250, 70%, 58%, 0.05)";
-          }
+          } else if (isChosen) { borderColor = "hsl(var(--reading-accent))"; bg = "hsla(250, 70%, 58%, 0.05)"; }
 
           return (
-            <button
-              key={choice.id}
-              onClick={() => !submitted && setChosen(choice.id)}
-              disabled={submitted}
+            <button key={choice.id} onClick={() => !submitted && setChosen(choice.id)} disabled={submitted}
               className="w-full text-left flex items-start gap-3 p-3.5 rounded-lg border transition-colors duration-150"
-              style={{ borderColor, background: bg, cursor: submitted ? "default" : "pointer" }}
-            >
+              style={{ borderColor, background: bg, cursor: submitted ? "default" : "pointer" }}>
               <span className="shrink-0 w-5 h-5 rounded-full border flex items-center justify-center mt-0.5 text-[11px] font-semibold"
-                style={{
-                  borderColor: isChosen || isCorrectAnswer ? borderColor : "hsl(var(--reading-border))",
-                  background:  isChosen && !submitted ? "hsl(var(--reading-accent))" : "transparent",
-                  color:       isChosen && !submitted ? "white" : "hsl(var(--reading-secondary))",
-                }}
-              >
+                style={{ borderColor: isChosen || isCorrectAnswer ? borderColor : "hsl(var(--reading-border))", background: isChosen && !submitted ? "hsl(var(--reading-accent))" : "transparent", color: isChosen && !submitted ? "white" : "hsl(var(--reading-secondary))" }}>
                 {isCorrectAnswer ? <Check className="w-3 h-3" style={{ color: "hsl(152, 45%, 35%)" }} />
                  : (isWrongChoice || isFirstWrongTrace) ? <X className="w-3 h-3" style={{ color: "hsl(0, 60%, 50%)" }} />
                  : choice.id.toUpperCase()}
               </span>
-              <span className="flex-1 text-[0.95em] leading-snug" style={{ color: "hsl(var(--reading-text))" }}>
-                {inlineMd(choice.text)}
-              </span>
+              <span className="flex-1 text-[0.95em] leading-snug" style={{ color: "hsl(var(--reading-text))" }}>{inlineMd(choice.text)}</span>
               {isFirstWrongTrace && (
-                <span className="shrink-0 text-[10px] uppercase tracking-wider font-semibold self-center"
-                  style={{ color: "hsl(0, 50%, 50%)", opacity: 0.7 }}>
-                  your first guess
-                </span>
+                <span className="shrink-0 text-[10px] uppercase tracking-wider font-semibold self-center" style={{ color: "hsl(0, 50%, 50%)", opacity: 0.7 }}>your first guess</span>
               )}
             </button>
           );
@@ -300,35 +227,18 @@ function CheckBlock({ block, progress, onProgress }) {
       </div>
 
       {!submitted ? (
-        <button onClick={submit} disabled={!chosen} className="btn btn-primary w-full md:w-auto">
-          Check answer
-        </button>
+        <button onClick={submit} disabled={!chosen} className="btn btn-primary w-full md:w-auto">Check answer</button>
       ) : (
         <>
-          <div
-            className="rounded-lg p-4 text-[0.95em] leading-relaxed"
-            style={{
-              background: isCorrect ? "hsla(152, 45%, 55%, 0.08)" : "hsla(0, 60%, 55%, 0.06)",
-              border: `1px solid ${isCorrect ? "hsla(152, 45%, 45%, 0.35)" : "hsla(0, 60%, 55%, 0.3)"}`,
-            }}
-          >
-            <div className="font-medium mb-1" style={{ color: isCorrect ? "hsl(152, 45%, 32%)" : "hsl(0, 60%, 42%)" }}>
-              {isCorrect ? "Correct." : "Not quite."}
-            </div>
+          <div className="rounded-lg p-4 text-[0.95em] leading-relaxed"
+            style={{ background: isCorrect ? "hsla(152, 45%, 55%, 0.08)" : "hsla(0, 60%, 55%, 0.06)", border: `1px solid ${isCorrect ? "hsla(152, 45%, 45%, 0.35)" : "hsla(0, 60%, 55%, 0.3)"}` }}>
+            <div className="font-medium mb-1" style={{ color: isCorrect ? "hsl(152, 45%, 32%)" : "hsl(0, 60%, 42%)" }}>{isCorrect ? "Correct." : "Not quite."}</div>
             <div>{inlineMd(chosenExplanation)}</div>
-            {isWrong && (
-              <button onClick={retry} className="mt-3 text-[0.88em] font-medium underline underline-offset-2"
-                style={{ color: "hsl(var(--reading-accent))" }}>
-                Try again
-              </button>
-            )}
+            {isWrong && <button onClick={retry} className="mt-3 text-[0.88em] font-medium underline underline-offset-2" style={{ color: "hsl(var(--reading-accent))" }}>Try again</button>}
           </div>
-
           {hasPerChoiceFeedback && otherChoices.length > 0 && (
             <div className="pt-1">
-              <button onClick={() => setShowWhyNot(v => !v)}
-                className="text-[0.88em] font-medium flex items-center gap-1.5"
-                style={{ color: "hsl(var(--reading-secondary))" }}>
+              <button onClick={() => setShowWhyNot(v => !v)} className="text-[0.88em] font-medium flex items-center gap-1.5" style={{ color: "hsl(var(--reading-secondary))" }}>
                 <span>{showWhyNot ? "Hide" : "Why weren't the others right?"}</span>
                 <span style={{ transform: showWhyNot ? "rotate(180deg)" : "none", transition: "transform 150ms" }}>↓</span>
               </button>
@@ -338,11 +248,8 @@ function CheckBlock({ block, progress, onProgress }) {
                     const note = block.choiceExplanations?.[c.id];
                     if (!note) return null;
                     return (
-                      <div key={c.id} className="rounded-lg p-3.5 text-[0.9em] leading-relaxed"
-                        style={{ background: "hsl(var(--reading-code-bg))", border: "1px solid hsl(var(--reading-border))" }}>
-                        <div className="font-medium mb-1" style={{ color: "hsl(var(--reading-text))" }}>
-                          {c.id.toUpperCase()} · {inlineMd(c.text)}
-                        </div>
+                      <div key={c.id} className="rounded-lg p-3.5 text-[0.9em] leading-relaxed" style={{ background: "hsl(var(--reading-code-bg))", border: "1px solid hsl(var(--reading-border))" }}>
+                        <div className="font-medium mb-1" style={{ color: "hsl(var(--reading-text))" }}>{c.id.toUpperCase()} · {inlineMd(c.text)}</div>
                         <div className="muted">{inlineMd(note)}</div>
                       </div>
                     );
@@ -357,18 +264,10 @@ function CheckBlock({ block, progress, onProgress }) {
   );
 }
 
-// ─── PRACTICE (user writes, AI grades against a rubric) ─────
-//
-// Persistence shape in UserProgress.practiceEntries[blockId]:
-//   {
-//     text:        string          // latest draft
-//     submissions: Array<{...}>   // evaluated submissions, oldest first
-//   }
 function PracticeBlock({ block, progress, onProgress }) {
   const savedEntry = progress?.practiceEntries?.[block.id];
   const initialText = typeof savedEntry === "string" ? savedEntry : (savedEntry?.text ?? "");
-  const initialSubmissions = (savedEntry && typeof savedEntry === "object" && Array.isArray(savedEntry.submissions))
-    ? savedEntry.submissions : [];
+  const initialSubmissions = (savedEntry && typeof savedEntry === "object" && Array.isArray(savedEntry.submissions)) ? savedEntry.submissions : [];
 
   const [value, setValue]           = useState(initialText);
   const [submissions, setSubs]      = useState(initialSubmissions);
@@ -387,12 +286,7 @@ function PracticeBlock({ block, progress, onProgress }) {
 
   const saveDraft = (v) => {
     setValue(v);
-    onProgress?.({
-      practiceEntries: {
-        ...(progress?.practiceEntries ?? {}),
-        [block.id]: { text: v, submissions },
-      },
-    });
+    onProgress?.({ practiceEntries: { ...(progress?.practiceEntries ?? {}), [block.id]: { text: v, submissions } } });
   };
 
   const doSubmit = async () => {
@@ -411,28 +305,16 @@ function PracticeBlock({ block, progress, onProgress }) {
       });
 
       const data = resp?.data ?? resp;
-      if (data?.error) {
-        setErr(data.message ?? "Couldn't grade this submission. Try again.");
-        setGrading(false);
-        return;
-      }
+      if (data?.error) { setErr(data.message ?? "Couldn't grade this submission. Try again."); setGrading(false); return; }
 
       const submission = {
-        text:        value.trim(),
-        submittedAt: new Date().toISOString(),
-        verdict:     data.verdict,
-        dimensions:  data.dimensions ?? [],
-        feedback:    data.feedback,
-        oneChange:   data.oneChange ?? null,
+        text: value.trim(), submittedAt: new Date().toISOString(),
+        verdict: data.verdict, dimensions: data.dimensions ?? [],
+        feedback: data.feedback, oneChange: data.oneChange ?? null,
       };
       const newSubs = [...submissions, submission];
       setSubs(newSubs);
-      onProgress?.({
-        practiceEntries: {
-          ...(progress?.practiceEntries ?? {}),
-          [block.id]: { text: value, submissions: newSubs },
-        },
-      });
+      onProgress?.({ practiceEntries: { ...(progress?.practiceEntries ?? {}), [block.id]: { text: value, submissions: newSubs } } });
       if (blockRef.current) blockRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     } catch (e) {
       console.error("grading failed:", e);
@@ -443,49 +325,28 @@ function PracticeBlock({ block, progress, onProgress }) {
   };
 
   return (
-    <div ref={blockRef} className="reading-card rounded-xl p-5 space-y-3 my-2 transition-opacity"
-      style={{ opacity: grading ? 0.75 : 1 }}>
+    <div ref={blockRef} className="reading-card rounded-xl p-5 space-y-3 my-2 transition-opacity" style={{ opacity: grading ? 0.75 : 1 }}>
       <div className="flex items-center gap-2 eyebrow">
         <span>Practice</span>
-        {attemptsUsed > 0 && (
-          <span className="opacity-60">— attempt {attemptsUsed}{attemptsLeft > 0 ? ` of ${maxAttempts}` : ""}</span>
-        )}
+        {attemptsUsed > 0 && <span className="opacity-60">— attempt {attemptsUsed}{attemptsLeft > 0 ? ` of ${maxAttempts}` : ""}</span>}
       </div>
 
-      <div className="text-[1.0625em] font-medium" style={{ color: "hsl(var(--reading-text))" }}>
-        {inlineMd(block.instruction ?? "")}
-      </div>
-      {block.deliverable && (
-        <div className="text-[0.9em] muted italic">Write: {block.deliverable}</div>
-      )}
+      <div className="text-[1.0625em] font-medium" style={{ color: "hsl(var(--reading-text))" }}>{inlineMd(block.instruction ?? "")}</div>
+      {block.deliverable && <div className="text-[0.9em] muted italic">Write: {block.deliverable}</div>}
 
-      <textarea
-        value={value}
-        onChange={(e) => saveDraft(e.target.value)}
-        placeholder={block.placeholder ?? "Write your answer here…"}
-        rows={5}
-        disabled={grading || attemptsLeft === 0}
-        className="w-full rounded-lg px-3.5 py-3 text-[0.95em] resize-y font-reading"
-        style={{
-          background: "hsl(var(--reading-surface))",
-          border: "1px solid hsl(var(--reading-border))",
-          color: "hsl(var(--reading-text))",
-          fontFamily: "var(--font-reading)",
-          lineHeight: 1.55,
-        }}
-      />
+      <textarea value={value} onChange={(e) => saveDraft(e.target.value)} placeholder={block.placeholder ?? "Write your answer here…"} rows={5}
+        disabled={grading || attemptsLeft === 0} className="w-full rounded-lg px-3.5 py-3 text-[0.95em] resize-y font-reading"
+        style={{ background: "hsl(var(--reading-surface))", border: "1px solid hsl(var(--reading-border))", color: "hsl(var(--reading-text))", fontFamily: "var(--font-reading)", lineHeight: 1.55 }} />
 
       {attemptsLeft > 0 && (
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="text-[0.8em] muted">
-            {value.trim().length > 0 && value.trim().length < softGateChars
-              ? `${value.trim().length} chars — on the short side, but you can submit anyway` : ""}
+            {value.trim().length > 0 && value.trim().length < softGateChars ? `${value.trim().length} chars — on the short side, but you can submit anyway` : ""}
           </div>
           <div className="flex items-center gap-2">
             {showShortConfirm && <span className="text-[0.85em] muted">This looks short — submit anyway?</span>}
             <button onClick={doSubmit} disabled={!canSubmit} className="btn btn-primary !text-[0.85em] !py-2 !px-4">
-              {grading
-                ? (attemptsUsed === 0 ? "Reading your prompt…" : "Reading your revision…")
+              {grading ? (attemptsUsed === 0 ? "Reading your prompt…" : "Reading your revision…")
                 : showShortConfirm ? "Submit anyway"
                 : attemptsUsed === 0 ? "Submit for feedback" : "Submit revised attempt"}
             </button>
@@ -494,15 +355,11 @@ function PracticeBlock({ block, progress, onProgress }) {
       )}
 
       {gradingError && (
-        <div className="rounded-lg p-3.5 text-[0.9em]"
-          style={{ background: "hsla(0, 60%, 55%, 0.06)", border: "1px solid hsla(0, 60%, 55%, 0.3)", color: "hsl(0, 60%, 42%)" }}>
-          {gradingError}
-        </div>
+        <div className="rounded-lg p-3.5 text-[0.9em]" style={{ background: "hsla(0, 60%, 55%, 0.06)", border: "1px solid hsla(0, 60%, 55%, 0.3)", color: "hsl(0, 60%, 42%)" }}>{gradingError}</div>
       )}
 
       {grading && (
-        <div className="rounded-lg p-4 space-y-2 animate-pulse"
-          style={{ background: "hsl(var(--reading-code-bg))", border: "1px solid hsl(var(--reading-border))" }}>
+        <div className="rounded-lg p-4 space-y-2 animate-pulse" style={{ background: "hsl(var(--reading-code-bg))", border: "1px solid hsl(var(--reading-border))" }}>
           <div className="h-3 rounded w-1/3" style={{ background: "hsl(var(--reading-border))" }} />
           <div className="h-2 rounded w-full" style={{ background: "hsl(var(--reading-border))" }} />
           <div className="h-2 rounded w-5/6" style={{ background: "hsl(var(--reading-border))" }} />
@@ -513,15 +370,10 @@ function PracticeBlock({ block, progress, onProgress }) {
       {!grading && lastSubmission && <FeedbackPanel submission={lastSubmission} rubricType={rubricType} />}
 
       {!grading && lastSubmission && attemptsLeft > 0 && (
-        <div className="text-[0.85em] muted pt-1">
-          Edit your response above and submit a revised attempt. {attemptsLeft} attempt{attemptsLeft === 1 ? "" : "s"} left.
-        </div>
+        <div className="text-[0.85em] muted pt-1">Edit your response above and submit a revised attempt. {attemptsLeft} attempt{attemptsLeft === 1 ? "" : "s"} left.</div>
       )}
-
       {!grading && attemptsLeft === 0 && (
-        <div className="text-[0.85em] muted pt-1">
-          Your attempts for this practice block are used up. Move on when you're ready.
-        </div>
+        <div className="text-[0.85em] muted pt-1">Your attempts for this practice block are used up. Move on when you're ready.</div>
       )}
     </div>
   );
@@ -535,8 +387,7 @@ function FeedbackPanel({ submission, rubricType }) {
   const verdictIcon   = submission.verdict === "strong" ? "✓" : submission.verdict === "workable" ? "⚠" : "✗";
 
   return (
-    <div className="rounded-lg p-4 space-y-3 text-[0.9em] leading-relaxed"
-      style={{ background: verdictBg, border: `1px solid ${verdictBorder}` }}>
+    <div className="rounded-lg p-4 space-y-3 text-[0.9em] leading-relaxed" style={{ background: verdictBg, border: `1px solid ${verdictBorder}` }}>
       <div className="flex items-center gap-2 text-[0.85em] font-semibold uppercase tracking-wider" style={{ color: verdictColor }}>
         <span>{verdictIcon}</span><span>{verdictLabel}</span>
       </div>
@@ -546,8 +397,7 @@ function FeedbackPanel({ submission, rubricType }) {
           {submission.dimensions.map((d, i) => {
             const c = d.verdict === "✓" ? "hsl(152, 45%, 35%)" : d.verdict === "⚠" ? "hsl(40, 70%, 40%)" : "hsl(0, 60%, 45%)";
             return (
-              <div key={i} className="rounded-md p-2.5"
-                style={{ background: "hsla(0, 0%, 50%, 0.04)", border: "1px solid hsla(0, 0%, 50%, 0.08)" }}>
+              <div key={i} className="rounded-md p-2.5" style={{ background: "hsla(0, 0%, 50%, 0.04)", border: "1px solid hsla(0, 0%, 50%, 0.08)" }}>
                 <div className="flex items-center gap-1.5 text-[0.82em] font-medium">
                   <span style={{ color: c }}>{d.verdict}</span>
                   <span style={{ color: "hsl(var(--reading-text))" }}>{d.name}</span>
@@ -563,9 +413,7 @@ function FeedbackPanel({ submission, rubricType }) {
 
       {submission.oneChange && (
         <div className="pt-2 border-t" style={{ borderColor: verdictBorder }}>
-          <div className="text-[0.75em] uppercase tracking-wider font-semibold mb-1" style={{ color: verdictColor }}>
-            Try this one change
-          </div>
+          <div className="text-[0.75em] uppercase tracking-wider font-semibold mb-1" style={{ color: verdictColor }}>Try this one change</div>
           <div className="text-[0.92em]" style={{ color: "hsl(var(--reading-text))" }}>{submission.oneChange}</div>
         </div>
       )}
@@ -573,42 +421,25 @@ function FeedbackPanel({ submission, rubricType }) {
   );
 }
 
-// ─── WRITE (reflection, persists) ───────────────────────────
 function WriteBlock({ block, progress, onProgress }) {
   const saved = progress?.writeEntries?.[block.id] ?? "";
   const [value, setValue] = useState(saved);
-  const save = (v) => {
-    setValue(v);
-    onProgress?.({ writeEntries: { ...(progress?.writeEntries ?? {}), [block.id]: v } });
-  };
+  const save = (v) => { setValue(v); onProgress?.({ writeEntries: { ...(progress?.writeEntries ?? {}), [block.id]: v } }); };
   return (
     <div className="reading-card rounded-xl p-5 space-y-3 my-2">
       <div className="eyebrow">Reflect</div>
       <div className="text-[1em]" style={{ color: "hsl(var(--reading-text))" }}>{inlineMd(block.content ?? "")}</div>
-      <textarea
-        value={value}
-        onChange={(e) => save(e.target.value)}
-        placeholder={block.placeholder ?? "Your thoughts…"}
-        rows={4}
+      <textarea value={value} onChange={(e) => save(e.target.value)} placeholder={block.placeholder ?? "Your thoughts…"} rows={4}
         className="w-full rounded-lg px-3.5 py-3 text-[0.95em] resize-y"
-        style={{
-          background: "hsl(var(--reading-surface))",
-          border: "1px solid hsl(var(--reading-border))",
-          color: "hsl(var(--reading-text))",
-          fontFamily: "var(--font-reading)",
-          lineHeight: 1.55,
-        }}
-      />
+        style={{ background: "hsl(var(--reading-surface))", border: "1px solid hsl(var(--reading-border))", color: "hsl(var(--reading-text))", fontFamily: "var(--font-reading)", lineHeight: 1.55 }} />
       <div className="text-[0.8em] muted">Saved as you type.</div>
     </div>
   );
 }
 
-// ─── REFERENCE ──────────────────────────────────────────────
 function ReferenceBlock({ block }) {
   return (
-    <a href={block.url} target="_blank" rel="noreferrer"
-      className="reading-card rounded-xl p-4 flex items-start gap-3 no-underline hover:border-[hsl(var(--reading-accent))] transition-colors">
+    <a href={block.url} target="_blank" rel="noreferrer" className="reading-card rounded-xl p-4 flex items-start gap-3 no-underline hover:border-[hsl(var(--reading-accent))] transition-colors">
       <ExternalLink className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "hsl(var(--reading-accent))" }} />
       <div className="flex-1">
         <div className="font-medium" style={{ color: "hsl(var(--reading-text))" }}>{block.title ?? block.url}</div>
@@ -618,12 +449,10 @@ function ReferenceBlock({ block }) {
   );
 }
 
-// ─── DIVIDER ────────────────────────────────────────────────
 function DividerBlock() {
   return <hr className="my-2" style={{ border: "none", borderTop: "1px solid hsl(var(--reading-border))" }} />;
 }
 
-// ─── Block router ──────────────────────────────────────────
 export default function Block({ block, progress, onProgress }) {
   switch (block.type) {
     case "heading":   return <HeadingBlock block={block} />;
@@ -644,7 +473,6 @@ export default function Block({ block, progress, onProgress }) {
   }
 }
 
-// Helper: given a lesson's blocks and progress, are all required checks passed?
 export function allRequiredChecksPassed(blocks, progress) {
   const checks = blocks.filter(b => b.type === "check" && b.required !== false);
   if (checks.length === 0) return true;
