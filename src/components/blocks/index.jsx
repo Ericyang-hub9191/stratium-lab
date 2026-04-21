@@ -384,7 +384,7 @@ function CheckBlock({ block, progress, onProgress }) {
 
 // ─── PRACTICE (do-the-thing with optional length validation) ─
 function PracticeBlock({ block, progress, onProgress }) {
-  const saved = progress?.practiceEntries?.[block.id] ?? "";
+  const saved     = progress?.practiceEntries?.[block.id] ?? "";
   const [value, setValue] = useState(saved);
   const minLength = block.validation === "length" ? 40 : 0;
   const meetsMin  = value.trim().length >= minLength;
