@@ -155,7 +155,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
 
     // Parse the JSON. Trim any stray whitespace/fences just in case.
-    const raw = textBlock.text.trim()
+    const raw = (textBlock as any).text.trim()
       .replace(/^```(?:json)?\s*/i, "")
       .replace(/```\s*$/i, "")
       .trim();
