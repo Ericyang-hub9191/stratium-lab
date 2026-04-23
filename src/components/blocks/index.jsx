@@ -93,6 +93,7 @@ const CALLOUT_STYLES = {
   warning: { Icon: AlertTriangle, color: "hsl(25,  80%, 40%)", bg: "hsla(25,  80%, 55%, 0.08)", border: "hsla(25, 70%, 45%, 0.28)" },
   caution: { Icon: ShieldAlert,   color: "hsl(0,   65%, 42%)", bg: "hsla(0,   70%, 55%, 0.06)", border: "hsla(0,  60%, 50%, 0.28)" },
 };
+
 function CalloutBlock({ block }) {
   const style = CALLOUT_STYLES[block.variant] ?? CALLOUT_STYLES.info;
   const { Icon } = style;
@@ -155,7 +156,7 @@ function CheckBlock({ block, progress, onProgress }) {
   const [chosen,     setChosen]    = useState(saved?.chosenId ?? null);
   const [submitted,  setSubmitted] = useState(Boolean(saved));
   const [showWhyNot, setShowWhyNot] = useState(false);
-  const priorAttempts   = saved?.attempts ?? 0;
+  const priorAttempts    = saved?.attempts ?? 0;
   const firstWrongChoice = saved?.firstWrongChoice ?? null;
 
   const submit = () => {
@@ -196,9 +197,9 @@ function CheckBlock({ block, progress, onProgress }) {
 
       <div className="space-y-2">
         {(block.choices ?? []).map(choice => {
-          const isChosen        = chosen === choice.id;
-          const isCorrectAnswer = submitted && choice.id === block.correct;
-          const isWrongChoice   = submitted && isChosen && choice.id !== block.correct;
+          const isChosen         = chosen === choice.id;
+          const isCorrectAnswer  = submitted && choice.id === block.correct;
+          const isWrongChoice    = submitted && isChosen && choice.id !== block.correct;
           const isFirstWrongTrace = inReviewMode && firstWrongChoice === choice.id && choice.id !== block.correct;
           let borderColor = "hsl(var(--reading-border))";
           let bg = "transparent";
@@ -296,7 +297,9 @@ function PracticeBlock({ block, progress, onProgress }) {
     setGrading(true);
     setErr(null);
     try {
-      const resp = await base44.functions.invoke("gradePractice", {
+      // Correct SDK pattern: base44.functions.invoke("functionName", payload)
+      // Returns an Axios-shaped response object; data lives on .data
+      const response = await base44.functions.invoke("gradePractice", {
         lessonContext: block.lessonContext ?? "",
         taskPrompt:    block.instruction ?? "",
         userResponse:  value.trim(),
@@ -304,13 +307,18 @@ function PracticeBlock({ block, progress, onProgress }) {
         attemptNumber: attemptsUsed + 1,
       });
 
-      const data = resp?.data ?? resp;
-      if (data?.error) { setErr(data.message ?? "Couldn't grade this submission. Try again."); setGrading(false); return; }
+      const resp = response?.data ?? response;
+
+      if (resp?.error) {
+        setErr(resp.message ?? "Couldn't grade this submission. Try again.");
+        setGrading(false);
+        return;
+      }
 
       const submission = {
         text: value.trim(), submittedAt: new Date().toISOString(),
-        verdict: data.verdict, dimensions: data.dimensions ?? [],
-        feedback: data.feedback, oneChange: data.oneChange ?? null,
+        verdict: resp.verdict, dimensions: resp.dimensions ?? [],
+        feedback: resp.feedback, oneChange: resp.oneChange ?? null,
       };
       const newSubs = [...submissions, submission];
       setSubs(newSubs);
@@ -334,7 +342,8 @@ function PracticeBlock({ block, progress, onProgress }) {
       <div className="text-[1.0625em] font-medium" style={{ color: "hsl(var(--reading-text))" }}>{inlineMd(block.instruction ?? "")}</div>
       {block.deliverable && <div className="text-[0.9em] muted italic">Write: {block.deliverable}</div>}
 
-      <textarea value={value} onChange={(e) => saveDraft(e.target.value)} placeholder={block.placeholder ?? "Write your answer here…"} rows={5}
+      <textarea value={value} onChange={(e) => saveDraft(e.target.value)}
+        placeholder={block.placeholder ?? "Write your answer here…"} rows={5}
         disabled={grading || attemptsLeft === 0} className="w-full rounded-lg px-3.5 py-3 text-[0.95em] resize-y font-reading"
         style={{ background: "hsl(var(--reading-surface))", border: "1px solid hsl(var(--reading-border))", color: "hsl(var(--reading-text))", fontFamily: "var(--font-reading)", lineHeight: 1.55 }} />
 
@@ -368,7 +377,6 @@ function PracticeBlock({ block, progress, onProgress }) {
       )}
 
       {!grading && lastSubmission && <FeedbackPanel submission={lastSubmission} rubricType={rubricType} />}
-
       {!grading && lastSubmission && attemptsLeft > 0 && (
         <div className="text-[0.85em] muted pt-1">Edit your response above and submit a revised attempt. {attemptsLeft} attempt{attemptsLeft === 1 ? "" : "s"} left.</div>
       )}
