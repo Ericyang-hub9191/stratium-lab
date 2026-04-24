@@ -20,7 +20,7 @@ export default function Me() {
   const [savingTracks, setSavingTracks] = useState(false);
 
   const [notifications, setNotifications] = useState(
-    () => typeof window !== "undefined" && localStorage.getItem("synthetica_notifications") === "true"
+    () => typeof window !== "undefined" && localStorage.getItem("stratiumlab_notifications") === "true"
   );
 
   const [showDelete, setShowDelete] = useState(false);
@@ -171,7 +171,7 @@ export default function Me() {
             checked={notifications}
             onCheckedChange={(v) => {
               setNotifications(v);
-              localStorage.setItem("synthetica_notifications", String(v));
+              localStorage.setItem("stratiumlab_notifications", String(v));
             }}
           />
         </div>

@@ -64,7 +64,7 @@ export default function Layout() {
         className={cn("font-medium tracking-tight text-text-primary", size === "lg" ? "text-lg" : "text-sm")}
         style={{ letterSpacing: "-0.02em" }}
       >
-        Synthetica
+        Stratium Lab
       </span>
     </Link>
   );

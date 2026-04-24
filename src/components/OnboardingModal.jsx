@@ -59,7 +59,7 @@ export default function OnboardingModal({ onDone }) {
 
         {slide === 0 && (
           <div className="space-y-4 text-center">
-            <h2 className="text-xl ui-heading">Welcome to Synthetica.</h2>
+            <h2 className="text-xl ui-heading">Welcome to Stratium Lab.</h2>
             <p className="text-sm text-text-secondary leading-relaxed">
               A serious tool for getting better at using AI. Two formats: short Boosts you can do in 3 minutes, and longer Journeys that build real depth.
             </p>
