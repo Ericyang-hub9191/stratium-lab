@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 1024,
-      system: "You are an AI news editor for Synthetica, a professional AI mastery app. Your job is to write one daily Signal — a concise, high-quality briefing about a significant real development in AI. Write for busy professionals who want to stay ahead. Be specific, factual, and insightful. Never be vague or generic.",
+      system: "You are an AI news editor for Stratium Lab, a professional AI mastery app. Your job is to write one daily Signal — a concise, high-quality briefing about a significant real development in AI. Write for busy professionals who want to stay ahead. Be specific, factual, and insightful. Never be vague or generic.",
       messages: [
         {
           role: "user",
