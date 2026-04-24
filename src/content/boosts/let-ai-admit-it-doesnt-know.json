@@ -1,0 +1,123 @@
+{
+  "slug": "let-ai-admit-it-doesnt-know",
+  "title": "Let AI admit it doesn't know",
+  "subtitle": "The one-sentence trick that cuts AI bullshit.",
+  "category": "prompting",
+  "estimatedMinutes": 4,
+  "xpReward": 40,
+  "tags": ["hallucination", "reliability", "foundational"],
+  "isPublished": true,
+
+  "blocks": [
+    {
+      "id": "b1",
+      "type": "text",
+      "markdown": "You asked an AI a question. It gave you a confident, specific, well-written answer. ==You only found out later some of it was wrong.==\n\nHere's the uncomfortable part: the AI didn't know it didn't know. It just filled the gap with something plausible, because **nothing in your prompt told it that \"I don't know\" was a real option.**"
+    },
+
+    {
+      "id": "b2",
+      "type": "heading",
+      "level": 2,
+      "text": "The move"
+    },
+
+    {
+      "id": "b3",
+      "type": "text",
+      "markdown": "Add one sentence to your prompt. Something like:\n\n> *If you don't have enough information to answer well, ask me a clarifying question instead of guessing.*\n\nOr if you want something shorter:\n\n> *If you're unsure, say so.*\n\nThat's it. That's the whole trick. You're not changing what you're asking for — **you're giving the model explicit permission to admit uncertainty.** By default, most models lean hard toward answering confidently, even when they shouldn't."
+    },
+
+    {
+      "id": "b4",
+      "type": "callout",
+      "variant": "tip",
+      "title": "Why this works",
+      "body": "Without an out, the model's job feels like: *answer the question*. With an out, the job becomes: *answer the question if you can, or surface uncertainty if you can't.* It's a small change to the task definition, and it's the single cheapest thing you can do to reduce hallucinations in your day-to-day use."
+    },
+
+    {
+      "id": "b5",
+      "type": "heading",
+      "level": 2,
+      "text": "See it work"
+    },
+
+    {
+      "id": "b6",
+      "type": "text",
+      "markdown": "Open your preferred AI (ChatGPT, Claude, Gemini — any of them). Run these two prompts in **fresh chats** and compare the responses.\n\n**Prompt A — no out:**"
+    },
+
+    {
+      "id": "b7",
+      "type": "prompt",
+      "prompt": "I'm choosing between two medications my doctor mentioned. One is called [make up a plausible-sounding medication name, e.g. 'Lenzaprex']. What are its common side effects?",
+      "annotation": "You're baiting the model with something that sounds real but isn't. Watch what happens."
+    },
+
+    {
+      "id": "b8",
+      "type": "text",
+      "markdown": "**Prompt B — with an out:**"
+    },
+
+    {
+      "id": "b9",
+      "type": "prompt",
+      "prompt": "I'm choosing between two medications my doctor mentioned. One is called [same made-up name]. What are its common side effects?\n\nIf you're not sure this medication exists, tell me that instead of describing side effects.",
+      "annotation": "Same question, same made-up name, plus the out. Compare the two responses."
+    },
+
+    {
+      "id": "b10",
+      "type": "callout",
+      "variant": "note",
+      "title": "What you'll probably notice",
+      "body": "Prompt A often gets a confident list of side effects — for a drug that doesn't exist. Prompt B usually gets a straight \"I can't find this medication, can you double-check the name?\" Same model, same question. The out is what made the difference.\n\n(If your AI catches the made-up name even in Prompt A — good, that means you're using one that's been trained harder against this failure mode. Try a made-up **programming library** name or **book title** instead; those trip models up more reliably.)"
+    },
+
+    {
+      "id": "b11",
+      "type": "practice",
+      "instruction": "Run the two prompts above in your AI of choice (make up a medication name that sounds real — something like \"Lenzaprex\" or \"Norivactin\"). Then paste a short note below: what did you notice? Did the model bite on Prompt A? Did Prompt B catch it?",
+      "deliverable": "what you observed running both prompts",
+      "validation": "length",
+      "placeholder": "What happened when you ran both prompts?"
+    },
+
+    {
+      "id": "b12",
+      "type": "check",
+      "question": "You're about to send these four prompts to an AI. **Which one most needs \"Let me know if you don't have enough info\" added to it?**",
+      "choices": [
+        { "id": "a", "text": "\"Help me brainstorm 10 names for a new coffee shop.\"" },
+        { "id": "b", "text": "\"Write me a haiku about the ocean.\"" },
+        { "id": "c", "text": "\"My coworker mentioned a 2023 study on remote work productivity. What did it find?\"" },
+        { "id": "d", "text": "\"Summarize the key points of the email I pasted below.\"" }
+      ],
+      "correct": "c",
+      "explanation": "Use the out whenever **the AI might not know but could fake it**. Asking about a specific study the model may or may not have seen is exactly that risk — it can easily invent a plausible-sounding summary of a study that doesn't exist or that it's confusing with another one. The other three don't need the out: brainstorming and haikus don't have a \"right answer\" to get wrong, and summarizing pasted text is a task where the model has all the info it needs in front of it.",
+      "choiceExplanations": {
+        "a": "Brainstorming doesn't have a factual answer the model could get wrong — it's a creative task. The out would be unnecessary here.",
+        "b": "Same as brainstorming — there's no fact to verify. A haiku is a creative exercise. Save the out for factual questions.",
+        "c": "Correct. Specific studies, citations, statistics, quotes from people — anything where the model might have partial memory and fill gaps confidently — these are exactly when to use the out.",
+        "d": "The model has the email right in front of it in the prompt. There's no memory gap to fill. Summarization of provided text is low-risk; the out isn't needed."
+      },
+      "required": true
+    },
+
+    {
+      "id": "b13",
+      "type": "heading",
+      "level": 2,
+      "text": "The takeaway"
+    },
+
+    {
+      "id": "b14",
+      "type": "text",
+      "markdown": "==Always give the AI permission to say \"I don't know.\"== It's a single sentence. It won't catch every bad answer — no technique does — but it catches a real class of confident-wrong mistakes that would otherwise slip through.\n\nUse it anywhere the answer matters: medical, legal, financial, anything with specific names or numbers, anything you're about to share with other people."
+    }
+  ]
+}
