@@ -8,6 +8,50 @@
   "tags": ["hallucination", "reliability", "foundational"],
   "isPublished": true,
 
+  "review": {
+    "takeaway": "Always give the AI permission to say \"I don't know.\" One sentence — massive reduction in confident-wrong answers.",
+    "questions": [
+      {
+        "type": "mcq",
+        "question": "Your colleague asks an AI: \"Was there a major earthquake in Tokyo in March 2024?\" The AI confidently confirms there was one, with details. Your colleague trusts the answer. **What's the most likely problem here?**",
+        "choices": [
+          { "id": "a", "text": "AIs always lie about historical events." },
+          { "id": "b", "text": "The prompt didn't give the AI an out, so even if it wasn't sure, it generated a confident-sounding answer rather than admitting uncertainty." },
+          { "id": "c", "text": "Your colleague asked in the wrong format." },
+          { "id": "d", "text": "The AI doesn't know any 2024 events at all." }
+        ],
+        "correct": "b",
+        "explanation": "The classic failure mode: a confident answer to a question the AI actually wasn't sure about. Adding \"if you're not certain, say so\" gives the AI an explicit permission slip to admit when it doesn't know — which it usually won't do by default."
+      },
+      {
+        "type": "fill-in",
+        "prompt": "You're writing a prompt that asks for a quote from a historical figure. To reduce the chance of getting a fabricated quote, what one short instruction should you add?",
+        "acceptedAnswers": ["if you're not sure, say so", "if you don't know, tell me", "if you're uncertain, say so", "tell me if you're not sure", "let me know if you're not sure", "if you can't find the exact quote, tell me", "say so if you're unsure", "if unsure, say so", "ask me if you don't have enough info", "tell me if you don't know"],
+        "answerHint": "the one sentence",
+        "explanation": "Any phrasing that gives the AI explicit permission to admit uncertainty works. The exact words don't matter — what matters is that the AI knows \"I don't know\" is an acceptable answer."
+      },
+      {
+        "type": "mcq",
+        "question": "Which of these tasks does NOT need an out added to its prompt?",
+        "choices": [
+          { "id": "a", "text": "\"What was Apple's exact revenue in Q3 2023?\"" },
+          { "id": "b", "text": "\"Explain how a transformer model handles attention.\"" },
+          { "id": "c", "text": "\"Write me a short bedtime story about a fox who can't sleep.\"" },
+          { "id": "d", "text": "\"Quote a Maya Angelou poem about resilience.\"" }
+        ],
+        "correct": "c",
+        "explanation": "Creative writing tasks like a bedtime story have no factual answer to get wrong. The other three involve specific facts, technical accuracy, or quotations — exactly when fabrication risk is highest and the out is most useful."
+      },
+      {
+        "type": "fill-in",
+        "prompt": "In one short phrase, what's the main risk the \"out\" technique is designed to reduce?",
+        "acceptedAnswers": ["hallucination", "hallucinations", "confident wrong answers", "confidently wrong", "confident-wrong", "confident but wrong", "fabricated", "fabrication", "made-up answers", "making things up", "made up information", "made up facts"],
+        "answerHint": "one or two words",
+        "explanation": "Hallucinations — confident-sounding fabrications — are the failure mode this technique most directly targets. By giving the AI explicit permission to admit uncertainty, you make \"I don't know\" a viable response, reducing the chance it makes something up."
+      }
+    ]
+  },
+
   "blocks": [
     {
       "id": "b1",

@@ -16,6 +16,7 @@ import Progress from "./pages/Progress";
 import Me from "./pages/Me";
 import Signals from "./pages/Signals";
 import SignalDetail from "./pages/SignalDetail";
+import ReviewScreen from "./pages/ReviewScreen";
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -44,6 +45,7 @@ const AuthenticatedApp = () => {
         <Route path="/journey/:slug"      element={<JourneyDetail />} />
         <Route path="/lesson/:id"         element={<LessonExperience />} />
         <Route path="/boost/:id"          element={<BoostExperience />} />
+        <Route path="/review/:boostId"    element={<ReviewScreen />} />
         <Route path="/streak"             element={<Streak />} />
         <Route path="/progress"           element={<Progress />} />
         <Route path="/signals"            element={<Signals />} />

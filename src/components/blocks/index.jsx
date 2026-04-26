@@ -6,7 +6,7 @@ import { useState, useRef } from "react";
 import { Check, X, Copy, ExternalLink, Info, Lightbulb, AlertTriangle, ShieldAlert } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
-function inlineMd(text = "") {
+export function inlineMd(text = "") {
   const parts = [];
   let remaining = text;
   let key = 0;

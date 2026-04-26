@@ -52,6 +52,66 @@
         "type": "string"
       }
     },
+    "review": {
+      "type": "object",
+      "description": "Optional. Spaced-retrieval review content for this boost. Surfaced 3+ days after completion via the home page; available anytime via Library \u2192 Reviews tab. If omitted, no review is offered for this boost.",
+      "properties": {
+        "takeaway": {
+          "type": "string",
+          "description": "The one-sentence takeaway shown at the top of the review screen."
+        },
+        "questions": {
+          "type": "array",
+          "description": "3-4 review questions. Mix of MCQ and fill-in. Each tests the takeaway in a NEW scenario (not a repeat of the original check).",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "mcq",
+                  "fill-in"
+                ]
+              },
+              "question": {
+                "type": "string",
+                "description": "MCQ question text."
+              },
+              "choices": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                },
+                "description": "MCQ choices (id + text)."
+              },
+              "correct": {
+                "type": "string",
+                "description": "MCQ correct choice id."
+              },
+              "explanation": {
+                "type": "string",
+                "description": "Shown after the user answers."
+              },
+              "prompt": {
+                "type": "string",
+                "description": "Fill-in prompt text."
+              },
+              "acceptedAnswers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Fill-in: list of accepted phrasings. Grader treats user's answer as correct if it semantically matches any of these."
+              },
+              "answerHint": {
+                "type": "string",
+                "description": "Fill-in: short placeholder hint."
+              }
+            }
+          }
+        }
+      }
+    },
     "isPublished": {
       "type": "boolean",
       "default": false

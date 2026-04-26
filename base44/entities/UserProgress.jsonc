@@ -56,6 +56,14 @@
     "xpAwarded": {
       "type": "number",
       "description": "XP credited for completion. 0 until complete."
+    },
+    "lastReviewedAt": {
+      "type": "string",
+      "description": "ISO timestamp of the most recent review of this boost. Set by ReviewScreen on completion. Only meaningful for contentType=boost."
+    },
+    "reviewCount": {
+      "type": "number",
+      "description": "Count of times this boost has been reviewed. Defaults to 0."
     }
   },
   "required": [

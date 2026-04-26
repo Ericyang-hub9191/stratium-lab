@@ -4,23 +4,23 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Clock, BookOpen, Zap, Radio, ChevronRight } from "lucide-react";
+import { ArrowRight, Clock, BookOpen, Zap, Radio, ChevronRight, Repeat } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import OnboardingModal from "@/components/OnboardingModal";
 
 export default function Home() {
   const navigate = useNavigate();
 
-  const [user, setUser]                       = useState(null);
-  const [stats, setStats]                     = useState(null);
-  const [streak, setStreak]                   = useState(null);
-  const [nextLesson, setNextLesson]           = useState(null);
+  const [user, setUser]                           = useState(null);
+  const [stats, setStats]                         = useState(null);
+  const [nextLesson, setNextLesson]               = useState(null);
   const [nextLessonJourney, setNextLessonJourney] = useState(null);
-  const [recommendedBoost, setRecommendedBoost] = useState(null);
-  const [activeJourneys, setActiveJourneys]   = useState([]);
-  const [todaySignal, setTodaySignal]         = useState(null);
-  const [loading, setLoading]                 = useState(true);
-  const [showOnboarding, setShowOnboarding]   = useState(false);
+  const [recommendedBoost, setRecommendedBoost]   = useState(null);
+  const [reviewableBoost, setReviewableBoost]     = useState(null);
+  const [activeJourneys, setActiveJourneys]       = useState([]);
+  const [todaySignal, setTodaySignal]             = useState(null);
+  const [loading, setLoading]                     = useState(true);
+  const [showOnboarding, setShowOnboarding]       = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -40,7 +40,6 @@ export default function Home() {
 
         const userStats = statsArr[0];
         setStats(userStats);
-        setStreak(streakArr[0]);
         setTodaySignal(signals[0] ?? null);
 
         if (!userStats) setShowOnboarding(true);
@@ -94,6 +93,34 @@ export default function Home() {
         const filteredBoosts = boosts.filter(b => !completedBoostIds.has(b.id));
         const matching = tracks.length ? filteredBoosts.filter(b => tracks.includes(b.category)) : filteredBoosts;
         if (!cancelled) setRecommendedBoost(matching[0] ?? filteredBoosts[0] ?? null);
+
+        // Reviewable boost: completed 3+ days ago, has review content, not reviewed in last 7 days
+        const now = Date.now();
+        const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+        const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+        const completedBoostProgress = progressArr.filter(
+          p => p.contentType === "boost" && p.status === "completed" && p.completedAt
+        );
+        const reviewable = completedBoostProgress
+          .filter(p => {
+            const completedAt = Date.parse(p.completedAt);
+            if (!Number.isFinite(completedAt)) return false;
+            if (now - completedAt < THREE_DAYS) return false;
+            if (p.lastReviewedAt) {
+              const lastReview = Date.parse(p.lastReviewedAt);
+              if (Number.isFinite(lastReview) && now - lastReview < SEVEN_DAYS) return false;
+            }
+            return true;
+          })
+          .map(p => {
+            const b = boosts.find(b => b.id === p.contentId);
+            if (!b || !b.review || !Array.isArray(b.review.questions) || b.review.questions.length === 0) return null;
+            return { boost: b, progress: p, daysSinceCompletion: Math.floor((now - Date.parse(p.completedAt)) / (24 * 60 * 60 * 1000)) };
+          })
+          .filter(Boolean)
+          .sort((a, b) => Date.parse(a.progress.completedAt) - Date.parse(b.progress.completedAt));
+        if (!cancelled) setReviewableBoost(reviewable[0] ?? null);
+
       } catch (e) {
         console.error("Home load failed:", e);
       }
@@ -142,6 +169,7 @@ export default function Home() {
 
       <div className="max-w-3xl mx-auto px-4 md:px-8 py-6 md:py-10 space-y-7 md:space-y-9">
 
+        {/* Greeting */}
         <div className="space-y-1">
           <div className="ui-eyebrow">{new Date().toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" })}</div>
           <h1 className="text-2xl md:text-3xl ui-heading">
@@ -149,6 +177,7 @@ export default function Home() {
           </h1>
         </div>
 
+        {/* Today's lesson */}
         {nextLesson && (
           <section
             onClick={() => navigate(`/lesson/${nextLesson.id}`)}
@@ -177,6 +206,7 @@ export default function Home() {
           </section>
         )}
 
+        {/* Recommended boost */}
         {recommendedBoost && (
           <section>
             <div className="flex items-baseline justify-between mb-3">
@@ -209,6 +239,28 @@ export default function Home() {
           </section>
         )}
 
+        {/* Worth refreshing (review nudge) */}
+        {reviewableBoost && (
+          <section>
+            <h3 className="text-sm ui-heading text-text-primary mb-3">Worth refreshing</h3>
+            <div
+              onClick={() => navigate(`/review/${reviewableBoost.boost.id}`)}
+              className="cursor-pointer rounded-lg border border-border bg-surface-1 p-4 hover:border-border-strong transition-colors"
+            >
+              <div className="flex items-start gap-3">
+                <Repeat className="w-4 h-4 text-accent shrink-0 mt-0.5" strokeWidth={1.75} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-text-primary leading-snug">{reviewableBoost.boost.title}</div>
+                  <div className="text-xs text-text-secondary mt-1">
+                    You learned this {reviewableBoost.daysSinceCompletion} day{reviewableBoost.daysSinceCompletion === 1 ? "" : "s"} ago. 90-second review.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* In-progress journeys */}
         {activeJourneys.length > 0 && (
           <section>
             <h3 className="text-sm ui-heading text-text-primary mb-3">In progress</h3>
@@ -235,6 +287,7 @@ export default function Home() {
           </section>
         )}
 
+        {/* Today's signal */}
         {todaySignal && (
           <section>
             <div className="flex items-baseline justify-between mb-3">
