@@ -82,6 +82,10 @@
       "type": "practice",
       "instruction": "Run the two prompts above in your AI of choice (make up a medication name that sounds real — something like \"Lenzaprex\" or \"Norivactin\"). Then paste a short note below: what did you notice? Did the model bite on Prompt A? Did Prompt B catch it?",
       "deliverable": "what you observed running both prompts",
+      "rubricType": "reflection",
+      "maxAttempts": 2,
+      "softGateChars": 30,
+      "lessonContext": "Boost: 'Let AI admit it doesn't know'. The user just ran a side-by-side experiment — Prompt A asks about a made-up medication's side effects with no out, Prompt B adds an out. They're sharing what they observed when they ran both. This is reflection, not a graded prompt — respond conversationally, acknowledge their specific observation, optionally add one useful frame about the technique.",
       "validation": "length",
       "placeholder": "What happened when you ran both prompts?"
     },

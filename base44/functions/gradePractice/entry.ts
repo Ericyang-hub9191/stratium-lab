@@ -10,9 +10,14 @@
        lessonContext: string    // the lesson's title + key concept being practiced
        taskPrompt:    string    // the practice block's instruction to the user
        userResponse:  string    // what the user wrote
-       rubricType:    "rctf" | "brief"    // controls feedback depth
+       rubricType?:   "rctf" | "brief" | "reflection"    // OPTIONAL — if omitted, inferred from taskPrompt
        attemptNumber: 1 | 2     // frames feedback on retries
      }
+
+   Rubric resolution (HYBRID model):
+     - If rubricType is provided explicitly, use it (author override).
+     - If omitted, infer from the taskPrompt's wording. See inferRubricType().
+     - Default for non-prompt-construction practices is "reflection" (no grading).
 
    Output:
      {
@@ -35,11 +40,58 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
 const MIN_USEFUL_CHARS   = 15;
 const MAX_RESPONSE_CHARS = 4000;
 
-const SYSTEM_INSTRUCTIONS = `You are a rigorous but kind teaching assistant evaluating prompt-writing practice submissions for Stratium Lab, a tool that teaches serious AI skills.
+/**
+ * inferRubricType — when the author didn't specify rubricType, decide from the task prompt.
+ *
+ * Heuristic, in priority order:
+ *   1. If the task uses prompt-construction language ("write a prompt", "your prompt", "construct a prompt") → rctf
+ *   2. If the task asks for a short, specific judgment ("diagnose", "identify", "name the…", "what's the issue") → brief
+ *   3. Everything else (reflection, observation, opinion, "what did you notice", "share your experience") → reflection
+ *
+ * Reflection is the default. Rubric grading is the special case.
+ */
+function inferRubricType(taskPrompt) {
+  const t = (taskPrompt || "").toLowerCase();
 
-Evaluate the user's submitted practice response against the rubric and return structured feedback.
+  const promptSignals = [
+    "write a prompt",
+    "write the prompt",
+    "your prompt",
+    "construct a prompt",
+    "draft a prompt",
+    "compose a prompt",
+    "rewrite the prompt",
+    "the prompt should",
+    "covers all four",
+    "role, context, task, format",
+    "rctf",
+  ];
+  if (promptSignals.some(sig => t.includes(sig))) return "rctf";
 
-How you grade:
+  const briefSignals = [
+    "diagnose",
+    "identify which",
+    "identify the",
+    "name the",
+    "name which",
+    "pick the",
+    "which dimension",
+    "which one",
+    "which technique",
+    "what's wrong",
+    "what's missing",
+    "what's the issue",
+  ];
+  if (briefSignals.some(sig => t.includes(sig))) return "brief";
+
+  return "reflection";
+}
+
+const SYSTEM_INSTRUCTIONS = `You are a rigorous but kind teaching assistant for Stratium Lab, a tool that teaches serious AI skills. Your job depends on the rubricType — sometimes you grade prompts, sometimes you respond to reflections. Read the rubric type carefully before responding.
+
+Process the user's submission according to the rubric type below and return structured output. The rubric type tells you whether to grade or to respond conversationally.
+
+How you respond:
 
 For rubricType = "rctf" (R-C-T-F prompt structure):
 - Evaluate four dimensions independently: Role, Context, Task, Format.
@@ -53,6 +105,16 @@ For rubricType = "brief":
 - One verdict (strong / workable / needs-work).
 - 1-2 sentences of feedback. Direct, specific, no preamble.
 - Set "oneChange" to the single most useful revision.
+
+For rubricType = "reflection":
+- The user is sharing an OBSERVATION, REFLECTION, or NOTICING — not writing something to be graded. There is no rubric. There is no "right answer." Don't evaluate the quality of their writing or whether it's "complete."
+- Always set verdict to "strong" (this is a sentinel value; the frontend hides the verdict pill in reflection mode). Always return an empty dimensions array. Always set oneChange to null.
+- The feedback field carries your entire response. Write 2-3 sentences that:
+  (1) Genuinely acknowledge the SPECIFIC thing the user noticed — refer to a detail from their submission, not generic praise.
+  (2) Add ONE useful frame, observation, or piece of context that helps them think about what they noticed more deeply.
+- Don't ask follow-up questions (no question marks at the end). Don't suggest revisions. Don't grade, score, or rank.
+- If the user's reflection is empty of substance ("I tried it, it was fine"), gently invite a more specific noticing without being preachy. Example: "It sounds like nothing surprised you this round — sometimes the technique only stands out on tasks where the model would otherwise have stumbled. Worth trying again on a question with a specific factual answer."
+- Tone: warm, intelligent, conversational. Like a sharp friend who's been through the same exercise. NOT a teacher grading homework.
 
 Calibration:
 - "strong" = would produce a publishable result on the first model run with only minor touch-ups.
@@ -70,12 +132,12 @@ Never:
 - Never grade the user's writing style — grade whether the prompt is likely to produce a good result.
 - Never offer more than one revision. Students who receive 4 suggestions fix none.`;
 
-Deno.serve(async (req: Request): Promise<Response> => {
+Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return json({ error: "POST required" }, 405);
   }
 
-  let body: any;
+  let body;
   try {
     body = await req.json();
   } catch {
@@ -86,7 +148,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     lessonContext = "",
     taskPrompt    = "",
     userResponse  = "",
-    rubricType    = "rctf",
+    rubricType: explicitRubricType = null,
     attemptNumber = 1,
   } = body ?? {};
 
@@ -104,7 +166,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }, 400);
   }
 
-  if (rubricType !== "rctf" && rubricType !== "brief") {
+  const rubricType = (() => {
+    if (explicitRubricType === "rctf" || explicitRubricType === "brief" || explicitRubricType === "reflection") {
+      return explicitRubricType;
+    }
+    return inferRubricType(taskPrompt);
+  })();
+
+  if (rubricType !== "rctf" && rubricType !== "brief" && rubricType !== "reflection") {
     return json({ error: "Invalid rubricType" }, 400);
   }
 
@@ -138,7 +207,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       },
       dimensions: {
         type: "array",
-        description: "For rubricType=rctf: exactly 4 entries (Role, Context, Task, Format). For rubricType=brief: empty array.",
+        description: "For rubricType=rctf: exactly 4 entries (Role, Context, Task, Format). For rubricType=brief or reflection: empty array.",
         items: {
           type: "object",
           properties: {
@@ -151,11 +220,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
       },
       feedback: {
         type: "string",
-        description: "PEEL-structured prose for rctf (4-6 sentences), or 1-2 direct sentences for brief.",
+        description: "PEEL-structured prose for rctf (4-6 sentences); 1-2 direct sentences for brief; 2-3 conversational sentences for reflection.",
       },
       oneChange: {
         type: ["string", "null"],
-        description: "The single most valuable revision the user could make. Null only if the submission is already excellent.",
+        description: "The single most valuable revision for rctf/brief modes. Always null for reflection mode.",
       },
     },
     required: ["verdict", "dimensions", "feedback", "oneChange"],
@@ -168,9 +237,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       model: "claude_opus_4_7",
     });
 
-    return json(result, 200);
+    return json({ ...result, rubricType }, 200);
 
-  } catch (err: any) {
+  } catch (err) {
     console.error("gradePractice failed:", err);
     return json({
       error:   "grading-failed",
@@ -180,7 +249,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 });
 
-function json(body: unknown, status = 200): Response {
+function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { "content-type": "application/json" },

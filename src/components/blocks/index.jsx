@@ -277,17 +277,19 @@ function PracticeBlock({ block, progress, onProgress }) {
   const [showShortConfirm, setShow] = useState(false);
   const blockRef                    = useRef(null);
 
-  const maxAttempts   = block.maxAttempts ?? 2;
-  const softGateChars = block.softGateChars ?? 40;
-  const rubricType    = block.rubricType ?? "rctf";
-  const attemptsUsed  = submissions.length;
-  const attemptsLeft  = Math.max(0, maxAttempts - attemptsUsed);
-  const canSubmit     = attemptsLeft > 0 && !grading && value.trim().length > 0;
+  const maxAttempts    = block.maxAttempts ?? 2;
+  const softGateChars  = block.softGateChars ?? 40;
+  const explicitRubricType = block.rubricType ?? null;
+  const attemptsUsed   = submissions.length;
+  const attemptsLeft   = Math.max(0, maxAttempts - attemptsUsed);
+  const canSubmit      = attemptsLeft > 0 && !grading && value.trim().length > 0;
   const lastSubmission = submissions[submissions.length - 1] ?? null;
 
   const saveDraft = (v) => {
     setValue(v);
-    onProgress?.({ practiceEntries: { ...(progress?.practiceEntries ?? {}), [block.id]: { text: v, submissions } } });
+    onProgress?.({
+      practiceEntries: { ...(progress?.practiceEntries ?? {}), [block.id]: { text: v, submissions } },
+    });
   };
 
   const doSubmit = async () => {
@@ -297,13 +299,11 @@ function PracticeBlock({ block, progress, onProgress }) {
     setGrading(true);
     setErr(null);
     try {
-      // Correct SDK pattern: base44.functions.invoke("functionName", payload)
-      // Returns an Axios-shaped response object; data lives on .data
       const response = await base44.functions.invoke("gradePractice", {
         lessonContext: block.lessonContext ?? "",
         taskPrompt:    block.instruction ?? "",
         userResponse:  value.trim(),
-        rubricType,
+        ...(explicitRubricType ? { rubricType: explicitRubricType } : {}),
         attemptNumber: attemptsUsed + 1,
       });
 
@@ -316,13 +316,19 @@ function PracticeBlock({ block, progress, onProgress }) {
       }
 
       const submission = {
-        text: value.trim(), submittedAt: new Date().toISOString(),
-        verdict: resp.verdict, dimensions: resp.dimensions ?? [],
-        feedback: resp.feedback, oneChange: resp.oneChange ?? null,
+        text:        value.trim(),
+        submittedAt: new Date().toISOString(),
+        verdict:     resp.verdict,
+        dimensions:  resp.dimensions ?? [],
+        feedback:    resp.feedback,
+        oneChange:   resp.oneChange ?? null,
+        rubricType:  resp.rubricType ?? explicitRubricType ?? "reflection",
       };
       const newSubs = [...submissions, submission];
       setSubs(newSubs);
-      onProgress?.({ practiceEntries: { ...(progress?.practiceEntries ?? {}), [block.id]: { text: value, submissions: newSubs } } });
+      onProgress?.({
+        practiceEntries: { ...(progress?.practiceEntries ?? {}), [block.id]: { text: value, submissions: newSubs } },
+      });
       if (blockRef.current) blockRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     } catch (e) {
       console.error("grading failed:", e);
@@ -355,9 +361,9 @@ function PracticeBlock({ block, progress, onProgress }) {
           <div className="flex items-center gap-2">
             {showShortConfirm && <span className="text-[0.85em] muted">This looks short — submit anyway?</span>}
             <button onClick={doSubmit} disabled={!canSubmit} className="btn btn-primary !text-[0.85em] !py-2 !px-4">
-              {grading ? (attemptsUsed === 0 ? "Reading your prompt…" : "Reading your revision…")
+              {grading ? "Reading your response…"
                 : showShortConfirm ? "Submit anyway"
-                : attemptsUsed === 0 ? "Submit for feedback" : "Submit revised attempt"}
+                : attemptsUsed === 0 ? "Submit" : "Submit revised response"}
             </button>
           </div>
         </div>
@@ -376,10 +382,16 @@ function PracticeBlock({ block, progress, onProgress }) {
         </div>
       )}
 
-      {!grading && lastSubmission && <FeedbackPanel submission={lastSubmission} rubricType={rubricType} />}
+      {!grading && lastSubmission && <FeedbackPanel submission={lastSubmission} rubricType={lastSubmission.rubricType} />}
+
       {!grading && lastSubmission && attemptsLeft > 0 && (
-        <div className="text-[0.85em] muted pt-1">Edit your response above and submit a revised attempt. {attemptsLeft} attempt{attemptsLeft === 1 ? "" : "s"} left.</div>
+        <div className="text-[0.85em] muted pt-1">
+          {lastSubmission.rubricType === "reflection"
+            ? `Edit your reflection above and submit again if you want to add more. ${attemptsLeft} update${attemptsLeft === 1 ? "" : "s"} left.`
+            : `Edit your response above and submit a revised attempt. ${attemptsLeft} attempt${attemptsLeft === 1 ? "" : "s"} left.`}
+        </div>
       )}
+
       {!grading && attemptsLeft === 0 && (
         <div className="text-[0.85em] muted pt-1">Your attempts for this practice block are used up. Move on when you're ready.</div>
       )}
@@ -388,6 +400,19 @@ function PracticeBlock({ block, progress, onProgress }) {
 }
 
 function FeedbackPanel({ submission, rubricType }) {
+  // Reflection mode: conversational response, no grading UI
+  if (rubricType === "reflection") {
+    return (
+      <div className="rounded-lg p-4 space-y-2 text-[0.9em] leading-relaxed"
+        style={{ background: "hsla(245, 30%, 55%, 0.05)", border: "1px solid hsla(245, 30%, 55%, 0.18)" }}>
+        <div className="text-[0.75em] uppercase tracking-wider font-semibold" style={{ color: "hsl(var(--accent))" }}>
+          Response
+        </div>
+        <div style={{ color: "hsl(var(--reading-text))" }}>{submission.feedback}</div>
+      </div>
+    );
+  }
+
   const verdictColor  = submission.verdict === "strong" ? "hsl(152, 45%, 35%)" : submission.verdict === "workable" ? "hsl(40, 70%, 40%)" : "hsl(0, 60%, 45%)";
   const verdictBg     = submission.verdict === "strong" ? "hsla(152, 45%, 55%, 0.08)" : submission.verdict === "workable" ? "hsla(40, 70%, 55%, 0.08)" : "hsla(0, 60%, 55%, 0.06)";
   const verdictBorder = submission.verdict === "strong" ? "hsla(152, 45%, 45%, 0.35)" : submission.verdict === "workable" ? "hsla(40, 70%, 50%, 0.35)" : "hsla(0, 60%, 55%, 0.3)";
