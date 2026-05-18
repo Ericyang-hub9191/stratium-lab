@@ -13,7 +13,6 @@
 
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
 
-const MIN_USEFUL_CHARS   = 15;
 const MAX_RESPONSE_CHARS = 4000;
 
 function inferRubricType(taskPrompt) {
@@ -95,7 +94,11 @@ Deno.serve(async (req) => {
     attemptNumber = 1,
   } = body ?? {};
 
-  if (typeof userResponse !== "string" || userResponse.trim().length < MIN_USEFUL_CHARS) {
+  // For match rubric, short answers (e.g. "hallucinations") are valid — skip the min-char gate.
+  const isMatchRubric = explicitRubricType === "match";
+  const minChars = isMatchRubric ? 1 : 15;
+
+  if (typeof userResponse !== "string" || userResponse.trim().length < minChars) {
     return json({
       error: "submission-too-short",
       message: "The submission is too short to evaluate meaningfully. Add more detail and try again.",
