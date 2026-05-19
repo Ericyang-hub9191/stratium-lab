@@ -187,6 +187,15 @@ export default function Home() {
           </h1>
         </div>
 
+        {/* Product promise */}
+        <section className="rounded-lg border border-border bg-surface-1 p-4 md:p-5">
+          <div className="ui-eyebrow mb-1">Stratium Lab</div>
+          <h2 className="text-xl md:text-2xl ui-heading">Stop getting generic AI output.</h2>
+          <p className="text-sm text-text-secondary leading-relaxed mt-2 max-w-2xl">
+            Practice the habits that make AI useful at work: clearer context, better constraints, sharper revision, and more honest judgment.
+          </p>
+        </section>
+
         {/* Today's lesson */}
         {nextLesson && (
           <section

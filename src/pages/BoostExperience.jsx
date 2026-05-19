@@ -213,18 +213,22 @@ export default function BoostExperience() {
         </article>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border backdrop-blur-xl" style={{ background: "hsla(var(--bg), 0.92)" }}>
+      <div className="fixed bottom-0 left-0 md:left-60 right-0 z-30 border-t border-border bg-bg/95 backdrop-blur-xl shadow-[0_-10px_30px_rgba(0,0,0,0.28)]">
         {isCompleted && !outcomeAnswered ? (
-          <div className="max-w-2xl mx-auto px-4 md:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex-1">
-              <div className="text-xs font-medium text-text-primary">Did the second result show you something the first one missed?</div>
-              <div className="text-[11px] text-text-muted mt-0.5">One quiet signal so we know whether the exercise landed.</div>
+          <div className="max-w-3xl mx-auto px-4 md:px-6 py-4 flex flex-col lg:flex-row lg:items-center gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="text-sm md:text-base font-medium text-text-primary leading-snug">
+                Did the prompt you tried produce a noticeably better AI response?
+              </div>
+              <div className="text-xs md:text-sm text-text-secondary mt-1 leading-relaxed">
+                Answer based on the result you saw in your own AI tool.
+              </div>
             </div>
-            <div className="grid grid-cols-4 sm:flex gap-2">
-              <button onClick={() => answerOutcome("yes")} className="btn btn-primary !py-2 !px-3 !text-xs">Yes</button>
-              <button onClick={() => answerOutcome("somewhat")} className="btn btn-ghost !py-2 !px-3 !text-xs">Somewhat</button>
-              <button onClick={() => answerOutcome("not_really")} className="btn btn-ghost !py-2 !px-3 !text-xs">Not really</button>
-              <button onClick={() => answerOutcome("unknown")} className="btn btn-ghost !py-2 !px-3 !text-xs">Skip</button>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:shrink-0">
+              <button onClick={() => answerOutcome("yes")} className="btn btn-primary min-h-11 !px-4 !text-sm">Yes</button>
+              <button onClick={() => answerOutcome("somewhat")} className="btn btn-ghost min-h-11 !px-4 !text-sm">Somewhat</button>
+              <button onClick={() => answerOutcome("not_really")} className="btn btn-ghost min-h-11 !px-4 !text-sm">Not yet</button>
+              <button onClick={() => answerOutcome("unknown")} className="btn btn-quiet min-h-11 !px-4 !text-sm">Skip</button>
             </div>
           </div>
         ) : (
