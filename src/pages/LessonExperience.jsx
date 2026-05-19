@@ -408,7 +408,7 @@ function CompletionScreen({ lesson, journey, progress, nextLesson, recommendedBo
 
           {recommendedBoost && (
             <button
-              onClick={() => navigate(`/boost/${recommendedBoost.id}`)}
+              onClick={() => navigate(`/boost/${recommendedBoost.id}?source=lesson_completion`)}
               className="w-full rounded-lg border border-border bg-surface-1 hover:border-border-strong transition-colors p-4 text-left flex items-center gap-3"
             >
               <div className="w-8 h-8 rounded-md bg-surface-2 flex items-center justify-center shrink-0">

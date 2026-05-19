@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { queryClientInstance } from "@/lib/query-client";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import PageNotFound from "./lib/PageNotFound";
@@ -17,6 +18,15 @@ import Me from "./pages/Me";
 import Signals from "./pages/Signals";
 import SignalDetail from "./pages/SignalDetail";
 import ReviewScreen from "./pages/ReviewScreen";
+import { initAnalytics } from "@/lib/analytics";
+
+function AnalyticsBootstrap() {
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
+  return null;
+}
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -61,6 +71,7 @@ export default function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
+        <AnalyticsBootstrap />
         <Router>
           <AuthenticatedApp />
         </Router>

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ExternalLink, BookOpen, Zap } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { applyBoostContentOverrides } from "@/lib/content-overrides";
 
 export default function SignalDetail() {
   const { slug } = useParams();
@@ -31,7 +32,7 @@ export default function SignalDetail() {
         }
         if (sig?.relatedBoostSlug) {
           const b = await base44.entities.Boost.filter({ slug: sig.relatedBoostSlug });
-          if (!cancelled) setRelatedBoost(b[0] ?? null);
+          if (!cancelled) setRelatedBoost(applyBoostContentOverrides(b[0] ?? null));
         }
       } catch (e) {
         console.error("Signal load failed:", e);
@@ -112,7 +113,7 @@ export default function SignalDetail() {
                 )}
                 {relatedBoost && (
                   <button
-                    onClick={() => navigate(`/boost/${relatedBoost.id}`)}
+                    onClick={() => navigate(`/boost/${relatedBoost.id}?source=signal_detail`)}
                     className="reading-card w-full text-left rounded-xl p-4 flex items-start gap-3 hover:border-[hsl(var(--reading-accent))] transition-colors"
                   >
                     <Zap className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "hsl(var(--reading-accent))" }} />

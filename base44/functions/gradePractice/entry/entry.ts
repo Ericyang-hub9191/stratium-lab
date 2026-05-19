@@ -35,7 +35,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
 const MIN_USEFUL_CHARS   = 15;
 const MAX_RESPONSE_CHARS = 4000;
 
-const SYSTEM_INSTRUCTIONS = `You are a rigorous but kind teaching assistant evaluating prompt-writing practice submissions for Synthetica, a tool that teaches serious AI skills.
+const SYSTEM_INSTRUCTIONS = `You are a rigorous but kind teaching assistant evaluating prompt-writing practice submissions for Stratium Lab, a tool that teaches serious AI skills.
 
 Evaluate the user's submitted practice response against the rubric and return structured feedback.
 

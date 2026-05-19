@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Search, Clock, BookOpen, Zap, Repeat } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
+import { applyBoostListContentOverrides } from "@/lib/content-overrides";
 
 const JOURNEY_TRACKS   = ["all", "prompting", "writing", "research", "automation", "python", "data", "rag", "business", "biology", "safety", "psychology", "mlops", "build-your-own"];
 const BOOST_CATEGORIES = ["all", "prompting", "writing", "research", "automation", "python", "data", "productivity", "rag"];
@@ -33,7 +34,7 @@ export default function Library() {
         ]);
         if (cancelled) return;
         setJourneys(j);
-        setBoosts(b);
+        setBoosts(applyBoostListContentOverrides(b));
         if (user) {
           const p = await base44.entities.UserProgress.filter({ userId: user.id });
           if (!cancelled) setProgress(p);
@@ -209,7 +210,7 @@ function JourneyCard({ journey, navigate }) {
 
 function BoostCard({ boost, done, navigate }) {
   return (
-    <div onClick={() => navigate(`/boost/${boost.id}`)} className="cursor-pointer rounded-lg border border-border bg-surface-1 p-4 hover:border-border-strong transition-colors">
+    <div onClick={() => navigate(`/boost/${boost.id}?source=library_boosts`)} className="cursor-pointer rounded-lg border border-border bg-surface-1 p-4 hover:border-border-strong transition-colors">
       <div className="flex items-start gap-3">
         <Zap className="w-4 h-4 text-accent shrink-0 mt-0.5" strokeWidth={1.75} />
         <div className="flex-1 min-w-0">
@@ -241,7 +242,7 @@ function ReviewCard({ boost, progress, navigate }) {
     return `Reviewed ${days} days ago`;
   })();
   return (
-    <div onClick={() => navigate(`/review/${boost.id}`)} className="cursor-pointer rounded-lg border border-border bg-surface-1 p-4 hover:border-border-strong transition-colors">
+    <div onClick={() => navigate(`/review/${boost.id}?source=library_reviews`)} className="cursor-pointer rounded-lg border border-border bg-surface-1 p-4 hover:border-border-strong transition-colors">
       <div className="flex items-start gap-3">
         <Repeat className="w-4 h-4 text-accent shrink-0 mt-0.5" strokeWidth={1.75} />
         <div className="flex-1 min-w-0">

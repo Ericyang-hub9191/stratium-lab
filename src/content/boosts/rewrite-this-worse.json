@@ -8,6 +8,50 @@
   "tags": ["writing", "editing", "claude", "chatgpt"],
   "isPublished": true,
 
+  "review": {
+    "takeaway": "To judge AI output well, look for the specific choices that make it useful: concrete audience, clear purpose, relevant detail, and a usable shape.",
+    "questions": [
+      {
+        "type": "mcq",
+        "question": "You ask AI for a client email and it gives you something polished but vague. Which revision would most directly improve it?",
+        "choices": [
+          { "id": "a", "text": "Ask it to make the email longer and more professional." },
+          { "id": "b", "text": "Tell it the recipient, the specific situation, and the action the email should lead to." },
+          { "id": "c", "text": "Ask it to use more persuasive language." },
+          { "id": "d", "text": "Ask it for five versions and pick the best one." }
+        ],
+        "correct": "b",
+        "explanation": "Audience, context, and purpose give the output something real to optimize around. Length, polish, or more versions can still hide the same vagueness."
+      },
+      {
+        "type": "fill-in",
+        "prompt": "Name one quality that usually separates useful AI writing from generic AI writing.",
+        "acceptedAnswers": ["specific audience", "clear audience", "clear purpose", "concrete details", "relevant context", "usable format", "specific constraints", "clear next action"],
+        "answerHint": "one quality",
+        "explanation": "Useful AI writing usually has a clear audience, purpose, context, constraint, or output shape. Generic writing is often fluent but untethered."
+      },
+      {
+        "type": "mcq",
+        "question": "Why is rewriting a good output to make it worse a useful exercise?",
+        "choices": [
+          { "id": "a", "text": "It teaches you to notice which choices made the original output work." },
+          { "id": "b", "text": "It trains the AI to avoid making mistakes next time." },
+          { "id": "c", "text": "It gives you a bad version to use as a template." },
+          { "id": "d", "text": "It proves that AI output is usually unreliable." }
+        ],
+        "correct": "a",
+        "explanation": "Breaking a good answer on purpose makes the hidden quality signals easier to see. The main training is for your judgment, not for the model."
+      },
+      {
+        "type": "fill-in",
+        "prompt": "A draft sounds like it could apply to any company. What is one thing you could add to make it less generic?",
+        "acceptedAnswers": ["company context", "specific audience", "target customer", "business goal", "example", "constraints", "tone requirements", "specific situation", "desired outcome"],
+        "answerHint": "one added detail",
+        "explanation": "Add something that anchors the draft: audience, company context, goal, example, constraint, tone, situation, or desired outcome."
+      }
+    ]
+  },
+
   "blocks": [
     { "id": "b1", "type": "text", "markdown": "AI outputs have a predictable house style: over-polished, vaguely corporate, and longer than needed. You can feel it when you read it — _\"delving into,\"_ _\"comprehensive solutions,\"_ _\"in today's rapidly evolving landscape.\"_\n\nThere's a 30-second move that fixes this more reliably than any other prompt trick: tell the model to _write it worse on purpose, then keep the good parts._" },
     { "id": "b2", "type": "heading", "level": 2, "text": "The trick" },

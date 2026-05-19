@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Check, Home as HomeIcon } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { inlineMd } from "@/components/blocks";
+import { getNavigationSource, trackEvent } from "@/lib/analytics";
+import { applyBoostContentOverrides } from "@/lib/content-overrides";
 
 export default function ReviewScreen() {
   const { boostId } = useParams();
@@ -15,6 +17,7 @@ export default function ReviewScreen() {
   const [answers, setAnswers] = useState({});
   const [completed, setCompleted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const startedAtRef = useRef(Date.now());
 
   useEffect(() => {
     let cancelled = false;
@@ -25,7 +28,7 @@ export default function ReviewScreen() {
           base44.auth.me(),
         ]);
         if (cancelled) return;
-        const b = boostRows?.[0];
+        const b = applyBoostContentOverrides(boostRows?.[0]);
         if (!b) { setError("Boost not found."); setLoading(false); return; }
         if (!b.review || !Array.isArray(b.review.questions) || b.review.questions.length === 0) {
           setError("No review available for this boost."); setLoading(false); return;
@@ -40,6 +43,11 @@ export default function ReviewScreen() {
         }
         setBoost(b);
         setProgress(p);
+        trackEvent("review_started", {
+          boost_id: b.id,
+          days_since_completion: p.completedAt ? Math.floor((Date.now() - Date.parse(p.completedAt)) / (24 * 60 * 60 * 1000)) : null,
+          source: getNavigationSource(),
+        });
         setLoading(false);
       } catch (e) {
         if (cancelled) return;
@@ -100,6 +108,13 @@ export default function ReviewScreen() {
       await base44.entities.UserProgress.update(progress.id, {
         lastReviewedAt: new Date().toISOString(),
         reviewCount: (progress.reviewCount ?? 0) + 1,
+      });
+      trackEvent("review_completed", {
+        boost_id: boost.id,
+        score: Object.values(answers).filter(a => a.isCorrect).length,
+        question_count: questions.length,
+        match_questions_count: questions.filter(q => q.type === "fill-in").length,
+        time_to_complete_seconds: Math.round((Date.now() - startedAtRef.current) / 1000),
       });
     } catch (e) {
       console.error("review save failed:", e);

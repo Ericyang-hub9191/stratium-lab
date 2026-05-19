@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, Clock, BookOpen, Zap, Radio, ChevronRight, Repeat } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import OnboardingModal from "@/components/OnboardingModal";
+import { trackEvent } from "@/lib/analytics";
+import { applyBoostListContentOverrides } from "@/lib/content-overrides";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -88,7 +90,7 @@ export default function Home() {
         const completedBoostIds = new Set(
           progressArr.filter(p => p.contentType === "boost" && p.status === "completed").map(p => p.contentId)
         );
-        const boosts = await base44.entities.Boost.filter({ isPublished: true });
+        const boosts = applyBoostListContentOverrides(await base44.entities.Boost.filter({ isPublished: true }));
         const tracks = userStats?.favoriteTracks ?? [];
         const filteredBoosts = boosts.filter(b => !completedBoostIds.has(b.id));
         const matching = tracks.length ? filteredBoosts.filter(b => tracks.includes(b.category)) : filteredBoosts;
@@ -143,7 +145,15 @@ export default function Home() {
         });
       } catch (_) {}
     }
+    trackEvent("onboarding_completed", {
+      selected_goal: selections.tracks?.[0] ?? "all",
+      selected_use_case: selections.tracks?.join(",") || "all",
+      time_to_complete_seconds: selections.timeToCompleteSeconds ?? null,
+    });
     setShowOnboarding(false);
+    if (recommendedBoost?.id) {
+      navigate(`/boost/${recommendedBoost.id}?source=onboarding`);
+    }
   };
 
   if (loading) {
@@ -216,7 +226,7 @@ export default function Home() {
               </button>
             </div>
             <div
-              onClick={() => navigate(`/boost/${recommendedBoost.id}`)}
+              onClick={() => navigate(`/boost/${recommendedBoost.id}?source=home_recommended`)}
               className="cursor-pointer rounded-lg border border-border bg-surface-1 p-4 hover:border-border-strong transition-colors"
             >
               <div className="flex items-start gap-3">
@@ -244,7 +254,7 @@ export default function Home() {
           <section>
             <h3 className="text-sm ui-heading text-text-primary mb-3">Worth refreshing</h3>
             <div
-              onClick={() => navigate(`/review/${reviewableBoost.boost.id}`)}
+              onClick={() => navigate(`/review/${reviewableBoost.boost.id}?source=home_refresh`)}
               className="cursor-pointer rounded-lg border border-border bg-surface-1 p-4 hover:border-border-strong transition-colors"
             >
               <div className="flex items-start gap-3">

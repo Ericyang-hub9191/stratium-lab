@@ -8,6 +8,50 @@
   "tags": ["prompting", "reasoning", "accuracy"],
   "isPublished": true,
 
+  "review": {
+    "takeaway": "When an AI answer seems convincing, ask it to argue against itself so you can see assumptions, weak points, and missing alternatives before you trust it.",
+    "questions": [
+      {
+        "type": "mcq",
+        "question": "AI gives you a confident recommendation for a pricing change. What is the strongest next prompt?",
+        "choices": [
+          { "id": "a", "text": "Make this recommendation sound more confident." },
+          { "id": "b", "text": "Argue against this recommendation. What assumptions could be wrong?" },
+          { "id": "c", "text": "Rewrite this in a shorter format." },
+          { "id": "d", "text": "Give me three slogans for this pricing change." }
+        ],
+        "correct": "b",
+        "explanation": "This forces a stress test of the answer instead of polishing it. Confidence is not the same as reliability."
+      },
+      {
+        "type": "fill-in",
+        "prompt": "What is one thing you are trying to uncover when you ask AI to critique its own answer?",
+        "acceptedAnswers": ["assumptions", "weak points", "missing alternatives", "risks", "counterarguments", "uncertainty", "failure modes", "what could be wrong", "blind spots"],
+        "answerHint": "one risk or blind spot",
+        "explanation": "Self-critique is meant to surface assumptions, weak points, risks, counterarguments, missing alternatives, or failure modes."
+      },
+      {
+        "type": "mcq",
+        "question": "When is self-critique most useful?",
+        "choices": [
+          { "id": "a", "text": "After an answer looks plausible enough that you might act on it." },
+          { "id": "b", "text": "Only when the answer is obviously wrong." },
+          { "id": "c", "text": "Before giving the AI any context." },
+          { "id": "d", "text": "Only for technical coding tasks." }
+        ],
+        "correct": "a",
+        "explanation": "That is the moment when hidden assumptions become dangerous. Obvious errors are easy to catch; plausible errors are the real risk."
+      },
+      {
+        "type": "fill-in",
+        "prompt": "Write a short follow-up prompt that would make AI stress-test its previous answer.",
+        "acceptedAnswers": ["argue against this", "critique your answer", "what assumptions could be wrong", "what are the weak points", "what did you miss", "give me the counterargument", "stress test this answer", "where could this fail", "what would a smart critic say"],
+        "answerHint": "short follow-up prompt",
+        "explanation": "Any direct request for critique, counterargument, assumptions, weak points, or failure modes captures the move."
+      }
+    ]
+  },
+
   "blocks": [
     { "id": "b1", "type": "text", "markdown": "Language models have a strong bias: once they start giving an answer, they commit to it. If the answer was wrong, the model will confidently defend it — sometimes with made-up supporting reasoning.\n\nYou can break this with one line appended to any reasoning prompt." },
     { "id": "b2", "type": "prompt", "prompt": "After your answer, argue against it as if you were a skeptical colleague. What's the strongest case that your answer is wrong? If that case is compelling, revise your answer.", "annotation": "You're not asking the model to second-guess politely. You're asking it to adversarially stress-test its own output. On anything involving numbers, policy, or multi-step reasoning, this catches ~30% more errors than a plain prompt, at zero added cost." },

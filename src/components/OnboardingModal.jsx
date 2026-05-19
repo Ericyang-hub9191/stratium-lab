@@ -22,6 +22,7 @@ const TRACK_OPTIONS = [
 export default function OnboardingModal({ onDone }) {
   const [slide, setSlide] = useState(0);
   const [selected, setSelected] = useState([]);
+  const [startedAt] = useState(Date.now());
 
   const totalSlides = 3;
   const isLast = slide === totalSlides - 1;
@@ -32,7 +33,10 @@ export default function OnboardingModal({ onDone }) {
 
   const next = () => {
     if (isLast) {
-      onDone({ tracks: selected });
+      onDone({
+        tracks: selected,
+        timeToCompleteSeconds: Math.round((Date.now() - startedAt) / 1000),
+      });
     } else {
       setSlide(s => s + 1);
     }
@@ -61,10 +65,10 @@ export default function OnboardingModal({ onDone }) {
           <div className="space-y-4 text-center">
             <h2 className="text-xl ui-heading">Welcome to Stratium Lab.</h2>
             <p className="text-sm text-text-secondary leading-relaxed">
-              A serious tool for getting better at using AI. Two formats: short Boosts you can do in 3 minutes, and longer Journeys that build real depth.
+              Stop getting generic AI output. Stratium Lab trains the habits that make AI useful at work: clearer context, better constraints, sharper revision, and more honest judgment.
             </p>
             <p className="text-sm text-text-secondary leading-relaxed">
-              Every lesson has a checkpoint — not to test you, but to make sure something actually stuck.
+              The first exercise takes about 10 minutes. You'll run prompts in the AI tool you already use and see what changes.
             </p>
           </div>
         )}
@@ -107,13 +111,13 @@ export default function OnboardingModal({ onDone }) {
               Streaks here aren't a punishment system. The point is the work, not the number. Come back when you can — but try to come back.
             </p>
             <p className="text-sm text-text-secondary leading-relaxed">
-              When you finish a lesson, the answer to "did I really learn that?" lives in the checkpoint. Take it seriously.
+              When you finish the first exercise, the important question is simple: did the second result show you something the first one missed?
             </p>
           </div>
         )}
 
         <button onClick={next} className="btn btn-primary w-full">
-          {isLast ? "Get started" : "Next"}
+          {isLast ? "Start the 10-minute exercise" : "Next"}
         </button>
       </div>
     </div>

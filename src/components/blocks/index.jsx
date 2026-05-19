@@ -5,6 +5,7 @@
 import { useState, useRef } from "react";
 import { Check, X, Copy, ExternalLink, Info, Lightbulb, AlertTriangle, ShieldAlert } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { markFirstSessionStep, trackEvent } from "@/lib/analytics";
 
 export function inlineMd(text = "") {
   const parts = [];
@@ -108,10 +109,24 @@ function CalloutBlock({ block }) {
   );
 }
 
-function PromptBlock({ block }) {
+function PromptBlock({ block, progress }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
-    try { await navigator.clipboard.writeText(block.prompt ?? ""); setCopied(true); setTimeout(() => setCopied(false), 1400); } catch (_) {}
+    try {
+      await navigator.clipboard.writeText(block.prompt ?? "");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1400);
+      if (progress?.contentType === "boost") {
+        const payload = {
+          boost_id: progress.contentId,
+          block_id: block.id,
+          prompt_variant: block.label ?? block.id ?? "prompt",
+          step_name: block.title ?? block.label ?? "prompt",
+        };
+        trackEvent("prompt_copied", payload);
+        markFirstSessionStep("prompt_copied", { boost_id: progress.contentId });
+      }
+    } catch (_) {}
   };
   return (
     <div className="reading-card rounded-xl overflow-hidden">
@@ -298,6 +313,26 @@ function PracticeBlock({ block, progress, onProgress }) {
     setShow(false);
     setGrading(true);
     setErr(null);
+    const requestedAt = Date.now();
+    const rubricType = explicitRubricType ?? "reflection";
+    const isBoostPractice = progress?.contentType === "boost";
+    const isFirstReflection = isBoostPractice && Object.values(progress?.practiceEntries ?? {}).every(entry => {
+      if (!entry) return true;
+      if (typeof entry === "string") return entry.trim().length === 0;
+      return !Array.isArray(entry.submissions) || entry.submissions.length === 0;
+    });
+    if (isBoostPractice) {
+      const wordCount = value.trim().split(/\s+/).filter(Boolean).length;
+      trackEvent("reflection_submitted", {
+        boost_id: progress.contentId,
+        block_id: block.id,
+        rubric_type: rubricType,
+        word_count: wordCount,
+        is_first_reflection: isFirstReflection,
+      });
+      markFirstSessionStep("prompt_used", { boost_id: progress.contentId });
+      markFirstSessionStep("reflection_submitted", { boost_id: progress.contentId });
+    }
     try {
       const response = await base44.functions.invoke("gradePractice", {
         lessonContext: block.lessonContext ?? "",
@@ -329,10 +364,21 @@ function PracticeBlock({ block, progress, onProgress }) {
       onProgress?.({
         practiceEntries: { ...(progress?.practiceEntries ?? {}), [block.id]: { text: value, submissions: newSubs } },
       });
+      if (isBoostPractice) {
+        trackEvent("practice_feedback_viewed", {
+          boost_id: progress.contentId,
+          block_id: block.id,
+          rubric_type: submission.rubricType,
+          verdict: submission.verdict,
+          latency_ms: Date.now() - requestedAt,
+          fallback_used: false,
+        });
+        markFirstSessionStep("practice_feedback_viewed", { boost_id: progress.contentId });
+      }
       if (blockRef.current) blockRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     } catch (e) {
       console.error("grading failed:", e);
-      setErr("The grader is unavailable right now. Try again in a moment.");
+      setErr("Feedback is unavailable right now. Try again in a moment.");
     } finally {
       setGrading(false);
     }
@@ -493,7 +539,7 @@ export default function Block({ block, progress, onProgress }) {
     case "code":      return <CodeBlock block={block} />;
     case "example":   return <ExampleBlock block={block} />;
     case "callout":   return <CalloutBlock block={block} />;
-    case "prompt":    return <PromptBlock block={block} />;
+    case "prompt":    return <PromptBlock block={block} progress={progress} />;
     case "compare":   return <CompareBlock block={block} />;
     case "check":     return <CheckBlock block={block} progress={progress} onProgress={onProgress} />;
     case "practice":  return <PracticeBlock block={block} progress={progress} onProgress={onProgress} />;
