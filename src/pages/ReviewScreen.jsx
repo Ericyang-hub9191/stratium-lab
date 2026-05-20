@@ -180,7 +180,7 @@ export default function ReviewScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-bg pb-24">
+    <div className="min-h-screen pb-24" style={{ background: "hsl(var(--reading-bg))" }}>
       <div className="sticky top-0 z-10 border-b border-border bg-bg/95 backdrop-blur">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-2">
           <button onClick={() => navigate(-1)} className="btn btn-ghost !py-1.5 !px-2.5" aria-label="Back">
@@ -188,15 +188,15 @@ export default function ReviewScreen() {
           </button>
           <div className="flex-1 min-w-0">
             <div className="ui-eyebrow">Review · {questions.length} questions</div>
-            <div className="text-sm font-medium truncate">{boost.title}</div>
+            <div className="text-sm font-medium text-text-primary truncate">{boost.title}</div>
           </div>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        <div className="rounded-xl p-5" style={{ background: "hsla(var(--accent), 0.08)", border: "1px solid hsla(var(--accent), 0.25)" }}>
+        <div className="rounded-xl p-5" style={{ background: "hsla(var(--accent), 0.10)", border: "1px solid hsla(var(--accent), 0.35)" }}>
           <div className="text-[11px] font-medium uppercase tracking-wider text-accent mb-2">You learned this</div>
-          <div className="text-base text-text-primary leading-relaxed">{boost.review.takeaway}</div>
+          <div className="text-base leading-relaxed" style={{ color: "hsl(var(--reading-text))" }}>{boost.review.takeaway}</div>
         </div>
 
         {questions.map((q, idx) => (
@@ -244,8 +244,8 @@ function ReviewQuestion({ index, question, answer, onAnswerMCQ, onSubmitFillIn }
                 disabled={isAnswered}
                 className="w-full text-left rounded-lg p-3 transition-colors"
                 style={{
-                  background: showAsRight ? "hsla(152, 45%, 55%, 0.10)" : showAsWrong ? "hsla(0, 60%, 55%, 0.08)" : isSelected ? "hsla(var(--accent), 0.10)" : "transparent",
-                  border: showAsRight ? "1px solid hsla(152, 45%, 45%, 0.4)" : showAsWrong ? "1px solid hsla(0, 60%, 55%, 0.3)" : "1px solid hsl(var(--reading-border))",
+                  background: showAsRight ? "hsla(152, 45%, 55%, 0.12)" : showAsWrong ? "hsla(0, 60%, 55%, 0.10)" : isSelected ? "hsla(var(--accent), 0.12)" : "hsl(var(--reading-surface))",
+                  border: showAsRight ? "1px solid hsla(152, 45%, 45%, 0.5)" : showAsWrong ? "1px solid hsla(0, 60%, 55%, 0.4)" : "1px solid hsl(var(--reading-border))",
                   cursor: isAnswered ? "default" : "pointer",
                 }}
               >
