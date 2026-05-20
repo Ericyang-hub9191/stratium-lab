@@ -155,7 +155,7 @@ export default function Library() {
                 "shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors capitalize",
                 filter === opt
                   ? "border-accent bg-[hsla(var(--accent),0.12)] text-text-primary"
-                  : "border-border bg-transparent text-text-secondary hover:border-border-strong hover:text-text-primary"
+                  : "border-border bg-surface-1 text-text-secondary hover:border-border-strong hover:text-text-primary"
               )}
             >
               {opt === "all" ? "All" : opt}
@@ -188,7 +188,7 @@ export default function Library() {
 
 function JourneyCard({ journey, navigate }) {
   return (
-    <div onClick={() => navigate(`/journey/${journey.slug}`)} className="cursor-pointer rounded-lg border border-border bg-surface-1 p-4 hover:border-border-strong transition-colors">
+    <div onClick={() => navigate(`/journey/${journey.slug}`)} className="cursor-pointer rounded-lg border border-border bg-surface-1 p-4 hover:border-accent transition-colors">
       <div className="flex items-start gap-3">
         <BookOpen className="w-4 h-4 text-accent shrink-0 mt-0.5" strokeWidth={1.75} />
         <div className="flex-1 min-w-0">
@@ -210,7 +210,7 @@ function JourneyCard({ journey, navigate }) {
 
 function BoostCard({ boost, done, navigate }) {
   return (
-    <div onClick={() => navigate(`/boost/${boost.id}?source=library_boosts`)} className="cursor-pointer rounded-lg border border-border bg-surface-1 p-4 hover:border-border-strong transition-colors">
+    <div onClick={() => navigate(`/boost/${boost.id}?source=library_boosts`)} className="cursor-pointer rounded-lg border border-border bg-surface-1 p-4 hover:border-accent transition-colors">
       <div className="flex items-start gap-3">
         <Zap className="w-4 h-4 text-accent shrink-0 mt-0.5" strokeWidth={1.75} />
         <div className="flex-1 min-w-0">
@@ -242,7 +242,7 @@ function ReviewCard({ boost, progress, navigate }) {
     return `Reviewed ${days} days ago`;
   })();
   return (
-    <div onClick={() => navigate(`/review/${boost.id}?source=library_reviews`)} className="cursor-pointer rounded-lg border border-border bg-surface-1 p-4 hover:border-border-strong transition-colors">
+    <div onClick={() => navigate(`/review/${boost.id}?source=library_reviews`)} className="cursor-pointer rounded-lg border border-border bg-surface-1 p-4 hover:border-accent transition-colors">
       <div className="flex items-start gap-3">
         <Repeat className="w-4 h-4 text-accent shrink-0 mt-0.5" strokeWidth={1.75} />
         <div className="flex-1 min-w-0">

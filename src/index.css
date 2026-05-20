@@ -120,10 +120,23 @@
     letter-spacing: 0.002em;
   }
 
-  .reading-surface .reading-card {
+  .reading-card {
     background: hsl(var(--reading-surface));
     border: 1px solid hsl(var(--reading-border));
     color: hsl(var(--reading-text));
+  }
+
+  .reading-card .ui-eyebrow {
+    color: hsl(var(--reading-muted));
+  }
+
+  .reading-card .btn-ghost {
+    color: hsl(var(--reading-text));
+    border-color: hsl(var(--reading-border));
+  }
+  .reading-card .btn-ghost:hover:not(:disabled) {
+    background: hsl(var(--reading-code-bg));
+    border-color: hsl(var(--reading-accent));
   }
 
   .reading-surface a {
@@ -239,7 +252,7 @@
     transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
     cursor: pointer;
   }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn:disabled { opacity: 0.62; cursor: not-allowed; }
 
   .btn-primary {
     background: hsl(var(--accent));
@@ -248,7 +261,7 @@
   .btn-primary:hover:not(:disabled) { background: hsl(var(--accent-hover)); }
 
   .btn-ghost {
-    background: transparent;
+    background: hsl(var(--surface-1));
     color: hsl(var(--text-primary));
     border-color: hsl(var(--border));
   }
@@ -259,10 +272,12 @@
 
   .btn-quiet {
     background: transparent;
-    color: hsl(var(--text-secondary));
+    color: hsl(var(--text-primary));
+    border-color: hsl(var(--border));
   }
   .btn-quiet:hover:not(:disabled) {
-    color: hsl(var(--text-primary));
+    background: hsl(var(--surface-2));
+    border-color: hsl(var(--border-strong));
   }
 
   /* ─── Focus ring — single consistent style ──────────── */

@@ -198,7 +198,7 @@ export default function BoostExperience() {
       </div>
 
       <div className="flex-1 reading-surface py-8 md:py-12 px-4 md:px-8 animate-fade-in">
-        <article className="max-w-2xl mx-auto space-y-6 pb-28">
+        <article className="max-w-2xl mx-auto space-y-6 pb-36">
           <header className="space-y-3 pb-4 mb-2 border-b" style={{ borderColor: "hsl(var(--reading-border))" }}>
             <div className="eyebrow">Quick Boost · {boost.category}</div>
             <h1 className="!mt-0">{boost.title}</h1>
