@@ -151,8 +151,8 @@ export default function Home() {
       time_to_complete_seconds: selections.timeToCompleteSeconds ?? null,
     });
     setShowOnboarding(false);
-    if (recommendedBoost?.id) {
-      navigate(`/boost/${recommendedBoost.id}?source=onboarding`);
+    if (selections.firstBoostSlug) {
+      navigate(`/boost/${selections.firstBoostSlug}?source=onboarding`);
     }
   };
 

@@ -3,6 +3,7 @@
    ───────────────────────────────────────────────────────────── */
 
 import { useState } from "react";
+import firstSessionBoost from "@/content/boosts/let-ai-admit-it-doesnt-know.json";
 
 const TRACK_OPTIONS = [
   { id: "prompting",       label: "Better prompting",          desc: "Day-to-day skill for any AI tool" },
@@ -35,6 +36,7 @@ export default function OnboardingModal({ onDone }) {
     if (isLast) {
       onDone({
         tracks: selected,
+        firstBoostSlug: firstSessionBoost.slug,
         timeToCompleteSeconds: Math.round((Date.now() - startedAt) / 1000),
       });
     } else {
