@@ -19,6 +19,14 @@ function countPracticeSubmissions(progress) {
   }).length;
 }
 
+async function findBoost(idOrSlug) {
+  const boostResults = await base44.entities.Boost.filter({ id: idOrSlug });
+  if (boostResults[0]) return boostResults[0];
+
+  const slugResults = await base44.entities.Boost.filter({ slug: idOrSlug, isPublished: true });
+  return slugResults[0] ?? null;
+}
+
 export default function BoostExperience() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -36,11 +44,11 @@ export default function BoostExperience() {
     (async () => {
       try {
         const [boostResults, currentUser] = await Promise.all([
-          base44.entities.Boost.filter({ id }),
+          findBoost(id),
           base44.auth.me().catch(() => null),
         ]);
         if (cancelled) return;
-        const rec = applyBoostContentOverrides(boostResults[0] ?? null);
+        const rec = applyBoostContentOverrides(boostResults);
         setBoost(rec);
         setUser(currentUser);
 
