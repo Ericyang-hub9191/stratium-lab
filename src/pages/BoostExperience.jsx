@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Clock, Check, Zap } from "lucide-react";
+import { ArrowLeft, Clock, Check, Zap, Repeat } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { updateStreak, updateUserStatsForBoost } from "@/lib/progress-utils";
 import Block, { allRequiredChecksPassed } from "@/components/blocks";
@@ -228,10 +228,26 @@ export default function BoostExperience() {
     if (!user?.id || !boost?.id) return;
     localStorage.setItem(`stratiumlab_outcome_${user.id}_${boost.id}`, "true");
     setOutcomeAnswered(true);
+    if (isFirstSessionProofBoost) {
+      trackEvent("first_proof_beta_feedback_submitted", {
+        boost_id: boost.id,
+        noticed_output_difference: noticedOutputDifference,
+      });
+    }
     markFirstSessionStep("outcome_answered", {
       boost_id: boost.id,
       noticed_output_difference: noticedOutputDifference,
     });
+  };
+
+  const startFirstProofReview = () => {
+    if (!boost?.id) return;
+    trackEvent("first_proof_review_handoff_clicked", {
+      boost_id: boost.id,
+      has_review: Boolean(boost.review?.questions?.length),
+      source: "boost_completion",
+    });
+    navigate(`/review/${boost.id}?source=first_proof_handoff`);
   };
 
   const firstProofSteps = [
@@ -307,11 +323,18 @@ export default function BoostExperience() {
         {isCompleted && !outcomeAnswered ? (
           <div className="max-w-3xl mx-auto px-4 md:px-6 py-4 flex flex-col lg:flex-row lg:items-center gap-4">
             <div className="flex-1 min-w-0">
+              {isFirstSessionProofBoost && (
+                <div className="text-[11px] font-medium uppercase tracking-wider text-accent mb-1">
+                  Quick beta check
+                </div>
+              )}
               <div className="text-sm md:text-base font-medium text-text-primary leading-snug">
                 Did the prompt you tried produce a noticeably better AI response?
               </div>
               <div className="text-xs md:text-sm text-text-secondary mt-1 leading-relaxed">
-                Answer based on the result you saw in your own AI tool.
+                {isFirstSessionProofBoost
+                  ? "One tap while the result is fresh. Then we'll show the next step."
+                  : "Answer based on the result you saw in your own AI tool."}
               </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:shrink-0">
@@ -319,6 +342,31 @@ export default function BoostExperience() {
               <button onClick={() => answerOutcome("somewhat")} className="btn btn-ghost min-h-11 !px-4 !text-sm">Somewhat</button>
               <button onClick={() => answerOutcome("not_really")} className="btn btn-ghost min-h-11 !px-4 !text-sm">Not yet</button>
               <button onClick={() => answerOutcome("unknown")} className="btn btn-quiet min-h-11 !px-4 !text-sm">Skip</button>
+            </div>
+          </div>
+        ) : isCompleted && isFirstSessionProofBoost ? (
+          <div className="max-w-3xl mx-auto px-4 md:px-6 py-4 flex flex-col lg:flex-row lg:items-center gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 text-success text-xs font-medium mb-1">
+                <Check className="w-3.5 h-3.5" />
+                Proof loop complete · +{progress?.xpAwarded ?? boost.xpReward} XP
+              </div>
+              <div className="text-sm md:text-base font-medium text-text-primary leading-snug">
+                Review is how this turns into a habit.
+              </div>
+              <div className="text-xs md:text-sm text-text-secondary mt-1 leading-relaxed">
+                You tried the prompt, saw the difference, reflected, and got feedback. Take the 90-second review next to lock in the move.
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 lg:shrink-0">
+              {boost.review?.questions?.length > 0 && (
+                <button onClick={startFirstProofReview} className="btn btn-primary min-h-11 !px-4 !text-sm">
+                  <Repeat className="w-4 h-4" /> Start review
+                </button>
+              )}
+              <button onClick={() => navigate("/")} className="btn btn-ghost min-h-11 !px-4 !text-sm">
+                Back home
+              </button>
             </div>
           </div>
         ) : isFirstSessionProofBoost && !isCompleted ? (
