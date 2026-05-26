@@ -10,6 +10,8 @@ import OnboardingModal from "@/components/OnboardingModal";
 import { trackEvent } from "@/lib/analytics";
 import { applyBoostListContentOverrides } from "@/lib/content-overrides";
 
+const FIRST_SESSION_BOOST_SLUG = "let-ai-admit-it-doesnt-know";
+
 export default function Home() {
   const navigate = useNavigate();
 
@@ -18,6 +20,7 @@ export default function Home() {
   const [nextLesson, setNextLesson]               = useState(null);
   const [nextLessonJourney, setNextLessonJourney] = useState(null);
   const [recommendedBoost, setRecommendedBoost]   = useState(null);
+  const [firstProofReview, setFirstProofReview]   = useState(null);
   const [reviewableBoost, setReviewableBoost]     = useState(null);
   const [activeJourneys, setActiveJourneys]       = useState([]);
   const [todaySignal, setTodaySignal]             = useState(null);
@@ -96,6 +99,22 @@ export default function Home() {
         const matching = tracks.length ? filteredBoosts.filter(b => tracks.includes(b.category)) : filteredBoosts;
         if (!cancelled) setRecommendedBoost(matching[0] ?? filteredBoosts[0] ?? null);
 
+        const progressByBoostId = new Map(
+          progressArr.filter(p => p.contentType === "boost").map(p => [p.contentId, p])
+        );
+        const firstProofBoost = boosts.find(b => b.slug === FIRST_SESSION_BOOST_SLUG);
+        const firstProofProgress = firstProofBoost ? progressByBoostId.get(firstProofBoost.id) : null;
+        if (!cancelled) {
+          setFirstProofReview(
+            firstProofBoost &&
+            firstProofProgress?.status === "completed" &&
+            (firstProofProgress.reviewCount ?? 0) === 0 &&
+            firstProofBoost.review?.questions?.length > 0
+              ? { boost: firstProofBoost, progress: firstProofProgress }
+              : null
+          );
+        }
+
         // Reviewable boost: completed 3+ days ago, has review content, not reviewed in last 7 days
         const now = Date.now();
         const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
@@ -154,6 +173,16 @@ export default function Home() {
     if (selections.firstBoostSlug) {
       navigate(`/boost/${selections.firstBoostSlug}?source=onboarding`);
     }
+  };
+
+  const openFirstProofReview = () => {
+    if (!firstProofReview?.boost?.id) return;
+    trackEvent("first_proof_review_handoff_clicked", {
+      boost_id: firstProofReview.boost.id,
+      has_review: true,
+      source: "home",
+    });
+    navigate(`/review/${firstProofReview.boost.id}?source=home_first_proof_handoff`);
   };
 
   if (loading) {
@@ -226,6 +255,27 @@ export default function Home() {
         )}
 
         {/* Recommended boost */}
+        {firstProofReview && (
+          <section>
+            <h3 className="text-sm ui-heading text-text-primary mb-3">Lock in your first proof</h3>
+            <div
+              onClick={openFirstProofReview}
+              className="cursor-pointer rounded-lg border border-accent bg-surface-1 p-4 hover:border-accent-hover transition-colors"
+            >
+              <div className="flex items-start gap-3">
+                <Repeat className="w-4 h-4 text-accent shrink-0 mt-0.5" strokeWidth={1.75} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-text-primary leading-snug">Do the 90-second review</div>
+                  <div className="text-xs text-text-secondary mt-1 leading-relaxed">
+                    You finished "{firstProofReview.boost.title}". Review is the next loop: recall the move once, then use it again later.
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
+              </div>
+            </div>
+          </section>
+        )}
+
         {recommendedBoost && (
           <section>
             <div className="flex items-baseline justify-between mb-3">
