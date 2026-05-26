@@ -109,7 +109,7 @@ function CalloutBlock({ block }) {
   );
 }
 
-function PromptBlock({ block, progress }) {
+function PromptBlock({ block, progress, onPromptCopied }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     try {
@@ -126,6 +126,7 @@ function PromptBlock({ block, progress }) {
         trackEvent("prompt_copied", payload);
         markFirstSessionStep("prompt_copied", { boost_id: progress.contentId });
       }
+      onPromptCopied?.(block.id);
     } catch (_) {}
   };
   return (
@@ -280,7 +281,7 @@ function CheckBlock({ block, progress, onProgress }) {
   );
 }
 
-function PracticeBlock({ block, progress, onProgress }) {
+function PracticeBlock({ block, progress, onProgress, onPracticeSubmitted }) {
   const savedEntry = progress?.practiceEntries?.[block.id];
   const initialText = typeof savedEntry === "string" ? savedEntry : (savedEntry?.text ?? "");
   const initialSubmissions = (savedEntry && typeof savedEntry === "object" && Array.isArray(savedEntry.submissions)) ? savedEntry.submissions : [];
@@ -333,6 +334,7 @@ function PracticeBlock({ block, progress, onProgress }) {
       markFirstSessionStep("prompt_used", { boost_id: progress.contentId });
       markFirstSessionStep("reflection_submitted", { boost_id: progress.contentId });
     }
+    onPracticeSubmitted?.(block.id);
     try {
       const response = await base44.functions.invoke("gradePractice", {
         lessonContext: block.lessonContext ?? "",
@@ -532,17 +534,17 @@ function DividerBlock() {
   return <hr className="my-2" style={{ border: "none", borderTop: "1px solid hsl(var(--reading-border))" }} />;
 }
 
-export default function Block({ block, progress, onProgress }) {
+export default function Block({ block, progress, onProgress, onPromptCopied, onPracticeSubmitted }) {
   switch (block.type) {
     case "heading":   return <HeadingBlock block={block} />;
     case "text":      return <TextBlock block={block} />;
     case "code":      return <CodeBlock block={block} />;
     case "example":   return <ExampleBlock block={block} />;
     case "callout":   return <CalloutBlock block={block} />;
-    case "prompt":    return <PromptBlock block={block} progress={progress} />;
+    case "prompt":    return <PromptBlock block={block} progress={progress} onPromptCopied={onPromptCopied} />;
     case "compare":   return <CompareBlock block={block} />;
     case "check":     return <CheckBlock block={block} progress={progress} onProgress={onProgress} />;
-    case "practice":  return <PracticeBlock block={block} progress={progress} onProgress={onProgress} />;
+    case "practice":  return <PracticeBlock block={block} progress={progress} onProgress={onProgress} onPracticeSubmitted={onPracticeSubmitted} />;
     case "write":     return <WriteBlock block={block} progress={progress} onProgress={onProgress} />;
     case "reference": return <ReferenceBlock block={block} />;
     case "divider":   return <DividerBlock />;

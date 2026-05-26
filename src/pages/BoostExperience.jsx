@@ -11,12 +11,41 @@ import Block, { allRequiredChecksPassed } from "@/components/blocks";
 import { getNavigationSource, markFirstSessionStep, trackEvent } from "@/lib/analytics";
 import { applyBoostContentOverrides } from "@/lib/content-overrides";
 
+const FIRST_SESSION_BOOST_SLUG = "let-ai-admit-it-doesnt-know";
+
 function countPracticeSubmissions(progress) {
   return Object.values(progress?.practiceEntries ?? {}).filter(entry => {
     if (!entry) return false;
     if (typeof entry === "string") return entry.trim().length > 0;
     return Array.isArray(entry.submissions) && entry.submissions.length > 0;
   }).length;
+}
+
+function requiredPracticeBlocks(blocks) {
+  return blocks.filter(b => b.type === "practice" && b.required !== false);
+}
+
+function requiredPromptBlocks(blocks) {
+  return blocks.filter(b => b.type === "prompt" && b.required !== false);
+}
+
+function practiceBlockHasFeedback(progress, blockId) {
+  const entry = progress?.practiceEntries?.[blockId];
+  return Boolean(entry && typeof entry === "object" && Array.isArray(entry.submissions) && entry.submissions.length > 0);
+}
+
+function firstBoostPromptCopyKey(userId, boostId) {
+  return `stratiumlab_prompt_copied_${userId}_${boostId}`;
+}
+
+function readCopiedPromptIds(userId, boostId) {
+  if (typeof window === "undefined" || !userId || !boostId) return [];
+  try {
+    const parsed = JSON.parse(localStorage.getItem(firstBoostPromptCopyKey(userId, boostId)) || "[]");
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+  } catch {
+    return [];
+  }
 }
 
 async function findBoost(idOrSlug) {
@@ -37,6 +66,8 @@ export default function BoostExperience() {
   const [loading, setLoading]       = useState(true);
   const [completing, setCompleting] = useState(false);
   const [outcomeAnswered, setOutcomeAnswered] = useState(false);
+  const [copiedPromptIds, setCopiedPromptIds] = useState([]);
+  const [submittedPracticeIds, setSubmittedPracticeIds] = useState([]);
   const startedAtRef = useRef(Date.now());
 
   useEffect(() => {
@@ -101,6 +132,14 @@ export default function BoostExperience() {
     setOutcomeAnswered(localStorage.getItem(`stratiumlab_outcome_${user.id}_${boost.id}`) === "true");
   }, [user?.id, boost?.id]);
 
+  useEffect(() => {
+    if (!user?.id || !boost?.id) {
+      setCopiedPromptIds([]);
+      return;
+    }
+    setCopiedPromptIds(readCopiedPromptIds(user.id, boost.id));
+  }, [user?.id, boost?.id]);
+
   const persistTimer = useRef(null);
   const handleProgressUpdate = (partial) => {
     setProgress(prev => {
@@ -113,11 +152,41 @@ export default function BoostExperience() {
     });
   };
 
+  const blocks = boost?.blocks ?? [];
+  const requiredChecks = useMemo(() => blocks.filter(b => b.type === "check" && b.required !== false), [blocks]);
+  const requiredPrompts = useMemo(() => requiredPromptBlocks(blocks), [blocks]);
+  const requiredPractices = useMemo(() => requiredPracticeBlocks(blocks), [blocks]);
+  const checksPassed = useMemo(() => allRequiredChecksPassed(blocks, progress), [blocks, progress]);
+  const isFirstSessionProofBoost = boost?.slug === FIRST_SESSION_BOOST_SLUG;
+  const copiedPrompts = requiredPrompts.length === 0 || requiredPrompts.every(block => copiedPromptIds.includes(block.id));
+  const submittedReflection = requiredPractices.length === 0 || requiredPractices.every(block =>
+    submittedPracticeIds.includes(block.id) || practiceBlockHasFeedback(progress, block.id)
+  );
+  const receivedPracticeFeedback = requiredPractices.length === 0 || requiredPractices.every(block =>
+    practiceBlockHasFeedback(progress, block.id)
+  );
+
+  const handlePromptCopied = (blockId) => {
+    if (!isFirstSessionProofBoost || !user?.id || !boost?.id || !blockId) return;
+    setCopiedPromptIds(prev => {
+      const next = prev.includes(blockId) ? prev : [...prev, blockId];
+      localStorage.setItem(firstBoostPromptCopyKey(user.id, boost.id), JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handlePracticeSubmitted = (blockId) => {
+    if (!isFirstSessionProofBoost || !blockId) return;
+    setSubmittedPracticeIds(prev => prev.includes(blockId) ? prev : [...prev, blockId]);
+  };
+
   const canComplete = useMemo(() => {
     if (!boost || !progress) return false;
     if (progress.status === "completed") return false;
-    return allRequiredChecksPassed(boost.blocks ?? [], progress);
-  }, [boost, progress]);
+    if (!checksPassed) return false;
+    if (!isFirstSessionProofBoost) return true;
+    return copiedPrompts && submittedReflection && receivedPracticeFeedback;
+  }, [boost, progress, checksPassed, isFirstSessionProofBoost, copiedPrompts, submittedReflection, receivedPracticeFeedback]);
 
   const isCompleted = progress?.status === "completed";
 
@@ -165,6 +234,14 @@ export default function BoostExperience() {
     });
   };
 
+  const firstProofSteps = [
+    { id: "copy", label: "Copy both prompts into your AI tool", done: copiedPrompts },
+    { id: "observe", label: "Compare the AI responses", done: submittedReflection },
+    { id: "reflect", label: "Submit what you noticed", done: submittedReflection },
+    { id: "feedback", label: "Read your feedback", done: receivedPracticeFeedback },
+    { id: "check", label: "Answer the checkpoint", done: checksPassed },
+  ];
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg">
@@ -181,8 +258,6 @@ export default function BoostExperience() {
       </div>
     );
   }
-
-  const requiredChecks = (boost.blocks ?? []).filter(b => b.type === "check" && b.required !== false);
 
   return (
     <div className="min-h-screen bg-bg flex flex-col">
@@ -215,8 +290,15 @@ export default function BoostExperience() {
             )}
           </header>
 
-          {(boost.blocks ?? []).map(block => (
-            <Block key={block.id} block={block} progress={progress} onProgress={handleProgressUpdate} />
+          {blocks.map(block => (
+            <Block
+              key={block.id}
+              block={block}
+              progress={progress}
+              onProgress={handleProgressUpdate}
+              onPromptCopied={handlePromptCopied}
+              onPracticeSubmitted={handlePracticeSubmitted}
+            />
           ))}
         </article>
       </div>
@@ -238,6 +320,25 @@ export default function BoostExperience() {
               <button onClick={() => answerOutcome("not_really")} className="btn btn-ghost min-h-11 !px-4 !text-sm">Not yet</button>
               <button onClick={() => answerOutcome("unknown")} className="btn btn-quiet min-h-11 !px-4 !text-sm">Skip</button>
             </div>
+          </div>
+        ) : isFirstSessionProofBoost && !isCompleted ? (
+          <div className="max-w-3xl mx-auto px-4 md:px-6 py-3.5 flex flex-col lg:flex-row lg:items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-medium text-text-primary mb-2">Finish the proof loop before completing.</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
+                {firstProofSteps.map(step => (
+                  <div key={step.id} className={`flex items-center gap-1.5 text-xs leading-snug ${step.done ? "text-success" : "text-text-secondary"}`}>
+                    <span className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${step.done ? "border-success bg-success/10" : "border-border"}`}>
+                      {step.done && <Check className="w-2.5 h-2.5" />}
+                    </span>
+                    <span>{step.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <button onClick={handleComplete} disabled={!canComplete || completing || isCompleted} className="btn btn-primary lg:shrink-0">
+              {completing ? "Saving…" : `Complete boost · +${boost.xpReward ?? 40} XP`}
+            </button>
           </div>
         ) : (
           <div className="max-w-2xl mx-auto px-4 md:px-6 py-3.5 flex items-center gap-4">
