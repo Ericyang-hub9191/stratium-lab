@@ -90,7 +90,7 @@
     {
       "id": "b6",
       "type": "text",
-      "markdown": "Open your preferred AI (ChatGPT, Claude, Gemini — any of them). Run these two prompts in **fresh chats** and compare the responses.\n\n**Prompt A — no out:**"
+      "markdown": "Open your preferred AI (ChatGPT, Claude, Gemini — any of them). Copy and run these two prompts in **fresh chats**. The point is to see the result change in your own tool, not just read the example here.\n\n**Prompt A — no out:**"
     },
 
     {
@@ -124,7 +124,7 @@
     {
       "id": "b11",
       "type": "practice",
-      "instruction": "Run the two prompts above in your AI of choice (make up a medication name that sounds real — something like \"Lenzaprex\" or \"Norivactin\"). Then paste a short note below: what did you notice? Did the model bite on Prompt A? Did Prompt B catch it?",
+      "instruction": "After you run both prompts in your AI tool, paste a short reflection on what you observed. Did the model bite on Prompt A? Did Prompt B catch the made-up medication? Mention one specific difference between the two responses.",
       "deliverable": "what you observed running both prompts",
       "rubricType": "reflection",
       "maxAttempts": 2,
