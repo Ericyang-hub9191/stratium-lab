@@ -35,10 +35,14 @@ export default function Layout() {
         base44.entities.Streak.filter({ userId: user.id }),
         base44.entities.UserStats.filter({ userId: user.id }),
       ]);
+      const userStats = stats[0] ?? null;
       setStreak(streaks[0]?.currentStreak ?? 0);
-      setXp(stats[0]?.totalXp ?? 0);
+      setXp(userStats?.totalXp ?? 0);
+      if (!userStats && pathname !== "/") {
+        navigate("/", { replace: true });
+      }
     } catch (_) {}
-  }, []);
+  }, [navigate, pathname]);
 
   useEffect(() => { fetchStats(); }, [pathname, fetchStats]);
 

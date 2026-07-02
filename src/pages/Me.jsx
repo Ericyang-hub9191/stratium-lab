@@ -6,11 +6,13 @@ import { useEffect, useState } from "react";
 import { LogOut, Bell, AlertTriangle, Edit2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/lib/AuthContext";
 import { levelFromXp } from "@/lib/progress-utils";
 
 const ALL_TRACKS = ["prompting", "writing", "research", "automation", "python", "data", "rag", "business", "biology", "safety", "psychology", "mlops", "build-your-own"];
 
 export default function Me() {
+  const { logout } = useAuth();
   const [user, setUser]   = useState(null);
   const [stats, setStats] = useState(null);
   const [streak, setStreak] = useState(null);
@@ -177,7 +179,7 @@ export default function Me() {
         </div>
       </section>
 
-      <button onClick={() => base44.auth.logout()} className="btn btn-ghost w-full">
+      <button onClick={() => logout()} className="btn btn-ghost w-full">
         <LogOut className="w-4 h-4" /> Sign out
       </button>
 
