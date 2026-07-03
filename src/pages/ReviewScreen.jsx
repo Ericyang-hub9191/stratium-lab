@@ -5,6 +5,18 @@ import { base44 } from "@/api/base44Client";
 import { inlineMd } from "@/components/blocks";
 import { getNavigationSource, trackEvent } from "@/lib/analytics";
 import { applyBoostContentOverrides } from "@/lib/content-overrides";
+import { getBoostBySlugOrId } from "@/lib/content-adapter";
+
+async function findBoost(idOrSlug) {
+  const local = getBoostBySlugOrId(idOrSlug);
+  if (local) return local;
+
+  const idResults = await base44.entities.Boost.filter({ id: idOrSlug });
+  if (idResults[0]) return applyBoostContentOverrides(idResults[0]);
+
+  const slugResults = await base44.entities.Boost.filter({ slug: idOrSlug, isPublished: true });
+  return applyBoostContentOverrides(slugResults[0] ?? null);
+}
 
 export default function ReviewScreen() {
   const { boostId } = useParams();
@@ -23,12 +35,12 @@ export default function ReviewScreen() {
     let cancelled = false;
     (async () => {
       try {
-        const [boostRows, user] = await Promise.all([
-          base44.entities.Boost.filter({ id: boostId }),
+        const [boostRecord, user] = await Promise.all([
+          findBoost(boostId),
           base44.auth.me(),
         ]);
         if (cancelled) return;
-        const b = applyBoostContentOverrides(boostRows?.[0]);
+        const b = boostRecord;
         if (!b) { setError("Boost not found."); setLoading(false); return; }
         if (!b.review || !Array.isArray(b.review.questions) || b.review.questions.length === 0) {
           setError("No review available for this boost."); setLoading(false); return;

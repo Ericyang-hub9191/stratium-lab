@@ -8,7 +8,7 @@ import { ArrowRight, Clock, BookOpen, Zap, Radio, ChevronRight, Repeat } from "l
 import { base44 } from "@/api/base44Client";
 import OnboardingModal from "@/components/OnboardingModal";
 import { trackEvent } from "@/lib/analytics";
-import { applyBoostListContentOverrides } from "@/lib/content-overrides";
+import { listBoosts, listJourneys, listLessons } from "@/lib/content-adapter";
 
 const FIRST_SESSION_BOOST_SLUG = "let-ai-admit-it-doesnt-know";
 
@@ -56,12 +56,12 @@ export default function Home() {
           progressArr.filter(p => p.contentType === "lesson" && p.journeyId).map(p => p.journeyId)
         );
 
-        let journeys = await base44.entities.Journey.filter({ isPublished: true });
+        let journeys = listJourneys();
         const activeWithProgress = await Promise.all(
           journeys
             .filter(j => inProgressJourneyIds.has(j.slug))
             .map(async j => {
-              const lessons = await base44.entities.Lesson.filter({ journeyId: j.slug, isPublished: true });
+              const lessons = listLessons({ journeyId: j.slug });
               const completed = lessons.filter(l => completedLessonIds.has(l.id)).length;
               return { ...j, completed, total: lessons.length, lessons };
             })
@@ -80,7 +80,7 @@ export default function Home() {
           const filtered = tracks.length ? journeys.filter(j => tracks.includes(j.track)) : journeys;
           const starter = filtered[0] ?? journeys[0];
           if (starter) {
-            const lessons = await base44.entities.Lesson.filter({ journeyId: starter.slug, isPublished: true });
+            const lessons = listLessons({ journeyId: starter.slug });
             const sorted = lessons.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
             nextL = sorted[0] ?? null;
             nextJ = starter;
@@ -93,7 +93,7 @@ export default function Home() {
         const completedBoostIds = new Set(
           progressArr.filter(p => p.contentType === "boost" && p.status === "completed").map(p => p.contentId)
         );
-        const boosts = applyBoostListContentOverrides(await base44.entities.Boost.filter({ isPublished: true }));
+        const boosts = listBoosts();
         const tracks = userStats?.favoriteTracks ?? [];
         const filteredBoosts = boosts.filter(b => !completedBoostIds.has(b.id));
         const matching = tracks.length ? filteredBoosts.filter(b => tracks.includes(b.category)) : filteredBoosts;

@@ -1,19 +1,13 @@
-import disagreeWithItself from "@/content/boosts/disagree-with-itself.json";
-import letAiAdmitItDoesntKnow from "@/content/boosts/let-ai-admit-it-doesnt-know.json";
-import rewriteThisWorse from "@/content/boosts/rewrite-this-worse.json";
+import { getBoostBySlugOrId, listBoosts } from "@/lib/content-adapter";
 
-const CANONICAL_BOOSTS = [
-  disagreeWithItself,
-  letAiAdmitItDoesntKnow,
-  rewriteThisWorse,
-];
+const CANONICAL_BOOSTS = listBoosts();
 
 const canonicalBySlug = new Map(CANONICAL_BOOSTS.map(boost => [boost.slug, boost]));
 const canonicalByTitle = new Map(CANONICAL_BOOSTS.map(boost => [boost.title, boost]));
 const canonicalByTitleAlias = new Map([
-  ["Rewrite this, worse", rewriteThisWorse],
-  ["Make it disagree with itself", disagreeWithItself],
-  ["Let AI admit it doesn't know", letAiAdmitItDoesntKnow],
+  ["Rewrite this, worse", getBoostBySlugOrId("the-rewrite-this-worse-trick")],
+  ["Make it disagree with itself", getBoostBySlugOrId("force-the-model-to-disagree")],
+  ["Let AI admit it doesn't know", getBoostBySlugOrId("let-ai-admit-it-doesnt-know")],
 ]);
 
 function hasReviewContent(review) {

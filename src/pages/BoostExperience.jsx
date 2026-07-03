@@ -10,6 +10,7 @@ import { updateStreak, updateUserStatsForBoost } from "@/lib/progress-utils";
 import Block, { allRequiredChecksPassed } from "@/components/blocks";
 import { getNavigationSource, markFirstSessionStep, trackEvent } from "@/lib/analytics";
 import { applyBoostContentOverrides } from "@/lib/content-overrides";
+import { getBoostBySlugOrId } from "@/lib/content-adapter";
 
 const FIRST_SESSION_BOOST_SLUG = "let-ai-admit-it-doesnt-know";
 
@@ -49,6 +50,9 @@ function readCopiedPromptIds(userId, boostId) {
 }
 
 async function findBoost(idOrSlug) {
+  const local = getBoostBySlugOrId(idOrSlug);
+  if (local) return local;
+
   const boostResults = await base44.entities.Boost.filter({ id: idOrSlug });
   if (boostResults[0]) return boostResults[0];
 
