@@ -23,6 +23,29 @@ import { ArrowLeft, Clock, Check, ArrowRight, Home as HomeIcon, BookOpen, Zap } 
 import { base44 } from "@/api/base44Client";
 import { updateStreak, updateUserStatsForLesson } from "@/lib/progress-utils";
 import Block, { allRequiredChecksPassed } from "@/components/blocks";
+import { getJourneyBySlugOrId, getLessonBySlugOrId, listBoosts, listLessons } from "@/lib/content-adapter";
+
+async function findLesson(idOrSlug) {
+  const local = getLessonBySlugOrId(idOrSlug);
+  if (local) return local;
+
+  const idResults = await base44.entities.Lesson.filter({ id: idOrSlug });
+  if (idResults[0]) return idResults[0];
+
+  const slugResults = await base44.entities.Lesson.filter({ slug: idOrSlug, isPublished: true });
+  return slugResults[0] ?? null;
+}
+
+async function findJourney(slugOrId) {
+  const local = getJourneyBySlugOrId(slugOrId);
+  if (local) return local;
+
+  const slugResults = await base44.entities.Journey.filter({ slug: slugOrId });
+  if (slugResults[0]) return slugResults[0];
+
+  const idResults = await base44.entities.Journey.filter({ id: slugOrId });
+  return idResults[0] ?? null;
+}
 
 export default function LessonExperience() {
   const { id } = useParams();
@@ -47,17 +70,17 @@ export default function LessonExperience() {
     (async () => {
       try {
         const [lessonResults, currentUser] = await Promise.all([
-          base44.entities.Lesson.filter({ id }),
+          findLesson(id),
           base44.auth.me().catch(() => null),
         ]);
         if (cancelled) return;
-        const lessonRec = lessonResults[0] ?? null;
+        const lessonRec = lessonResults ?? null;
         setLesson(lessonRec);
         setUser(currentUser);
 
         if (lessonRec?.journeyId) {
-          const journeyResults = await base44.entities.Journey.filter({ slug: lessonRec.journeyId });
-          if (!cancelled) setJourney(journeyResults[0] ?? null);
+          const journeyResults = await findJourney(lessonRec.journeyId);
+          if (!cancelled) setJourney(journeyResults ?? null);
         }
 
         if (currentUser && lessonRec) {
@@ -118,16 +141,13 @@ export default function LessonExperience() {
     if (!lesson || !user) return;
     try {
       if (lesson.journeyId) {
-        const sibling = await base44.entities.Lesson.filter({
-          journeyId: lesson.journeyId,
-          isPublished: true,
-        });
+        const sibling = listLessons({ journeyId: lesson.journeyId });
         const sorted = (sibling ?? []).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         const next = sorted.find(l => (l.order ?? 0) > (lesson.order ?? 0));
         setNextLesson(next ?? null);
       }
       const [allBoosts, allProgress, stats] = await Promise.all([
-        base44.entities.Boost.filter({ isPublished: true }),
+        listBoosts(),
         base44.entities.UserProgress.filter({ userId: user.id, contentType: "boost" }),
         base44.entities.UserStats.filter({ userId: user.id }),
       ]);

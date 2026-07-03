@@ -7,6 +7,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Check, Clock } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
+import { getJourneyBySlugOrId, listLessons } from "@/lib/content-adapter";
 
 export default function JourneyDetail() {
   const { slug } = useParams();
@@ -21,12 +22,12 @@ export default function JourneyDetail() {
     (async () => {
       try {
         const [journeys, lessonList, user] = await Promise.all([
-          base44.entities.Journey.filter({ slug }),
-          base44.entities.Lesson.filter({ journeyId: slug, isPublished: true }),
+          getJourneyBySlugOrId(slug),
+          listLessons({ journeyId: slug }),
           base44.auth.me().catch(() => null),
         ]);
         if (cancelled) return;
-        setJourney(journeys[0] ?? null);
+        setJourney(journeys ?? null);
         setLessons((lessonList ?? []).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
         if (user) {
           const progress = await base44.entities.UserProgress.filter({

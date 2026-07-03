@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Search, Clock, BookOpen, Zap, Repeat } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
-import { applyBoostListContentOverrides } from "@/lib/content-overrides";
+import { listBoosts, listJourneys } from "@/lib/content-adapter";
 
 const JOURNEY_TRACKS   = ["all", "prompting", "writing", "research", "automation", "python", "data", "rag", "business", "biology", "safety", "psychology", "mlops", "build-your-own"];
 const BOOST_CATEGORIES = ["all", "prompting", "writing", "research", "automation", "python", "data", "productivity", "rag"];
@@ -28,13 +28,13 @@ export default function Library() {
     (async () => {
       try {
         const [j, b, user] = await Promise.all([
-          base44.entities.Journey.filter({ isPublished: true }),
-          base44.entities.Boost.filter({ isPublished: true }),
+          listJourneys(),
+          listBoosts(),
           base44.auth.me().catch(() => null),
         ]);
         if (cancelled) return;
         setJourneys(j);
-        setBoosts(applyBoostListContentOverrides(b));
+        setBoosts(b);
         if (user) {
           const p = await base44.entities.UserProgress.filter({ userId: user.id });
           if (!cancelled) setProgress(p);
