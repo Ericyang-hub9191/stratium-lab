@@ -40,30 +40,32 @@ export default function Home() {
     let cancelled = false;
     (async () => {
       try {
-        const u = await base44.auth.me();
-        if (cancelled) return;
-        setUser(u);
-
         const journeys = listJourneys();
         const boosts = listBoosts();
         const fallbackLesson = getFirstAvailableLesson(journeys);
+        if (cancelled) return;
         setNextLesson(fallbackLesson.nextLesson);
         setNextLessonJourney(fallbackLesson.nextLessonJourney);
         setRecommendedBoost(boosts[0] ?? null);
+        setLoading(false);
 
-        const [statsArr, streakArr, progressArr, signals] = await Promise.all([
-          base44.entities.UserStats.filter({ userId: u.id }),
-          base44.entities.Streak.filter({ userId: u.id }),
-          base44.entities.UserProgress.filter({ userId: u.id }),
+        const u = await base44.auth.me().catch(() => null);
+        if (cancelled || !u) return;
+        setUser(u);
+
+        const [statsArr, , progressArr, signals] = await Promise.all([
+          base44.entities.UserStats.filter({ userId: u.id }).catch(() => null),
+          base44.entities.Streak.filter({ userId: u.id }).catch(() => []),
+          base44.entities.UserProgress.filter({ userId: u.id }).catch(() => []),
           base44.entities.Signal.list("-date", 1).catch(() => []),
         ]);
         if (cancelled) return;
 
-        const userStats = statsArr[0];
+        const userStats = statsArr?.[0] ?? null;
         setStats(userStats);
         setTodaySignal(signals[0] ?? null);
 
-        if (!userStats) setShowOnboarding(true);
+        if (statsArr && !userStats) setShowOnboarding(true);
 
         const completedLessonIds = new Set(
           progressArr.filter(p => p.contentType === "lesson" && p.status === "completed").map(p => p.contentId)
