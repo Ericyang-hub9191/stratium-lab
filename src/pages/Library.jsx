@@ -27,16 +27,16 @@ export default function Library() {
     let cancelled = false;
     (async () => {
       try {
-        const [j, b, user] = await Promise.all([
-          listJourneys(),
-          listBoosts(),
-          base44.auth.me().catch(() => null),
-        ]);
+        const j = listJourneys();
+        const b = listBoosts();
         if (cancelled) return;
         setJourneys(j);
         setBoosts(b);
+
+        const user = await base44.auth.me().catch(() => null);
+        if (cancelled) return;
         if (user) {
-          const p = await base44.entities.UserProgress.filter({ userId: user.id });
+          const p = await base44.entities.UserProgress.filter({ userId: user.id }).catch(() => []);
           if (!cancelled) setProgress(p);
         }
       } catch (e) {

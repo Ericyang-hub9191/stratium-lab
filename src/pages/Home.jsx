@@ -12,6 +12,15 @@ import { listBoosts, listJourneys, listLessons } from "@/lib/content-adapter";
 
 const FIRST_SESSION_BOOST_SLUG = "let-ai-admit-it-doesnt-know";
 
+function getFirstAvailableLesson(journeys) {
+  const starter = journeys[0];
+  if (!starter) return { nextLesson: null, nextLessonJourney: null };
+
+  const lessons = listLessons({ journeyId: starter.slug });
+  const sorted = lessons.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  return { nextLesson: sorted[0] ?? null, nextLessonJourney: starter };
+}
+
 export default function Home() {
   const navigate = useNavigate();
 
@@ -35,6 +44,13 @@ export default function Home() {
         if (cancelled) return;
         setUser(u);
 
+        const journeys = listJourneys();
+        const boosts = listBoosts();
+        const fallbackLesson = getFirstAvailableLesson(journeys);
+        setNextLesson(fallbackLesson.nextLesson);
+        setNextLessonJourney(fallbackLesson.nextLessonJourney);
+        setRecommendedBoost(boosts[0] ?? null);
+
         const [statsArr, streakArr, progressArr, signals] = await Promise.all([
           base44.entities.UserStats.filter({ userId: u.id }),
           base44.entities.Streak.filter({ userId: u.id }),
@@ -56,7 +72,6 @@ export default function Home() {
           progressArr.filter(p => p.contentType === "lesson" && p.journeyId).map(p => p.journeyId)
         );
 
-        let journeys = listJourneys();
         const activeWithProgress = await Promise.all(
           journeys
             .filter(j => inProgressJourneyIds.has(j.slug))
@@ -93,7 +108,6 @@ export default function Home() {
         const completedBoostIds = new Set(
           progressArr.filter(p => p.contentType === "boost" && p.status === "completed").map(p => p.contentId)
         );
-        const boosts = listBoosts();
         const tracks = userStats?.favoriteTracks ?? [];
         const filteredBoosts = boosts.filter(b => !completedBoostIds.has(b.id));
         const matching = tracks.length ? filteredBoosts.filter(b => tracks.includes(b.category)) : filteredBoosts;
