@@ -1,6 +1,6 @@
-# Stratium Lab Big-Picture Plan
+# Stratium Lab Historical Implementation Plan
 
-This file is the roadmap and source of truth for future Codex tasks in Stratium Lab.
+> **Status notice (2026-09-08):** This document preserves the earlier Base44-era implementation plan and technical context. It is not the current product authority. Follow `STRATIUM_PRODUCT_CONSTITUTION.md`, approved entries in `STRATIUM_DECISION_LOG.md`, `AGENTS.md`, and `AUTONOMY_POLICY.md`. If this historical plan conflicts with those documents, stop and follow the newer governing source.
 
 Stratium Lab is for ambitious AI users who already use AI but often get generic, shallow, or unreliable results. This includes university-bound students, university students, ambitious high school graduates, early-career professionals, working professionals, and builders/founders who want to use AI more effectively for study, work, productivity, and projects.
 
@@ -99,9 +99,9 @@ Product promise: Stratium Lab helps ambitious learners and professionals turn AI
 - Lint passed for that PR.
 - Build passed for that PR.
 
-## Codex Workflow Rules
+## Historical Codex Workflow Rules
 
-- Treat `PROJECT_PLAN.md` as the roadmap and source of truth for future Codex tasks.
+- Treat this section as historical implementation guidance only. Do not use it to override the current governing documents.
 - Keep future Codex tasks small and scoped.
 - Before editing, inspect relevant files and explain the plan.
 - Make only changes that match the requested task boundary.
